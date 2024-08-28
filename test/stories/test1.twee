@@ -1,0 +1,29 @@
+:: StoryTitle
+Test 1
+
+:: StoryData
+{
+  "ifid": "D5585FCC-9F03-41AE-9D24-73BF341E66E6",
+  "format": "Brick",
+  "format-version": "0.1"
+}
+
+:: Start
+Lorem \\\ipsun bfdsa awefdsa waefsd.
+single line break
+
+double line break. <em title="bldsablsabl">Some emphasize text</em>
+
+:: Passage 2
+@($name = 'Bob')
+
+(if $name === 'Chris')
+  Howdy Chris!
+(else)
+  Hi stranger!
+(/if)
+<a>Link to example.com</a>
+<br>
+<button>This is a button</button>
+
+@switch()

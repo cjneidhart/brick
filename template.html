@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>{{STORY_NAME}}</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <style id="style-bootstrap">{{BOOTSTRAP_CSS}}</style>
+    <style id="style-brick">{{BRICK_STYLE}}</style>
+  </head>
+  <body>
+    {{STORY_DATA}}
+    <div class="container-fluid">
+      <div class="row">
+        <aside id="ui-bar" class="col-lg-2">
+          <div class="offcanvas-lg offcanvas-start" data-bs-scroll="true" data-bs-backdrop="false">
+            <h1 id="story-title" class="mt-2 text-center"></h1>
+          </div>
+        </aside>
+
+        <div class="col" class="container-md">
+          <main id="passages"></main>
+        </div>
+      </div>
+    </div>
+    <script id="script-bootstrap" type="text/javascript">{{BOOTSTRAP_SCRIPT}}</script>
+    <script id="script-brick" type="text/javascript">{{BRICK_SCRIPT}}</script>
+  </body>
+</html>

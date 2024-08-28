@@ -12,7 +12,9 @@ Test 1
 Lorem \\\ipsun bfdsa awefdsa waefsd.
 single line break
 
-double line break. <em title="bldsablsabl">Some emphasize text</em>
+double line break. <em title="hello World!">Then some emphasized text</em>.
+
+Down here is a <a class="foo">L I N K</a>.
 
 :: Passage 2
 @($name = 'Bob')

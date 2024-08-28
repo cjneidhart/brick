@@ -91,7 +91,7 @@ export class PassageIndex {
       checkBannedNames(name);
       const tags = elt.getAttribute("tags")?.split(" ").filter((x) => x) || [];
       checkBannedTags(tags, name);
-      const passage = new Passage(id, name, elt.innerHTML, tags);
+      const passage = new Passage(id, name, elt.textContent || '', tags);
       if (this.#byId.has(id)) {
         throw new Error(`Duplicate passage id ${id}`);
       }

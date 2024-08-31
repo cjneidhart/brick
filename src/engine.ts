@@ -44,7 +44,7 @@ export function forward(): boolean {
  * Navigate to the given passage, creating a new moment in the history.
  */
 export function navigate(passage: string | Passage) {
-  const passageName = typeof passage === 'string' ? passage : passage.name;
+  const passageName = typeof passage === "string" ? passage : passage.name;
 
   // clear moments past the current index
   history.length = index + 1;

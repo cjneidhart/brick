@@ -5,7 +5,8 @@ const RE = {
   elementName: /[a-zA-Z]+/y,
   htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/y,
   js: {
-    normalChars: /[^"'`()[\]{}/$_,]*/y,
+    identifier: /[a-zA-Z][a-zA-Z0-9_$]*/y,
+    normalChars: /[^"'`()[\]{}/$_,a-zA-Z]*/y,
     stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/y,
     stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/y,
   },
@@ -143,7 +144,7 @@ export class Parser {
           break outer;
 
         default:
-          throw new Error("Logic error");
+          throw new Error(`Logic Error (${c})`);
       }
     }
 
@@ -213,44 +214,74 @@ export class Parser {
   }
 
   parseJsExpression(): string {
-    const startIdx = this.index;
     const nesting = [];
+    const output: string[] = [];
+    let match;
     outer: while (this.index < this.input.length) {
-      this.consume(RE.js.normalChars);
+      match = this.consume(RE.js.normalChars);
+      if (match) {
+        output.push(match[0]);
+      }
 
       const c = this.lookahead();
+      match = this.consume(RE.js.identifier);
+      if (match) {
+        output.push(match[0]);
+        continue;
+      }
+
       switch (c) {
         case '"':
-          if (!this.consume(RE.js.stringDouble)) {
+          match = this.consume(RE.js.stringDouble);
+          if (match) {
+            output.push(match[0]);
+          } else {
             throw new Error("Unclosed double-quoted string");
           }
           break;
 
         case "'":
-          if (!this.consume(RE.js.stringSingle)) {
+          match = this.consume(RE.js.stringSingle);
+          if (match) {
+            output.push(match[0]);
+          } else {
             throw new Error("Unclosed single-quoted string");
           }
           break;
 
         case "(":
           nesting.push(")");
+          output.push(c);
           this.index++;
           break;
 
         case "[":
           nesting.push("]");
+          output.push(c);
           this.index++;
           break;
 
         case "{":
           nesting.push("}");
+          output.push(c);
           this.index++;
+          break;
+
+        case "$":
+          this.index++;
+          match = this.consume(RE.js.identifier);
+          if (match) {
+            output.push("Brick.vars.", match[0]);
+          } else {
+            throw new Error("Illegal identifier");
+          }
           break;
 
         case ",":
           if (nesting.length > 0) {
             // in a sub-expression, just continue
             this.index++;
+            output.push(c);
           } else {
             // at outer level, end the expression
             break outer;
@@ -260,6 +291,7 @@ export class Parser {
         default:
           if (c && c === nesting[nesting.length - 1]) {
             this.index++;
+            output.push(c);
             break;
           }
 
@@ -274,6 +306,6 @@ export class Parser {
       throw new Error(`Expected a "${nesting.pop()}"`);
     }
 
-    return this.input.substring(startIdx, this.index);
+    return output.join("");
   }
 }

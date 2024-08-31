@@ -9,6 +9,7 @@ Test 1
 }
 
 :: Start
+@($name = "Orange" + "Chris")
 Lorem ipsun is a trad/* BLOCK
 
 COMMENT **/itional fil// LINE COMMENT

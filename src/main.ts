@@ -32,7 +32,9 @@ export const Brick = {
 };
 
 declare global {
-  interface Window { Brick: typeof Brick; }
+  interface Window {
+    Brick: typeof Brick;
+  }
 }
 window.Brick = Brick;
 

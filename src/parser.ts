@@ -20,11 +20,7 @@ export class ElementTemplate {
   attributes: Map<string, string>;
   content: NodeTemplate[];
 
-  constructor(
-    name: string,
-    attrs: Map<string, string>,
-    content: NodeTemplate[],
-  ) {
+  constructor(name: string, attrs: Map<string, string>, content: NodeTemplate[]) {
     this.name = name;
     this.attributes = attrs;
     this.content = content;
@@ -123,9 +119,7 @@ export class Parser {
         case "?":
         case "[":
         case "]":
-          throw new Error(
-            `Cannot yet handle unescaped '${c}' (U+${c.charCodeAt(0)})`,
-          );
+          throw new Error(`Cannot yet handle unescaped '${c}' (U+${c.charCodeAt(0)})`);
 
         case undefined:
           // end of input
@@ -205,7 +199,7 @@ export class Parser {
   parseJsExpression(): string {
     const startIdx = this.index;
     const nesting = [];
-    outer: while (true) {
+    outer: while (this.index < this.input.length) {
       this.consume(RE.js.normalChars);
 
       const c = this.lookahead();

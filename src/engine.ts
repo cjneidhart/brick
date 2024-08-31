@@ -7,18 +7,70 @@ const mainElt =
     throw new Error("No #passages element found");
   })();
 
-const HISTORY_LENGTH = 5;
-
 interface Moment {
   passageName: string;
   state: Record<string, unknown>;
 }
 
-export function navigate(passage: string | Passage) {
-  const psg = typeof passage === "string" ? getPassage(passage) : passage;
-  if (typeof psg === "undefined") {
-    throw new Error(`Couldn't find passage "${passage}"`);
+const history: Moment[] = [];
+let index = -1;
+
+/**
+ * Attempt to move backwards in history. Returns whether the navigation was successful.
+ */
+export function backward(): boolean {
+  if (index === 0) {
+    return false;
+  } else {
+    index--;
+    renderActive();
+    return true;
   }
+}
+
+export function forward(): boolean {
+  if (index === history.length - 1) {
+    return false;
+  } else {
+    index++;
+    renderActive();
+    return true;
+  }
+}
+
+/**
+ * Navigate to the given passage, creating a new moment in the history.
+ */
+export function navigate(passage: string | Passage) {
+  const passageName = typeof passage === 'string' ? passage : passage.name;
+
+  // clear moments past the current index
+  history.length = index + 1;
+
+  const newMoment = {
+    passageName,
+    state: {},
+  };
+  history.push(newMoment);
+  index++;
+
+  renderActive();
+}
+
+/**
+ * Render the active moment.
+ */
+function renderActive() {
+  const moment = history[index];
+  if (!moment) {
+    throw new Error(`No active moment at index ${index}`);
+  }
+
+  const psg = getPassage(moment.passageName);
+  if (!psg) {
+    throw new Error(`Couldn't find passage "${moment.passageName}"`);
+  }
+
   mainElt.innerHTML = "";
   render(mainElt, psg.content);
 }

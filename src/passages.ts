@@ -61,9 +61,7 @@ function checkBannedNames(name: string) {
 function checkBannedTags(tags: string[], passageName: string) {
   for (const tag of tags) {
     if (BANNED_TAGS.includes(tag)) {
-      throw new Error(
-        `The tag '${tag}' on the passage "${passageName} is not allowed`,
-      );
+      throw new Error(`The tag '${tag}' on the passage "${passageName} is not allowed`);
     }
   }
 }
@@ -112,9 +110,7 @@ export function filter(predicate: (passage: Passage) => boolean): Passage[] {
   return result;
 }
 
-export function find(
-  predicate: (passage: Passage) => boolean,
-): Passage | undefined {
+export function find(predicate: (passage: Passage) => boolean): Passage | undefined {
   for (const passage of byName.values()) {
     if (predicate(passage)) {
       return passage;

@@ -1,4 +1,4 @@
-import { navigate } from "./engine";
+import { backward, forward, navigate } from "./engine";
 import { get as getPassage, init as initPassages } from "./passages";
 import { evalJavaScript } from "./scripting";
 
@@ -36,9 +36,7 @@ function getElementById(elementId: string): Element {
 const storyData = document.getElementsByTagName("tw-storydata")[0];
 initPassages(storyData);
 const styles = storyData.querySelectorAll('style[type="text/twine-css"]');
-const scripts = storyData.querySelectorAll(
-  'script[type="text/twine-javascript"]',
-);
+const scripts = storyData.querySelectorAll('script[type="text/twine-javascript"]');
 
 for (const stylesheet of styles) {
   const styleElt = document.createElement("style");
@@ -64,3 +62,10 @@ if (!storyTitle) {
 
 const titleElt = getElementById("story-title");
 titleElt.textContent = storyTitle;
+
+document.getElementById("brick-history-backward")?.addEventListener("click", (_event) => {
+  backward();
+});
+document.getElementById("brick-history-forward")?.addEventListener("click", (_event) => {
+  forward();
+})

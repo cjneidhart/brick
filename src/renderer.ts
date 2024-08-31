@@ -60,22 +60,20 @@ function isPhrasingNode(node: string | Element): boolean {
   // TODO:
   // <link> and <meta> if the `itemprop` attribute is present
   // <area> if it is a descendant of a <map> element
-  if (
-    typeof node === "string" ||
-    PHRASING_TAGS.includes(node.tagName.toLowerCase())
-  ) {
+  if (typeof node === "string" || PHRASING_TAGS.includes(node.tagName.toLowerCase())) {
     return true;
   } else if (SOMETIMES_PHRASING_TAGS.includes(node.tagName.toLowerCase())) {
     return Array.from(node.childNodes).every(
-      (n) =>
-        n.nodeType === Node.TEXT_NODE ||
-        (n.nodeType === Node.ELEMENT_NODE && isPhrasingNode(n as Element)),
+      (n) => n.nodeType === Node.TEXT_NODE || (n.nodeType === Node.ELEMENT_NODE && isPhrasingNode(n as Element)),
     );
   } else {
     return false;
   }
 }
 
+/**
+ * Render the given brick markup and append it to an element.
+ */
 export function render(output: Element, input: string | NodeTemplate[]) {
   let inputNodes;
   if (typeof input === "string") {
@@ -110,7 +108,6 @@ export function render(output: Element, input: string | NodeTemplate[]) {
     } else {
       elt = nt;
       const paragraphs = elt.split("\n\n");
-      console.log(paragraphs);
       let p = paragraphs.shift();
       if (typeof p === "string") {
         output.append(p);

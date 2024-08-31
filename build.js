@@ -53,12 +53,8 @@ function afterWebpack(err, stats) {
   const templateText = readTextFile("template.html");
   const scriptText = readTextFile("dist/brick.js");
   const brickStyle = readTextFile("src/brick.css");
-  const bsCss = readTextFile(
-    "node_modules/bootstrap/dist/css/bootstrap.min.css",
-  );
-  const bsJs = readTextFile(
-    "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
-  );
+  const bsCss = readTextFile("node_modules/bootstrap/dist/css/bootstrap.min.css");
+  const bsJs = readTextFile("node_modules/bootstrap/dist/js/bootstrap.bundle.min.js");
 
   const storyFormat = templateText
     .replace("{{BOOTSTRAP_CSS}}", bsCss)

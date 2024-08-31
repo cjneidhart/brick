@@ -10,3 +10,9 @@
 #passages {
   max-width: 60rem;
 }
+
+#brick-history-backward, #brick-history-forward {
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid black;
+}

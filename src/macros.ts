@@ -18,9 +18,9 @@ const macros = new Map<string, Macro>();
 
 export function add(name: string, macro: Macro) {
   if (macros.has(name)) {
-    throw new Error(`Macro already exists: "${name}"`);
+    console.warn(`Replacing an existing macro: "${name}"`);
   }
-  return macros.set(name, macro);
+  macros.set(name, macro);
 }
 
 export function get(name: string): Macro | null {

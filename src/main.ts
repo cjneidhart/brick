@@ -6,14 +6,18 @@ const { alert, document } = globalThis;
 
 window.addEventListener('error', (event) => {
   const { error } = event;
+  let msg = "";
   if (error instanceof Error) {
-    let msg = 'Fatal Error!\n';
+    msg += 'Fatal Error!\n';
     msg += error.toString();
     if (error.stack) {
-      msg += error.stack;
+      msg += "\n" + error.stack;
     }
-    alert(msg);
+  } else {
+    msg += "Non-error object was thrown and not caught:\n";
+    msg += String(event);
   }
+  alert(msg);
 });
 
 window.addEventListener('unhandledrejection', (event) => {

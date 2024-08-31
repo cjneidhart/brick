@@ -16,6 +16,9 @@ interface Macro {
 const macros = new Map<string, Macro>();
 
 export function add(name: string, macro: Macro) {
+  if (macros.has(name)) {
+    throw new Error(`Macro already exists: "${name}"`);
+  }
   return macros.set(name, macro);
 }
 
@@ -29,14 +32,13 @@ export function remove(name: string): boolean {
 
 add("include", {
   handler(...args: unknown[]): Node {
-    let psgName: string;
+    const [psgName] = args;
+
     if (args.length !== 1) {
       throw new Error("@include must be called with 1 argument");
-    } else {
-      if (typeof args[0] !== 'string') {
-        throw new Error("@include: first arg (passage name) must be a string");
-      }
-      psgName = args[0];
+    }
+    if (typeof psgName !== "string") {
+      throw new Error("@include: first arg (passage name) must be a string");
     }
 
     const passage = getPassage(psgName);
@@ -49,3 +51,10 @@ add("include", {
     return div;
   },
 });
+
+add("", {
+  handler(..._args): Node {
+    // Pass: the args have already been evaluated by the renderer
+    return new Text();
+  }
+})

@@ -5,7 +5,7 @@ const RE = {
   elementName: /[a-zA-Z]+/uy,
   htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/uy,
   js: {
-    normalChars: /[^"'`()[\]{}/$_]/uy,
+    normalChars: /[^"'`()[\]{}/$_,]*/uy,
     stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/uy,
     stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/uy,
   },
@@ -205,6 +205,7 @@ export class Parser {
 
   parseJsExpression(): string {
     const startIdx = this.index;
+    const nesting = [];
     outer:
     while (true) {
       this.consume(RE.js.normalChars);
@@ -223,7 +224,38 @@ export class Parser {
           }
           break;
 
+        case "(":
+          nesting.push(")");
+          this.index++;
+          break;
+
+        case "[":
+          nesting.push("]");
+          this.index++;
+          break;
+
+        case "{":
+          nesting.push("}");
+          this.index++;
+          break;
+
+        case ",":
+          if (nesting.length > 0) {
+            // in a sub-expression, just continue
+            this.index++;
+          } else {
+            // at outer level, end the expression
+            break outer;
+          }
+          break;
+
         default:
+          const topNest = nesting.pop();
+          if (c === topNest) {
+            this.index++;
+            break;
+          }
+
           if (![")", "]", "}"].includes(c || "")) {
             throw new Error(`Can't handle unescaped ${c} yet`);
           }

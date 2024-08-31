@@ -54,12 +54,7 @@ const PHRASING_TAGS = [
   "wbr",
 ];
 
-const SOMETIMES_PHRASING_TAGS = [
-  "a",
-  "del",
-  "ins",
-  "map",
-];
+const SOMETIMES_PHRASING_TAGS = ["a", "del", "ins", "map"];
 
 function isPhrasingNode(node: string | Element): boolean {
   // TODO:
@@ -71,10 +66,11 @@ function isPhrasingNode(node: string | Element): boolean {
   ) {
     return true;
   } else if (SOMETIMES_PHRASING_TAGS.includes(node.tagName.toLowerCase())) {
-    return Array.from(node.childNodes).every((n) => {
-      return n.nodeType === Node.TEXT_NODE ||
-        n.nodeType === Node.ELEMENT_NODE && isPhrasingNode(n as Element);
-    });
+    return Array.from(node.childNodes).every(
+      (n) =>
+        n.nodeType === Node.TEXT_NODE ||
+        (n.nodeType === Node.ELEMENT_NODE && isPhrasingNode(n as Element)),
+    );
   } else {
     return false;
   }
@@ -119,8 +115,8 @@ export function render(output: Element, input: string | NodeTemplate[]) {
       if (typeof p === "string") {
         output.append(p);
         while (typeof (p = paragraphs.shift()) === "string") {
-          output.append(document.createElement('br'));
-          output.append(document.createElement('br'));
+          output.append(document.createElement("br"));
+          output.append(document.createElement("br"));
           output.append(p);
         }
       }

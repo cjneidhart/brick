@@ -1,7 +1,8 @@
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
 
-const mainElt = document.getElementById("passages") ||
+const mainElt =
+  document.getElementById("passages") ||
   (() => {
     throw new Error("No #passages element found");
   })();
@@ -16,8 +17,8 @@ interface Moment {
 }
 
 export function navigate(passage: string | Passage) {
-  const psg = typeof passage === 'string' ? getPassage(passage) : passage;
-  if (typeof psg === 'undefined') {
+  const psg = typeof passage === "string" ? getPassage(passage) : passage;
+  if (typeof psg === "undefined") {
     throw new Error(`Couldn't find passage "${passage}"`);
   }
   mainElt.innerHTML = "";

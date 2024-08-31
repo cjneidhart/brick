@@ -1,4 +1,5 @@
 ## Markdown features
+
 - `*` for `<em>` and `**` for `<strong>` - definitely
 - Leading `#` for `<h1>`, `<h2>` etc. - probably
 - `_` and `__` - definitely not, conflict with naked temp variables

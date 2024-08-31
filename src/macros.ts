@@ -57,7 +57,7 @@ add("", {
   handler(..._args): Node {
     // Pass: the args have already been evaluated by the renderer
     return new Text();
-  }
+  },
 });
 
 add("linkTo", {
@@ -86,5 +86,5 @@ add("linkTo", {
     });
 
     return anchor;
-  }
-})
+  },
+});

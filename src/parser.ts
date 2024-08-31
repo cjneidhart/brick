@@ -81,8 +81,7 @@ export class Parser {
     const output: NodeTemplate[] = [];
 
     let iterations = 0;
-    outer:
-    while (this.index < this.input.length) {
+    outer: while (this.index < this.input.length) {
       if (iterations >= MAX_SAFE_INTEGER) {
         throw new Error("Parser stuck in loop");
       } else {
@@ -206,8 +205,7 @@ export class Parser {
   parseJsExpression(): string {
     const startIdx = this.index;
     const nesting = [];
-    outer:
-    while (true) {
+    outer: while (true) {
       this.consume(RE.js.normalChars);
 
       const c = this.lookahead();

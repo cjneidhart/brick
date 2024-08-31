@@ -54,9 +54,7 @@ const BANNED_TAGS = [
 
 function checkBannedNames(name: string) {
   if (BANNED_NAMES.includes(name)) {
-    throw new Error(
-      `The passage name "${name}" is not allowed`,
-    );
+    throw new Error(`The passage name "${name}" is not allowed`);
   }
 }
 
@@ -86,7 +84,11 @@ export function init(storyData: Element) {
       throw new Error(`Passage "${id}" has no name`);
     }
     checkBannedNames(name);
-    const tags = elt.getAttribute("tags")?.split(" ").filter((x) => x) || [];
+    const tags =
+      elt
+        .getAttribute("tags")
+        ?.split(" ")
+        .filter((x) => x) || [];
     checkBannedTags(tags, name);
     const passage = new Passage(id, name, elt.textContent || "", tags);
     if (byId.has(id)) {

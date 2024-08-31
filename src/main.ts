@@ -26,6 +26,16 @@ window.addEventListener("unhandledrejection", (event) => {
   alert(`Fatal Error!\n${reason}`);
 });
 
+// The main Brick object that is viewable to authors
+export const Brick = {
+  vars: {} as Record<string, unknown>,
+};
+
+declare global {
+  interface Window { Brick: typeof Brick; }
+}
+window.Brick = Brick;
+
 const storyData = document.getElementsByTagName("tw-storydata")[0];
 initPassages(storyData);
 const styles = storyData.querySelectorAll('style[type="text/twine-css"]');
@@ -61,4 +71,4 @@ document.getElementById("brick-history-backward")?.addEventListener("click", (_e
 });
 document.getElementById("brick-history-forward")?.addEventListener("click", (_event) => {
   forward();
-})
+});

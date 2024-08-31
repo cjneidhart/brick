@@ -1,5 +1,7 @@
+import { Brick } from "./main";
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
+import { clone } from "./util";
 
 const mainElt =
   document.getElementById("brick-main") ||
@@ -9,7 +11,7 @@ const mainElt =
 
 interface Moment {
   passageName: string;
-  state: Record<string, unknown>;
+  vars: Record<string, unknown>;
 }
 
 const history: Moment[] = [];
@@ -49,7 +51,7 @@ export function navigate(passage: string | Passage) {
 
   const newMoment = {
     passageName,
-    state: {},
+    vars: clone(Brick.vars),
   };
   history.push(newMoment);
   index++;
@@ -70,6 +72,8 @@ function renderActive() {
   if (!psg) {
     throw new Error(`Couldn't find passage "${moment.passageName}"`);
   }
+
+  Brick.vars = clone(moment.vars);
 
   mainElt.innerHTML = "";
   render(mainElt, psg.content);

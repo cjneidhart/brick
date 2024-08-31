@@ -1,4 +1,4 @@
-import { get as getMacro, MacroContext } from "./macros";
+import { get as getMacro } from "./macros";
 import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { evalExpression } from "./scripting";
 

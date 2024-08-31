@@ -2,9 +2,9 @@ import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
 
 const mainElt =
-  document.getElementById("passages") ||
+  document.getElementById("brick-main") ||
   (() => {
-    throw new Error("No #passages element found");
+    throw new Error("No #brick-main element found");
   })();
 
 interface Moment {

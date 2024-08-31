@@ -29,3 +29,14 @@ export function slugify(input: string): string {
     .join("")
     .replace(/-+/g, "-");
 }
+
+/**
+ * Similar to `document.getElementById`, but throws an error if the element wasn't found.
+ */
+export function getElementById(elementId: string): Element {
+  const elt = document.getElementById(elementId);
+  if (!elt) {
+    throw new Error(`No element with id '${elementId} found`);
+  }
+  return elt;
+}

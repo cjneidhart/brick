@@ -11,18 +11,20 @@
     {{STORY_DATA}}
     <div class="container-fluid">
       <div class="row">
-        <aside id="ui-bar" class="col-lg-2">
-          <div class="offcanvas-lg offcanvas-start" data-bs-scroll="true" data-bs-backdrop="false">
-            <div class="row text-center">
-              <button id="brick-history-backward" class="col btn" type="button">⬅️</button>
-              <button id="brick-history-forward" class="col btn" type="button">➡️</button>
+        <aside class="col-lg-2">
+          <div id="ui-bar" class="offcanvas-lg offcanvas-start px-2" data-bs-scroll="true" data-bs-backdrop="false">
+            <div class="container">
+              <div class="row text-center">
+                <button id="brick-history-backward" class="col btn mx-2" type="button">⬅️</button>
+                <button id="brick-history-forward" class="col btn mx-2" type="button">➡️</button>
+              </div>
             </div>
             <h1 id="story-title" class="mt-2 text-center"></h1>
           </div>
         </aside>
 
         <div class="col" class="container-md">
-          <main id="passages"></main>
+          <main id="brick-main"></main>
         </div>
       </div>
     </div>

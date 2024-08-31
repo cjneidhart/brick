@@ -2,6 +2,8 @@ const { MAX_SAFE_INTEGER } = Number;
 
 const RE = {
   closeTag: />/uy,
+  commentBlock: /\*(?:[^])*?\*\//y,
+  commentLine: /\/.*\n?/y,
   elementName: /[a-zA-Z]+/uy,
   htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/uy,
   js: {
@@ -10,7 +12,7 @@ const RE = {
     stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/uy,
   },
   macroInvoke: /([A-Za-z0-9_]*)\s*\(/uy,
-  normalChars: /[^[\]{}\\($_?<@]+/uy,
+  normalChars: /[^[\]{}\\($_?<@/]+/uy,
   singleChar: /.|\s/uy,
   whitespace: /\s*/uy,
 };
@@ -78,7 +80,7 @@ export class Parser {
 
     let iterations = 0;
     outer: while (this.index < this.input.length) {
-      if (iterations >= MAX_SAFE_INTEGER) {
+      if (iterations >= 1_000_000) {
         throw new Error("Parser stuck in loop");
       } else {
         iterations++;
@@ -96,7 +98,7 @@ export class Parser {
       const c = this.consume(RE.singleChar)?.[0];
       switch (c) {
         case "\\": {
-          const c2 = this.input[this.index];
+          const c2 = this.lookahead();
           if (!c2) {
             throw new Error("Trailing '\\'");
           }
@@ -111,6 +113,23 @@ export class Parser {
 
         case "@":
           output.push(this.parseMacro());
+          break;
+
+        case "/":
+          switch (this.lookahead()) {
+            case "/":
+              this.consume(RE.commentLine);
+              break;
+            case "*":
+              if (!this.consume(RE.commentBlock)) {
+                throw new Error("Unclosed block comment");
+              }
+              break;
+            default:
+              output.push(c);
+              // leave the second character for now
+              break;
+          }
           break;
 
         case "(":

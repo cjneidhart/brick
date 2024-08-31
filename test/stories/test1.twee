@@ -9,7 +9,10 @@ Test 1
 }
 
 :: Start
-Lorem \\\ipsun bfdsa awefdsa waefsd.
+Lorem ipsun is a trad/* BLOCK
+
+COMMENT **/itional fil// LINE COMMENT
+ler text.
 single line break
 
 double line break. <em title="hello World!">Then some emphasized text</em>.

@@ -1,6 +1,7 @@
 import { backward, forward, navigate } from "./engine";
 import { get as getPassage, init as initPassages } from "./passages";
 import { evalJavaScript } from "./scripting";
+import { getElementById } from "./util";
 
 const { alert, document } = globalThis;
 
@@ -24,14 +25,6 @@ window.addEventListener("unhandledrejection", (event) => {
   const { reason } = event;
   alert(`Fatal Error!\n${reason}`);
 });
-
-function getElementById(elementId: string): Element {
-  const elt = document.getElementById(elementId);
-  if (!elt) {
-    throw new Error(`No element with id '${elementId} found`);
-  }
-  return elt;
-}
 
 const storyData = document.getElementsByTagName("tw-storydata")[0];
 initPassages(storyData);

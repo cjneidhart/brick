@@ -1,4 +1,6 @@
+import { get as getMacro } from "./macros";
 import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
+import { evalExpression } from "./scripting";
 
 const PHRASING_TAGS = [
   "abbr",
@@ -93,7 +95,14 @@ export function render(output: Element, input: string | NodeTemplate[]) {
   for (const nt of inputNodes) {
     let elt: Element | string;
     if (nt instanceof MacroTemplate) {
-      throw new Error("Can't do macros yet");
+      const macroData = getMacro(nt.name);
+      if (!macroData) {
+        throw new Error(`Macro not found: "${nt.name}"`);
+      }
+      const params = nt.args.map((arg) => evalExpression(arg));
+      const context = { name: nt.name };
+      const node = macroData.handler.apply(context, params);
+      output.append(node);
     } else if (nt instanceof ElementTemplate) {
       elt = document.createElement(nt.name);
       for (const [attrKey, attrVal] of nt.attributes) {

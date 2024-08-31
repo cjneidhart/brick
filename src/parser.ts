@@ -1,13 +1,18 @@
 const { MAX_SAFE_INTEGER } = Number;
 
 const RE = {
-  closeTag: /\>/y,
-  elementName: /[a-zA-Z]+/y,
-  htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/y,
-  macroInvoke: /@([A-Za-z_][A-Za-z0-9_]*)?\(/y,
-  normalChars: /[^\[\]\{\}\\($_?<]+/y,
-  singleChar: /.|\s/y,
-  whitespace: /\s*/y,
+  closeTag: />/uy,
+  elementName: /[a-zA-Z]+/uy,
+  htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/uy,
+  js: {
+    normalChars: /[^"'`\(\)\[\]\{\}/$_]/uy,
+    stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/uy,
+    stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/uy,
+  },
+  macroInvoke: /([A-Za-z0-9_]*)\s*\(/uy,
+  normalChars: /[^\[\]\{\}\\($_?<@]+/uy,
+  singleChar: /.|\s/uy,
+  whitespace: /\s*/uy,
 };
 
 export class ElementTemplate {
@@ -29,10 +34,10 @@ export class ElementTemplate {
 // Represents a not-yet-invoked macro
 export class MacroTemplate {
   name: string;
-  args: string;
+  args: string[];
   content: NodeTemplate[];
 
-  constructor(name: string, args: string) {
+  constructor(name: string, args: string[]) {
     this.name = name;
     this.args = args;
     this.content = [];
@@ -110,14 +115,19 @@ export class Parser {
           break;
 
         case "@":
-        // deliberate fallthrough
+          output.push(this.parseMacro());
+          break;
+
         case "(":
         case "$":
         case "_":
         case "?":
         case "[":
         case "]":
-          throw new Error(`Cannot yet handle unescaped '${c}'`);
+          console.log(this.input.substring(this.index));
+          throw new Error(
+            `Cannot yet handle unescaped '${c}' (U+${c.charCodeAt(0)})`,
+          );
 
         case undefined:
           // end of input
@@ -141,7 +151,6 @@ export class Parser {
     const attrs = new Map<string, string>();
 
     while (!this.consume(RE.closeTag)) {
-      console.log(this.input.substring(this.index))
       const match = this.consume(RE.htmlAttr);
       if (!match) {
         throw new Error("closing '>' expected");
@@ -156,5 +165,63 @@ export class Parser {
     const content = this.parse(new RegExp(`</${name}>`, "y"));
 
     return new ElementTemplate(name, attrs, content);
+  }
+
+  parseMacro(): MacroTemplate {
+    const match = this.consume(RE.macroInvoke);
+    if (!match) {
+      throw new Error("Unescaped '@'");
+    }
+    const macroName = match[1];
+
+    const args = this.parseJsArgs();
+
+    if (this.consume(/\s*\{/uy)) {
+      throw new Error("Macro bodies not yet supported");
+    }
+
+    return new MacroTemplate(macroName, args);
+  }
+
+  parseJsArgs(): string[] {
+    const args = [];
+    let arg;
+    while ((arg = this.parseJsExpression())) {
+      args.push(arg);
+      if (!this.consume(/\s*,/uy)) {
+        break;
+      }
+    }
+
+    if (!this.consume(/\s*\)/uy)) {
+      throw new Error("No closing paren");
+    }
+
+    return args;
+  }
+
+  parseJsExpression(): string {
+    const startIdx = this.index;
+    outer:
+    while (true) {
+      this.consume(RE.js.normalChars);
+
+      const c = this.lookahead();
+      switch (c) {
+        case '"':
+          if (!this.consume(RE.js.stringDouble)) {
+            throw new Error("Unclosed double-quoted string");
+          }
+          break;
+
+        default:
+          if (![')', ']', '}'].includes(c || '')) {
+            throw new Error(`Can't handle unescaped ${c} yet`);
+          }
+          break outer;
+      }
+    }
+
+    return this.input.substring(startIdx, this.index);
   }
 }

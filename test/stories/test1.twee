@@ -16,6 +16,10 @@ double line break. <em title="hello World!">Then some emphasized text</em>.
 
 Down here is a <a class="foo">L I N K</a>.
 
+Now we're including a passage:
+
+@include("Passage 3")
+
 :: Passage 2
 @($name = 'Bob')
 
@@ -29,3 +33,8 @@ Down here is a <a class="foo">L I N K</a>.
 <button>This is a button</button>
 
 @switch()
+
+
+:: Passage 3
+Congrats!
+You've included a passage.

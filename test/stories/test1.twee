@@ -28,7 +28,9 @@ Now let's try a link: @linkTo('Passage 2')
 :: Passage 2
 You have navigated to Passage 2.
 
-@linkTo("Start", "Go Back")
+@linkReplace("Click here to reveal the way back") {
+  @linkTo("Start", "Go Back")
+}
 
 
 :: Passage "3"

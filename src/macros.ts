@@ -5,8 +5,8 @@ import { render } from "./renderer";
 
 const { document } = window;
 
-interface MacroContext {
-  contents?: NodeTemplate[];
+export interface MacroContext {
+  content?: NodeTemplate[];
   name: string;
 }
 
@@ -83,6 +83,32 @@ add("linkTo", {
     anchor.append(linkText);
     anchor.addEventListener("click", () => {
       navigate(psgName);
+    });
+
+    return anchor;
+  },
+});
+
+add("linkReplace", {
+  handler(...args): Node {
+    if (args.length !== 1) {
+      throw new Error("@linkReplace: requires exactly 1 argument");
+    }
+    const [linkText] = args;
+    if (typeof linkText !== "string") {
+      throw new Error("@linkReplace: first arg (link text) must be a string");
+    }
+
+    const anchor = document.createElement("a");
+    anchor.href = "#";
+    anchor.classList.add("link-primary");
+    anchor.append(linkText);
+    anchor.addEventListener("click", () => {
+      const span = document.createElement("span");
+      span.classList.add("macro-linkReplace");
+      render(span, this.content || "");
+      anchor.after(span);
+      anchor.remove();
     });
 
     return anchor;

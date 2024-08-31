@@ -1,20 +1,18 @@
-const { MAX_SAFE_INTEGER } = Number;
-
 const RE = {
-  closeTag: />/uy,
+  closeTag: />/y,
   commentBlock: /\*(?:[^])*?\*\//y,
   commentLine: /\/.*\n?/y,
-  elementName: /[a-zA-Z]+/uy,
-  htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/uy,
+  elementName: /[a-zA-Z]+/y,
+  htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/y,
   js: {
-    normalChars: /[^"'`()[\]{}/$_,]*/uy,
-    stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/uy,
-    stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/uy,
+    normalChars: /[^"'`()[\]{}/$_,]*/y,
+    stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/y,
+    stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/y,
   },
-  macroInvoke: /([A-Za-z0-9_]*)\s*\(/uy,
-  normalChars: /[^[\]{}\\($_?<@/]+/uy,
-  singleChar: /.|\s/uy,
-  whitespace: /\s*/uy,
+  macroInvoke: /([A-Za-z0-9_]*)\s*\(/y,
+  normalChars: /[^[\]{}\\($_?<@/]+/y,
+  singleChar: /.|\s/y,
+  whitespace: /\s*/y,
 };
 
 export class ElementTemplate {
@@ -35,10 +33,10 @@ export class MacroTemplate {
   args: string[];
   content: NodeTemplate[];
 
-  constructor(name: string, args: string[]) {
+  constructor(name: string, args: string[], content: NodeTemplate[]) {
     this.name = name;
     this.args = args;
-    this.content = [];
+    this.content = content;
   }
 }
 
@@ -150,7 +148,7 @@ export class Parser {
     }
 
     if (closer && !this.consume(closer)) {
-      throw new Error(`Failed to match regex "${closer.source}`);
+      throw new Error(`Failed to match regex "${closer.source}"`);
     }
 
     return output;
@@ -191,11 +189,10 @@ export class Parser {
 
     const args = this.parseJsArgs();
 
-    if (this.consume(/\s*\{/uy)) {
-      throw new Error("Macro bodies not yet supported");
-    }
+    const hasContent = this.consume(/\s*\{/y);
+    const content = hasContent ? this.parse(/\}/y) : [];
 
-    return new MacroTemplate(macroName, args);
+    return new MacroTemplate(macroName, args, content);
   }
 
   parseJsArgs(): string[] {

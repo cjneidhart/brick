@@ -1,4 +1,4 @@
-import { get as getMacro } from "./macros";
+import { get as getMacro, MacroContext } from "./macros";
 import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { evalExpression } from "./scripting";
 
@@ -92,7 +92,7 @@ export function render(output: Element, input: string | NodeTemplate[]) {
         throw new Error(`Macro not found: "${nt.name}"`);
       }
       const params = nt.args.map((arg) => evalExpression(arg));
-      const context = { name: nt.name };
+      const context = { name: nt.name, content: nt.content };
       const node = macroData.handler.apply(context, params);
       output.append(node);
     } else if (nt instanceof ElementTemplate) {

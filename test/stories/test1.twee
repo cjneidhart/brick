@@ -20,19 +20,12 @@ Now we're including a passage:
 
 @include("Passage \"3\"")
 
+Now let's try a link: @linkTo('Passage 2')
+
 :: Passage 2
-@($name = 'Bob')
+You have navigated to Passage 2.
 
-(if $name === 'Chris')
-  Howdy Chris!
-(else)
-  Hi stranger!
-(/if)
-<a>Link to example.com</a>
-<br>
-<button>This is a button</button>
-
-@switch()
+@linkTo("Start", "Go Back")
 
 
 :: Passage "3"

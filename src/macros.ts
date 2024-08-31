@@ -1,3 +1,4 @@
+import { navigate } from "./engine";
 import { NodeTemplate } from "./parser";
 import { get as getPassage } from "./passages";
 import { render } from "./renderer";
@@ -56,5 +57,34 @@ add("", {
   handler(..._args): Node {
     // Pass: the args have already been evaluated by the renderer
     return new Text();
+  }
+});
+
+add("linkTo", {
+  handler(...args): Node {
+    let psgName, linkText;
+    if (args.length < 1 || args.length > 2) {
+      throw new Error("@linkTo requires 1 or 2 arguments");
+    } else if (args.length === 1) {
+      psgName = linkText = args[0];
+    } else {
+      psgName = args[0];
+      linkText = args[1];
+    }
+    if (typeof psgName !== "string") {
+      throw new Error("@linkTo: first arg (passage name) must be a string");
+    } else if (typeof linkText !== "string") {
+      throw new Error("@linkTo: second arg (link text) must be a string");
+    }
+
+    const anchor = document.createElement("a");
+    anchor.href = "#";
+    anchor.classList.add(getPassage(psgName) ? "link-primary" : "link-danger");
+    anchor.append(linkText);
+    anchor.addEventListener("click", () => {
+      navigate(psgName);
+    });
+
+    return anchor;
   }
 })

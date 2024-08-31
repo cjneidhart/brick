@@ -114,10 +114,11 @@ export function render(output: Element, input: string | NodeTemplate[]) {
     } else {
       elt = nt;
       const paragraphs = elt.split("\n\n");
+      console.log(paragraphs);
       let p = paragraphs.shift();
-      if (p) {
+      if (typeof p === "string") {
         output.append(p);
-        while ((p = paragraphs.shift())) {
+        while (typeof (p = paragraphs.shift()) === "string") {
           output.append(document.createElement('br'));
           output.append(document.createElement('br'));
           output.append(p);

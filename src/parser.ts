@@ -5,12 +5,12 @@ const RE = {
   elementName: /[a-zA-Z]+/uy,
   htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/uy,
   js: {
-    normalChars: /[^"'`\(\)\[\]\{\}/$_]/uy,
+    normalChars: /[^"'`()[\]{}/$_]/uy,
     stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/uy,
     stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/uy,
   },
   macroInvoke: /([A-Za-z0-9_]*)\s*\(/uy,
-  normalChars: /[^\[\]\{\}\\($_?<@]+/uy,
+  normalChars: /[^[\]{}\\($_?<@]+/uy,
   singleChar: /.|\s/uy,
   whitespace: /\s*/uy,
 };

@@ -4,14 +4,14 @@ import { render } from "./renderer";
 
 const { document } = window;
 
-type MacroContext = {
+interface MacroContext {
   contents?: NodeTemplate[];
   name: string;
-};
+}
 
-type Macro = {
+interface Macro {
   handler: (this: MacroContext, ...args: unknown[]) => Node;
-};
+}
 
 const macros = new Map<string, Macro>();
 

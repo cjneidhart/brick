@@ -18,7 +18,7 @@ Down here is a <a class="foo">L I N K</a>.
 
 Now we're including a passage:
 
-@include("Passage 3")
+@include("Passage \"3\"")
 
 :: Passage 2
 @($name = 'Bob')
@@ -35,6 +35,6 @@ Now we're including a passage:
 @switch()
 
 
-:: Passage 3
+:: Passage "3"
 Congrats!
 You've included a passage.

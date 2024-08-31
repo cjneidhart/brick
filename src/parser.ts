@@ -95,7 +95,7 @@ export class Parser {
       }
 
       if (closer && this.consume(closer)) {
-        break;
+        return output;
       }
 
       const c = this.consume(RE.singleChar)?.[0];
@@ -124,7 +124,6 @@ export class Parser {
         case "?":
         case "[":
         case "]":
-          console.log(this.input.substring(this.index));
           throw new Error(
             `Cannot yet handle unescaped '${c}' (U+${c.charCodeAt(0)})`,
           );
@@ -136,6 +135,10 @@ export class Parser {
         default:
           throw new Error("Logic error");
       }
+    }
+
+    if (closer && !this.consume(closer)) {
+      throw new Error(`Failed to match regex "${closer.source}`);
     }
 
     return output;
@@ -214,8 +217,14 @@ export class Parser {
           }
           break;
 
+        case "'":
+          if (!this.consume(RE.js.stringSingle)) {
+            throw new Error("Unclosed single-quoted string");
+          }
+          break;
+
         default:
-          if (![')', ']', '}'].includes(c || '')) {
+          if (![")", "]", "}"].includes(c || "")) {
             throw new Error(`Can't handle unescaped ${c} yet`);
           }
           break outer;

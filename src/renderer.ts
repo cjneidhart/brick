@@ -89,8 +89,6 @@ export function render(output: Element, input: string | NodeTemplate[]) {
     inputNodes = input;
   }
 
-  console.log(inputNodes);
-
   let pBuffer: (string | Element)[] = [];
   for (const nt of inputNodes) {
     let elt: Element | string;

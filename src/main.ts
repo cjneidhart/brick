@@ -50,8 +50,6 @@ for (const script of scripts) {
   evalJavaScript(script.textContent || "");
 }
 
-const passagesDiv = getElementById("passages");
-
 const startPassage = getPassage("Start");
 if (!startPassage) {
   throw new Error("No starting passage found");

@@ -248,8 +248,7 @@ export class Parser {
           break;
 
         default:
-          const topNest = nesting.pop();
-          if (c === topNest) {
+          if (c && c === nesting[nesting.length - 1]) {
             this.index++;
             break;
           }
@@ -259,6 +258,10 @@ export class Parser {
           }
           break outer;
       }
+    }
+
+    if (nesting.length > 0) {
+      throw new Error(`Expected a "${nesting.pop()}"`);
     }
 
     return this.input.substring(startIdx, this.index);

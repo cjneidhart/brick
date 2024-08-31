@@ -11,9 +11,7 @@ const HISTORY_LENGTH = 5;
 
 interface Moment {
   passageName: string;
-  state: {
-    [key: string]: any;
-  };
+  state: Record<string, unknown>;
 }
 
 export function navigate(passage: string | Passage) {

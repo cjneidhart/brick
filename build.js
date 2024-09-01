@@ -57,11 +57,11 @@ function afterWebpack(err, stats) {
   const bsJs = readTextFile("node_modules/bootstrap/dist/js/bootstrap.bundle.min.js");
 
   const storyFormat = templateText
-    .replace("{{BOOTSTRAP_CSS}}", bsCss)
-    .replace("{{BOOTSTRAP_SCRIPT}}", bsJs)
+    .replace("{{BOOTSTRAP_CSS}}", bsCss.replaceAll('$', '$$$$'))
+    .replace("{{BOOTSTRAP_SCRIPT}}", bsJs.replaceAll('$', '$$$$'))
     .replaceAll(/#\s*sourceMappingURL=bootstrap.*map/gm, "")
-    .replace("{{BRICK_SCRIPT}}", scriptText)
-    .replace("{{BRICK_STYLE}}", brickStyle);
+    .replace("{{BRICK_SCRIPT}}", scriptText.replaceAll('$', '$$$$'))
+    .replace("{{BRICK_STYLE}}", brickStyle.replaceAll('$', '$$$$'));
   const storyJson = {
     name: "Brick",
     version: "0.1",

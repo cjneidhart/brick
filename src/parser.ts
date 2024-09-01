@@ -41,7 +41,12 @@ export class MacroTemplate {
   }
 }
 
-export type NodeTemplate = ElementTemplate | MacroTemplate | string;
+export interface RawVariable {
+  /** The name of the variable being accessed. */
+  name: string;
+}
+
+export type NodeTemplate = ElementTemplate | MacroTemplate | string | RawVariable;
 
 export class Parser {
   input: string;
@@ -131,8 +136,17 @@ export class Parser {
           }
           break;
 
+        case "$": {
+          const match = this.consume(RE.js.identifier);
+          if (!match) {
+            throw new Error("'$' which is not part of a variable must be escaped");
+          }
+          output.push({ name: match[0] });
+          break;
+        }
+
+
         case "(":
-        case "$":
         case "_":
         case "?":
         case "[":

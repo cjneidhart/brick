@@ -1,4 +1,5 @@
 import { get as getMacro } from "./macros";
+import { Brick } from "./main";
 import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { evalExpression } from "./scripting";
 
@@ -105,7 +106,7 @@ export function render(output: Element, input: string | NodeTemplate[]) {
       }
       render(elt, nt.content);
       output.append(elt);
-    } else {
+    } else if (typeof nt === 'string') {
       elt = nt;
       const paragraphs = elt.split("\n\n");
       let p = paragraphs.shift();
@@ -117,6 +118,8 @@ export function render(output: Element, input: string | NodeTemplate[]) {
           output.append(p);
         }
       }
+    } else {
+      output.append(String(Brick.vars[nt.name]));
     }
 
     // if (isPhrasingNode(elt)) {

@@ -202,12 +202,32 @@ export class Parser {
     }
     const macroName = match[1];
 
-    const args = this.parseJsArgs();
+    const args = macroName === "for" ? this.parseForArgs() : this.parseJsArgs();
 
     const hasContent = this.consume(/\s*\{/y);
     const content = hasContent ? this.parse(/\}/y) : [];
 
     return new MacroTemplate(macroName, args, content);
+  }
+
+  parseForArgs(): string[] {
+    // TODO refine this
+    let match = this.consume(/([^]*?)\s+of\b/y);
+    if (!match) {
+      throw new Error("Could not find 'of' in @for macro");
+    }
+
+    const loopVar = match[1];
+    const loopCond = this.parseJsExpression();
+    if (loopCond.trim() === "") {
+      throw new Error("Right-hand side of a for macro must be an Iterable");
+    }
+
+    if (!this.consume(/\s*\)/uy)) {
+      throw new Error("No closing paren");
+    }
+
+    return [loopVar, loopCond];
   }
 
   parseJsArgs(): string[] {
@@ -306,6 +326,7 @@ export class Parser {
           if (c && c === nesting[nesting.length - 1]) {
             this.index++;
             output.push(c);
+            nesting.pop();
             break;
           }
 

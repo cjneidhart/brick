@@ -1,4 +1,5 @@
 import { navigate } from "./engine";
+import { Brick } from "./main";
 import { NodeTemplate } from "./parser";
 import { get as getPassage } from "./passages";
 import { render } from "./renderer";
@@ -119,7 +120,7 @@ add("linkReplace", {
 
 add("while", {
   skipArgs: true,
-  handler(...args): Node {
+  handler(...args) {
     if (args.some((x) => typeof x !== "string")) {
       throw new Error("@while: received a non-string arg");
     }
@@ -136,3 +137,35 @@ add("while", {
     return frag;
   },
 });
+
+add("for", {
+  skipArgs: true,
+  handler(...args) {
+    if (args.some((x) => typeof x !== "string")) {
+      throw new Error("@for: received a non-string arg");
+    }
+    if (args.length !== 2) {
+      throw new Error("@for: requires exactly 2 arguments");
+    }
+
+    const [varStr, iterableStr] = args as string[];
+    if (!varStr.startsWith('$')) {
+      throw new Error("@for: loop variable must be a story variable for now");
+    }
+    const varName = varStr.substring(1);
+    const iterable = evalExpression(iterableStr) as Iterable<unknown>;
+    if (typeof iterable[Symbol.iterator] !== "function") {
+      throw new Error("@for: Right-hand side must be an iterable value, such as an array");
+    }
+    const frag = document.createDocumentFragment();
+    const { content } = this;
+    for (const loopVal of iterable) {
+      Brick.vars[varName] = loopVal;
+      if (content) {
+        render(frag, content);
+      }
+    }
+
+    return frag;
+  },
+})

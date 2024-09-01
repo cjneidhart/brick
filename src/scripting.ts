@@ -1,5 +1,4 @@
 export function evalJavaScript(js: string): unknown {
-  console.log(js);
   const fn = new Function(`'use strict';${js}`);
   return fn();
 }

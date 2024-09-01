@@ -52,4 +52,8 @@ Test \@while:
   @($i++)
 }</ul>
 
-@(delete $i)
+Test \@for:
+@($a = ["apple", "orange", "banana"])
+<ol>@for($food of $a) {
+  <li>$food</li>
+}</ol>

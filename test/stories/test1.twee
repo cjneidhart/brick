@@ -28,6 +28,9 @@ Now we're including a passage:
 
 Now let's try a link: @linkTo('Passage 2')
 
+@linkTo("Loop Test", "Test out some loops")
+
+
 :: Passage 2
 You have navigated to Passage 2.
 
@@ -39,3 +42,14 @@ You have navigated to Passage 2.
 :: Passage "3"
 Congrats!
 You've included a passage.
+
+
+:: Loop Test
+Test \@while:
+@($i = 0)
+<ul>@while($i <= 10) {
+  <li>List Item Number $i</li>
+  @($i++)
+}</ul>
+
+@(delete $i)

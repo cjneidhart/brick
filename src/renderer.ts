@@ -75,7 +75,7 @@ function isPhrasingNode(node: string | Element): boolean {
 /**
  * Render the given brick markup and append it to an element.
  */
-export function render(output: Element, input: string | NodeTemplate[]) {
+export function render(output: Element | DocumentFragment, input: string | NodeTemplate[]) {
   let inputNodes;
   if (typeof input === "string") {
     const parser = new Parser(input);
@@ -92,7 +92,7 @@ export function render(output: Element, input: string | NodeTemplate[]) {
       if (!macroData) {
         throw new Error(`Macro not found: "${nt.name}"`);
       }
-      const params = nt.args.map((arg) => evalExpression(arg));
+      const params = macroData.skipArgs ? nt.args : nt.args.map((arg) => evalExpression(arg));
       const context = { name: nt.name, content: nt.content };
       const node = macroData.handler.apply(context, params);
       output.append(node);
@@ -106,7 +106,7 @@ export function render(output: Element, input: string | NodeTemplate[]) {
       }
       render(elt, nt.content);
       output.append(elt);
-    } else if (typeof nt === 'string') {
+    } else if (typeof nt === "string") {
       elt = nt;
       const paragraphs = elt.split("\n\n");
       let p = paragraphs.shift();

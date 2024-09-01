@@ -2,6 +2,7 @@ import { navigate } from "./engine";
 import { NodeTemplate } from "./parser";
 import { get as getPassage } from "./passages";
 import { render } from "./renderer";
+import { evalExpression } from "./scripting";
 
 const { document } = window;
 
@@ -11,6 +12,7 @@ export interface MacroContext {
 }
 
 interface Macro {
+  skipArgs?: boolean;
   handler: (this: MacroContext, ...args: unknown[]) => Node;
 }
 
@@ -112,5 +114,25 @@ add("linkReplace", {
     });
 
     return anchor;
+  },
+});
+
+add("while", {
+  skipArgs: true,
+  handler(...args): Node {
+    if (args.some((x) => typeof x !== "string")) {
+      throw new Error("@while: received a non-string arg");
+    }
+
+    const conditionStr = (args as string[]).join(",");
+    const frag = document.createDocumentFragment();
+    const { content } = this;
+    while (evalExpression(conditionStr)) {
+      if (content) {
+        render(frag, content);
+      }
+    }
+
+    return frag;
   },
 });

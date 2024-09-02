@@ -145,7 +145,6 @@ export class Parser {
           break;
         }
 
-
         case "(":
         case "_":
         case "?":

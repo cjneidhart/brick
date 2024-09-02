@@ -34,7 +34,7 @@ export function remove(name: string): boolean {
 }
 
 add("include", {
-  handler(...args: unknown[]): Node {
+  handler(...args: unknown[]) {
     const [psgName] = args;
 
     if (args.length !== 1) {
@@ -56,14 +56,14 @@ add("include", {
 });
 
 add("", {
-  handler(..._args): Node {
+  handler(..._args) {
     // Pass: the args have already been evaluated by the renderer
     return new Text();
   },
 });
 
 add("linkTo", {
-  handler(...args): Node {
+  handler(...args) {
     let psgName, linkText;
     if (args.length < 1 || args.length > 2) {
       throw new Error("@linkTo requires 1 or 2 arguments");
@@ -92,7 +92,7 @@ add("linkTo", {
 });
 
 add("linkReplace", {
-  handler(...args): Node {
+  handler(...args) {
     if (args.length !== 1) {
       throw new Error("@linkReplace: requires exactly 1 argument");
     }
@@ -148,7 +148,7 @@ add("for", {
     }
 
     const [varStr, iterableStr] = args as string[];
-    if (!varStr.startsWith('$')) {
+    if (!varStr.startsWith("$")) {
       throw new Error("@for: loop variable must be a story variable for now");
     }
     const place = `Brick.vars.${varStr.substring(1)}`;
@@ -167,4 +167,36 @@ add("for", {
 
     return frag;
   },
-})
+});
+
+add("checkBox", {
+  skipArgs: true,
+  handler(...args) {
+    if (args.length !== 2) {
+      throw new Error("@checkBox: requires 2 arguments");
+    }
+    if (args.some((arg) => typeof arg !== "string")) {
+      throw new Error("@checkBox: both arguments must be strings");
+    }
+
+    const [place, labelExpr] = args as string[];
+    const label = evalExpression(labelExpr);
+    if (typeof label !== "string" && !(label instanceof Node)) {
+      throw new Error("@checkBox: label must be a string or Node");
+    }
+
+    const initValue = evalExpression(place);
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!initValue;
+    cb.addEventListener("change", (_event) => {
+      evalAssign(place, cb.checked);
+    });
+
+    const labelElt = document.createElement("label");
+    labelElt.append(cb, " ", label);
+
+    return labelElt;
+  },
+});

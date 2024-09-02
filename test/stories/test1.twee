@@ -30,6 +30,8 @@ Now let's try a link: @linkTo('Passage 2')
 
 @linkTo("Loop Test", "Test out some loops")
 
+@linkTo("Input Macros", "Test input macros")
+
 
 :: Passage 2
 You have navigated to Passage 2.
@@ -57,3 +59,14 @@ Test \@for:
 <ol>@for($food of $a) {
   <li>$food</li>
 }</ol>
+
+@linkTo("Start", 'return')
+
+
+:: Input Macros
+
+Here's a checkbox:
+
+@checkBox($ham, "Would you like Ham?")
+
+@linkTo("Start", 'return')

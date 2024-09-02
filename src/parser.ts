@@ -212,7 +212,7 @@ export class Parser {
 
   parseForArgs(): string[] {
     // TODO refine this
-    let match = this.consume(/([^]*?)\s+of\b/y);
+    const match = this.consume(/\s*([^]*?)\s+of\b/y);
     if (!match) {
       throw new Error("Could not find 'of' in @for macro");
     }

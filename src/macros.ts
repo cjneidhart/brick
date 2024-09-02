@@ -1,9 +1,8 @@
 import { navigate } from "./engine";
-import { Brick } from "./main";
 import { NodeTemplate } from "./parser";
 import { get as getPassage } from "./passages";
 import { render } from "./renderer";
-import { evalExpression } from "./scripting";
+import { evalAssign, evalExpression } from "./scripting";
 
 const { document } = window;
 
@@ -152,7 +151,7 @@ add("for", {
     if (!varStr.startsWith('$')) {
       throw new Error("@for: loop variable must be a story variable for now");
     }
-    const varName = varStr.substring(1);
+    const place = `Brick.vars.${varStr.substring(1)}`;
     const iterable = evalExpression(iterableStr) as Iterable<unknown>;
     if (typeof iterable[Symbol.iterator] !== "function") {
       throw new Error("@for: Right-hand side must be an iterable value, such as an array");
@@ -160,7 +159,7 @@ add("for", {
     const frag = document.createDocumentFragment();
     const { content } = this;
     for (const loopVal of iterable) {
-      Brick.vars[varName] = loopVal;
+      evalAssign(place, loopVal);
       if (content) {
         render(frag, content);
       }

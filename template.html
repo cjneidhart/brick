@@ -13,13 +13,15 @@
       <div class="row">
         <aside class="col-lg-2">
           <div id="ui-bar" class="offcanvas-lg offcanvas-start px-2" data-bs-scroll="true" data-bs-backdrop="false">
-            <div class="container">
-              <div class="row text-center">
-                <button id="brick-history-backward" class="col btn mx-2" type="button">⬅️</button>
-                <button id="brick-history-forward" class="col btn mx-2" type="button">➡️</button>
-              </div>
+            <div class="btn-group text-center w-100">
+              <button id="brick-history-backward" class="btn btn-outline-primary" type="button">⬅️</button>
+              <button id="brick-history-forward" class="btn btn-outline-primary" type="button">➡️</button>
             </div>
             <h1 id="story-title" class="mt-2 text-center"></h1>
+            <div class="btn-group-vertical w-100" role="group" aria-label="label">
+              <button id="brick-saves" class="btn btn-outline-primary w-100">SAVES</button>
+              <button id="brick-restart" class="btn btn-outline-primary w-100">RESTART</button>
+            </div>
           </div>
         </aside>
 

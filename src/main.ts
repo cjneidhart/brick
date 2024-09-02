@@ -68,9 +68,10 @@ if (!storyTitle) {
 const titleElt = getElementById("story-title");
 titleElt.textContent = storyTitle;
 
-document.getElementById("brick-history-backward")?.addEventListener("click", (_event) => {
-  backward();
-});
-document.getElementById("brick-history-forward")?.addEventListener("click", (_event) => {
-  forward();
-});
+document.getElementById("brick-history-backward")?.addEventListener("click", backward);
+document.getElementById("brick-history-forward")?.addEventListener("click", forward);
+
+document
+  .getElementById("brick-saves")
+  ?.addEventListener("click", () => alert("Sorry, saves aren't supported yet."));
+document.getElementById("brick-restart")?.addEventListener("click", () => window.location.reload());

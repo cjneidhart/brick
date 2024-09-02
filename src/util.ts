@@ -72,7 +72,9 @@ export function clone<T>(original: T): T {
         // generic object
         const proto = Object.getPrototypeOf(original);
         if (proto !== null && proto !== Object.prototype) {
-          throw new Error("Can't clone an object with an unknown prototype and no `.clone()` method");
+          throw new Error(
+            "Can't clone an object with an unknown prototype and no `.clone()` method",
+          );
         }
         const newObj: Record<string, unknown> = {};
         for (const key in original) {

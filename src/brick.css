@@ -15,13 +15,6 @@
   transition: opacity 0.5s;
 }
 
-#brick-history-backward,
-#brick-history-forward {
-  /* width: 3rem;
-  height: 3rem; */
-  border: 1px solid black;
-}
-
 #ui-bar {
   height: 100vh;
   border-right: 1px solid black;

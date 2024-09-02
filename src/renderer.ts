@@ -65,7 +65,9 @@ function isPhrasingNode(node: string | Element): boolean {
     return true;
   } else if (SOMETIMES_PHRASING_TAGS.includes(node.tagName.toLowerCase())) {
     return Array.from(node.childNodes).every(
-      (n) => n.nodeType === Node.TEXT_NODE || (n.nodeType === Node.ELEMENT_NODE && isPhrasingNode(n as Element)),
+      (n) =>
+        n.nodeType === Node.TEXT_NODE ||
+        (n.nodeType === Node.ELEMENT_NODE && isPhrasingNode(n as Element)),
     );
   } else {
     return false;

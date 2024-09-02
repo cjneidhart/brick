@@ -30,6 +30,9 @@ export function backward(): boolean {
   }
 }
 
+/**
+ * Attempt to move forward in history. Returns whether the navigation was successful.
+ */
 export function forward(): boolean {
   if (index === history.length - 1) {
     return false;

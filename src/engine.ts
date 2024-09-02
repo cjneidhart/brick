@@ -76,5 +76,9 @@ function renderActive() {
   Brick.vars = clone(moment.vars);
 
   mainElt.innerHTML = "";
-  render(mainElt, psg.content);
+  const newDiv = document.createElement("div");
+  newDiv.classList.add("opacity-0", "fade-in");
+  render(newDiv, psg.content);
+  mainElt.append(newDiv);
+  setTimeout(() => newDiv.classList.remove("opacity-0"), 40);
 }

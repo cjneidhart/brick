@@ -11,6 +11,10 @@
   max-width: 60rem;
 }
 
+.fade-in {
+  transition: opacity 0.5s;
+}
+
 #brick-history-backward,
 #brick-history-forward {
   /* width: 3rem;

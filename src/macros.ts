@@ -107,10 +107,11 @@ add("linkReplace", {
     anchor.append(linkText);
     anchor.addEventListener("click", () => {
       const span = document.createElement("span");
-      span.classList.add("macro-linkReplace");
+      span.classList.add("macro-linkReplace", "fade-in", "opacity-0");
       render(span, this.content || "");
       anchor.after(span);
       anchor.remove();
+      setTimeout(() => span.classList.remove("opacity-0"), 40);
     });
 
     return anchor;

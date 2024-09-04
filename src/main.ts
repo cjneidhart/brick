@@ -1,4 +1,4 @@
-import { backward, forward, navigate } from "./engine";
+import * as engine from "./engine";
 import { get as getPassage, init as initPassages } from "./passages";
 import { evalJavaScript } from "./scripting";
 import { getElementById } from "./util";
@@ -49,6 +49,8 @@ for (const stylesheet of styles) {
   document.head.appendChild(styleElt);
 }
 
+engine.init();
+
 for (const script of scripts) {
   evalJavaScript(script.textContent || "");
 }
@@ -58,7 +60,7 @@ if (!startPassage) {
   throw new Error("No starting passage found");
 }
 
-navigate(startPassage);
+engine.navigate(startPassage);
 
 const storyTitle = storyData.getAttribute("name");
 if (!storyTitle) {
@@ -68,8 +70,8 @@ if (!storyTitle) {
 const titleElt = getElementById("story-title");
 titleElt.textContent = storyTitle;
 
-document.getElementById("brick-history-backward")?.addEventListener("click", backward);
-document.getElementById("brick-history-forward")?.addEventListener("click", forward);
+document.getElementById("brick-history-backward")?.addEventListener("click", engine.backward);
+document.getElementById("brick-history-forward")?.addEventListener("click", engine.forward);
 
 document
   .getElementById("brick-saves")

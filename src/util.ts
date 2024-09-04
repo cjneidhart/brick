@@ -1,17 +1,4 @@
-const DELETED_CHARS = new Set<string>();
-DELETED_CHARS.add("'");
-DELETED_CHARS.add('"');
-DELETED_CHARS.add(",");
-DELETED_CHARS.add("(");
-DELETED_CHARS.add(")");
-DELETED_CHARS.add("[");
-DELETED_CHARS.add("]");
-DELETED_CHARS.add("{");
-DELETED_CHARS.add("}");
-DELETED_CHARS.add(".");
-DELETED_CHARS.add("!");
-DELETED_CHARS.add("`");
-DELETED_CHARS.add("?");
+const DELETED_CHARS = new Set<string>("'\",()[]{}.!`?");
 
 export function slugify(input: string): string {
   return Array.from(input)
@@ -31,6 +18,7 @@ export function slugify(input: string): string {
 }
 
 export function clone<T>(original: T): T {
+  // TODO: circular reference detection
   switch (typeof original) {
     case "bigint":
     case "boolean":
@@ -88,13 +76,11 @@ export function clone<T>(original: T): T {
   }
 }
 
-/**
- * Similar to `document.getElementById`, but throws an error if the element wasn't found.
- */
+/** Similar to `document.getElementById`, but throws an error if the element wasn't found. */
 export function getElementById(elementId: string): Element {
   const elt = document.getElementById(elementId);
   if (!elt) {
-    throw new Error(`No element with id '${elementId} found`);
+    throw new Error(`No element with id "${elementId}" found`);
   }
   return elt;
 }

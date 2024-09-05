@@ -3,6 +3,7 @@ import { NodeTemplate } from "./parser";
 import { get as getPassage } from "./passages";
 import { render } from "./renderer";
 import { evalAssign, evalExpression } from "./scripting";
+import { uniqueId } from "./util";
 
 const { document } = window;
 
@@ -181,8 +182,8 @@ add("checkBox", {
     }
 
     const [place, labelExpr] = args as string[];
-    const label = evalExpression(labelExpr);
-    if (typeof label !== "string" && !(label instanceof Node)) {
+    const labelText = evalExpression(labelExpr);
+    if (typeof labelText !== "string" && !(labelText instanceof Node)) {
       throw new Error("@checkBox: label must be a string or Node");
     }
 
@@ -191,13 +192,19 @@ add("checkBox", {
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = !!initValue;
-    cb.addEventListener("change", (_event) => {
-      evalAssign(place, cb.checked);
-    });
+    cb.id = uniqueId();
+    cb.classList.add("form-check-input");
+    cb.addEventListener("change", () => evalAssign(place, cb.checked));
 
     const labelElt = document.createElement("label");
-    labelElt.append(cb, " ", label);
+    labelElt.classList.add("form-check-label");
+    labelElt.setAttribute("for", cb.id);
+    labelElt.append(labelText);
 
-    return labelElt;
+    const div = document.createElement("div");
+    div.classList.add("form-check");
+    div.append(cb, labelElt);
+
+    return div;
   },
 });

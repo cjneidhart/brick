@@ -84,3 +84,10 @@ export function getElementById(elementId: string): Element {
   }
   return elt;
 }
+
+let idCounter = 0;
+
+/** Return a unique identifier */
+export function uniqueId(): string {
+  return `brick-unique-id-${idCounter++}`;
+}

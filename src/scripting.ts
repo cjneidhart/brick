@@ -1,6 +1,7 @@
 import { showPassage } from "./dialog";
 import { backward, forward, storyVariables, tempVariables } from "./engine";
 import * as passages from "./passages";
+import * as Util from "./util";
 
 /** The public API available to authors */
 // TODO: type-checking
@@ -13,6 +14,7 @@ export const BrickPublic = Object.freeze({
   Passages: Object.freeze({
     get: passages.get,
   }),
+  Util: Object.freeze(Util),
   get vars() {
     return storyVariables;
   },

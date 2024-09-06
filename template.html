@@ -9,23 +9,25 @@
   </head>
   <body>
     {{STORY_DATA}}
-    <div class="row">
-      <aside class="col-lg-2">
-        <div id="ui-bar" class="offcanvas-lg offcanvas-start px-2" data-bs-scroll="true" data-bs-backdrop="false">
-          <div class="btn-group text-center w-100 my-2">
-            <button id="brick-history-backward" class="btn btn-outline-primary" type="button">&#x2190;</button>
-            <button id="brick-history-forward" class="btn btn-outline-primary" type="button">&#x2192;</button>
+    <div id="brick-viewport" class="container-fluid">
+      <div class="row gx-0">
+        <aside class="col-lg-2">
+          <div id="ui-bar" class="offcanvas-lg offcanvas-start px-2" data-bs-scroll="true" data-bs-backdrop="false">
+            <div class="btn-group text-center w-100 my-2">
+              <button id="brick-history-backward" class="btn btn-outline-primary" type="button">&#x2190;</button>
+              <button id="brick-history-forward" class="btn btn-outline-primary" type="button">&#x2192;</button>
+            </div>
+            <h1 id="story-title" class="text-center"></h1>
+            <div class="btn-group-vertical w-100" role="group" aria-label="label">
+              <button id="brick-saves" class="btn btn-outline-primary w-100">SAVES</button>
+              <button id="brick-restart" class="btn btn-outline-primary w-100">RESTART</button>
+            </div>
           </div>
-          <h1 id="story-title" class="text-center"></h1>
-          <div class="btn-group-vertical w-100" role="group" aria-label="label">
-            <button id="brick-saves" class="btn btn-outline-primary w-100">SAVES</button>
-            <button id="brick-restart" class="btn btn-outline-primary w-100">RESTART</button>
-          </div>
-        </div>
-      </aside>
+        </aside>
 
-      <div class="col" class="container-md">
-        <main id="brick-main" class="mx-auto"></main>
+        <div class="col" class="container-md">
+          <main id="brick-main" class="mx-auto"></main>
+        </div>
       </div>
     </div>
     <div id="brick-dialog" class="modal" tabindex="-1"></div>

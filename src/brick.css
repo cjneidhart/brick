@@ -9,6 +9,7 @@
 
 #brick-main {
   max-width: 60rem;
+  padding-top: 1rem;
 }
 
 .fade-in {
@@ -18,4 +19,12 @@
 #ui-bar {
   height: 100vh;
   border-right: 1px solid black;
+}
+
+#brick-viewport {
+  padding: 0;
+
+  & > .row {
+    margin: 0;
+  }
 }

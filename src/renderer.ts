@@ -2,6 +2,7 @@ import { storyVariables, tempVariables } from "./engine";
 import { get as getMacro } from "./macros";
 import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { evalExpression } from "./scripting";
+import { makeElement } from "./util";
 
 const PHRASING_TAGS = [
   "abbr",
@@ -99,7 +100,7 @@ export function render(output: Element | DocumentFragment, input: string | NodeT
       const node = macroData.handler.apply(context, params);
       output.append(node);
     } else if (nt instanceof ElementTemplate) {
-      elt = document.createElement(nt.name);
+      elt = makeElement(nt.name);
       for (const [attrKey, attrVal] of nt.attributes) {
         if (attrKey.startsWith("@")) {
           throw new Error('Unsupported: attribute names starting with "@"');
@@ -115,8 +116,8 @@ export function render(output: Element | DocumentFragment, input: string | NodeT
       if (typeof p === "string") {
         output.append(p);
         while (typeof (p = paragraphs.shift()) === "string") {
-          output.append(document.createElement("br"));
-          output.append(document.createElement("br"));
+          output.append(makeElement("br"));
+          output.append(makeElement("br"));
           output.append(p);
         }
       }

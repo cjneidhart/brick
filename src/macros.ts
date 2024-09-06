@@ -3,7 +3,7 @@ import { NodeTemplate } from "./parser";
 import { get as getPassage } from "./passages";
 import { render } from "./renderer";
 import { evalAssign, evalExpression } from "./scripting";
-import { uniqueId } from "./util";
+import { makeElement, uniqueId } from "./util";
 
 export interface MacroContext {
   content?: NodeTemplate[];
@@ -47,7 +47,7 @@ add("include", {
     if (!passage) {
       throw new Error(`Passage not found: "${psgName}"`);
     }
-    const div = document.createElement("div");
+    const div = makeElement("div");
     render(div, passage.content);
 
     return div;
@@ -78,13 +78,9 @@ add("linkTo", {
       throw new Error("@linkTo: second arg (link text) must be a string");
     }
 
-    const anchor = document.createElement("a");
-    anchor.href = "#";
-    anchor.classList.add(getPassage(psgName) ? "link-primary" : "link-danger");
-    anchor.append(linkText);
-    anchor.addEventListener("click", () => {
-      navigate(psgName);
-    });
+    const className = getPassage(psgName) ? "link-primary" : "link-danger";
+    const anchor = makeElement("a", { href: "#", class: className }, linkText);
+    anchor.addEventListener("click", () => navigate(psgName));
 
     return anchor;
   },
@@ -100,13 +96,10 @@ add("linkReplace", {
       throw new Error("@linkReplace: first arg (link text) must be a string");
     }
 
-    const anchor = document.createElement("a");
-    anchor.href = "#";
-    anchor.classList.add("link-primary");
-    anchor.append(linkText);
+    const anchor = makeElement("a", { href: "#", class: "link-primary" }, linkText);
+
     anchor.addEventListener("click", () => {
-      const span = document.createElement("span");
-      span.classList.add("macro-linkReplace", "fade-in", "opacity-0");
+      const span = makeElement("span", { class: "macro-linkReplace fade-in opacity-0" });
       render(span, this.content || "");
       anchor.after(span);
       anchor.remove();
@@ -187,21 +180,17 @@ add("checkBox", {
 
     const initValue = evalExpression(place);
 
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = !!initValue;
-    cb.id = uniqueId();
-    cb.classList.add("form-check-input");
-    cb.addEventListener("change", () => evalAssign(place, cb.checked));
+    const input = makeElement("input", {
+      type: "checkbox",
+      id: uniqueId(),
+      class: "form-check-input",
+    });
+    input.checked = !!initValue;
+    input.addEventListener("change", () => evalAssign(place, input.checked));
 
-    const labelElt = document.createElement("label");
-    labelElt.classList.add("form-check-label");
-    labelElt.setAttribute("for", cb.id);
-    labelElt.append(labelText);
+    const labelElt = makeElement("label", { class: "form-check-label", for: input.id }, labelText);
 
-    const div = document.createElement("div");
-    div.classList.add("form-check");
-    div.append(cb, labelElt);
+    const div = makeElement("div", { class: "form-check" }, input, labelElt);
 
     return div;
   },

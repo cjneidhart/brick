@@ -91,3 +91,28 @@ let idCounter = 0;
 export function uniqueId(): string {
   return `brick-unique-id-${idCounter++}`;
 }
+
+/** Create a new {@link HTMLElement}. */
+export function makeElement<K extends keyof HTMLElementTagNameMap>(
+  tagName: K,
+  attributes?: Record<string, string>,
+  ...childNodes: (Node | string)[]
+): HTMLElementTagNameMap[K];
+export function makeElement(
+  tagName: string,
+  attributes?: Record<string, string>,
+  ...childNodes: (Node | string)[]
+): HTMLElement;
+export function makeElement(
+  tagName: string,
+  attributes: Record<string, string> = {},
+  ...childNodes: (Node | string)[]
+): HTMLElement {
+  const element = document.createElement(tagName);
+  for (const attr in attributes) {
+    element.setAttribute(attr, attributes[attr]);
+  }
+  element.append(...childNodes);
+
+  return element;
+}

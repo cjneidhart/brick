@@ -1,5 +1,5 @@
 import * as bootstrap from "bootstrap";
-import { getElementById } from "./util";
+import { getElementById, makeElement } from "./util";
 import { get as getPassage } from "./passages";
 import { render } from "./renderer";
 
@@ -12,30 +12,19 @@ const bsModal = new bootstrap.Modal(modalElement);
 export function reset() {
   modalElement.innerHTML = "";
 
-  titleElt = document.createElement("h1");
-  titleElt.classList.add("modal-title");
+  titleElt = makeElement("h1", { class: "modal-title" });
+  const closeButton = makeElement("button", {
+    type: "button",
+    class: "btn-close",
+    "data-bs-dismiss": "modal",
+    "aria-label": "Close",
+  });
+  const modalHeader = makeElement("div", { class: "modal-header" }, titleElt, closeButton);
 
-  const closeButton = document.createElement("button");
-  closeButton.type = "button";
-  closeButton.classList.add("btn-close");
-  closeButton.setAttribute("data-bs-dismiss", "modal");
-  closeButton.setAttribute("aria-label", "Close");
+  modalBody = makeElement("div", { class: "modal-body" });
 
-  const modalHeader = document.createElement("div");
-  modalHeader.classList.add("modal-header");
-  modalHeader.append(titleElt, closeButton);
-
-  modalBody = document.createElement("div");
-  modalBody.classList.add("modal-body");
-
-  const content = document.createElement("div");
-  content.classList.add("modal-content");
-  content.append(modalHeader, modalBody);
-
-  const dialog = document.createElement("div");
-  dialog.classList.add("modal-dialog");
-  dialog.append(content);
-
+  const content = makeElement("div", { class: "modal-content" }, modalHeader, modalBody);
+  const dialog = makeElement("div", { class: "modal-dialog" }, content);
   modalElement.append(dialog);
 }
 

@@ -1,7 +1,7 @@
 import * as engine from "./engine";
 import { get as getPassage, init as initPassages } from "./passages";
 import { BrickPublic, evalJavaScript } from "./scripting";
-import { getElementById } from "./util";
+import { getElementById, makeElement } from "./util";
 
 window.addEventListener("error", (event) => {
   const { error } = event;
@@ -37,8 +37,7 @@ const styles = storyData.querySelectorAll('style[type="text/twine-css"]');
 const scripts = storyData.querySelectorAll('script[type="text/twine-javascript"]');
 
 for (const stylesheet of styles) {
-  const styleElt = document.createElement("style");
-  styleElt.append(stylesheet.textContent || "");
+  const styleElt = makeElement("style", {}, stylesheet.textContent || "");
   document.head.appendChild(styleElt);
 }
 
@@ -63,7 +62,7 @@ if (!storyTitle) {
 const titleElt = getElementById("story-title");
 titleElt.textContent = storyTitle;
 
-function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) => any) {
+function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) => unknown) {
   document.getElementById(id)?.addEventListener("click", handler);
 }
 

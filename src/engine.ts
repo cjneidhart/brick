@@ -1,6 +1,6 @@
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
-import { clone, getElementById } from "./util";
+import { clone, getElementById, makeElement } from "./util";
 
 interface Moment {
   passageName: string;
@@ -77,8 +77,7 @@ function renderActive() {
   tempVariables = {};
 
   mainElt.innerHTML = "";
-  const newDiv = document.createElement("div");
-  newDiv.classList.add("opacity-0", "fade-in");
+  const newDiv = makeElement("div", { class: "opacity-0 fade-in" });
   render(newDiv, psg.content);
   mainElt.append(newDiv);
   setTimeout(() => newDiv.classList.remove("opacity-0"), 40);

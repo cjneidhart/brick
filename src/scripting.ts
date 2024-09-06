@@ -18,7 +18,7 @@ export const BrickPublic = Object.freeze({
   },
   get temp() {
     return tempVariables;
-  }
+  },
 });
 
 export function evalJavaScript(js: string): unknown {

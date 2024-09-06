@@ -1,3 +1,4 @@
+import { showPassage } from "./dialog";
 import * as engine from "./engine";
 import { get as getPassage, init as initPassages } from "./passages";
 import { evalJavaScript } from "./scripting";
@@ -29,6 +30,7 @@ window.addEventListener("unhandledrejection", (event) => {
 // The main Brick object that is viewable to authors
 export const Brick = {
   vars: {} as Record<string, unknown>,
+  showDialog: showPassage,
 };
 
 declare global {

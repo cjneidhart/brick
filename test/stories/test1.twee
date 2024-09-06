@@ -32,6 +32,8 @@ Now let's try a link: @linkTo('Passage 2')
 
 @linkTo("Input Macros", "Test input macros")
 
+@linkTo("Modal Test", "Test modal dialogs")
+
 
 :: Passage 2
 You have navigated to Passage 2.
@@ -70,3 +72,15 @@ Here's a checkbox:
 @checkBox($ham, "Would you like Ham?")
 
 @linkTo("Start", 'return')
+
+
+:: Modal Test
+
+@linkReplace("Show a modal") {
+  @(Brick.showDialog("Sample Modal"))
+  @linkTo("Start", "return")
+}
+
+
+:: Sample Modal
+This is a modal!

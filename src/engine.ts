@@ -1,4 +1,3 @@
-import { Brick } from "./main";
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
 import { clone, getElementById } from "./util";
@@ -11,12 +10,14 @@ interface Moment {
 let mainElt: Element;
 let history: Moment[];
 let index: number;
+export let storyVariables: Record<string, unknown>;
 
 /** Initialize the engine */
 export function init() {
   mainElt = getElementById("brick-main");
   history = [];
   index = -1;
+  storyVariables = {};
 }
 
 /** Attempt to move backwards in history. Returns whether the navigation was successful. */
@@ -50,7 +51,7 @@ export function navigate(passage: string | Passage) {
 
   const newMoment = {
     passageName,
-    vars: clone(Brick.vars),
+    vars: clone(storyVariables),
   };
   history.push(newMoment);
   index++;
@@ -70,7 +71,7 @@ function renderActive() {
     throw new Error(`Couldn't find passage "${moment.passageName}"`);
   }
 
-  Brick.vars = clone(moment.vars);
+  storyVariables = clone(moment.vars);
 
   mainElt.innerHTML = "";
   const newDiv = document.createElement("div");

@@ -1,3 +1,23 @@
+import { showPassage } from "./dialog";
+import { backward, forward, storyVariables } from "./engine";
+import * as passages from "./passages";
+
+/** The public API available to authors */
+// TODO: type-checking
+export const BrickPublic = Object.freeze({
+  forward,
+  backward,
+  Dialog: Object.freeze({
+    showPassage,
+  }),
+  Passages: Object.freeze({
+    get: passages.get,
+  }),
+  get vars() {
+    return storyVariables;
+  },
+});
+
 export function evalJavaScript(js: string): unknown {
   const fn = new Function(`'use strict';${js}`);
   return fn();

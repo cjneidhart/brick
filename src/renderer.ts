@@ -1,5 +1,5 @@
+import { storyVariables } from "./engine";
 import { get as getMacro } from "./macros";
-import { Brick } from "./main";
 import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { evalExpression } from "./scripting";
 
@@ -121,7 +121,7 @@ export function render(output: Element | DocumentFragment, input: string | NodeT
         }
       }
     } else {
-      output.append(String(Brick.vars[nt.name]));
+      output.append(String(storyVariables[nt.name]));
     }
 
     // if (isPhrasingNode(elt)) {

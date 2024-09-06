@@ -77,7 +77,7 @@ Here's a checkbox:
 :: Modal Test
 
 @linkReplace("Show a modal") {
-  @(Brick.showDialog("Sample Modal"))
+  @(Brick.Dialog.showPassage("Sample Modal"))
   @linkTo("Start", "return")
 }
 

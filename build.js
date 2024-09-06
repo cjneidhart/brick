@@ -10,8 +10,8 @@ function readTextFile(path) {
 
 const webpackConfig = {
   entry: "./src/main.ts",
-  mode: "production",
-  devtool: false,
+  mode: "development",
+  devtool: "eval-source-map",
   module: {
     rules: [
       {

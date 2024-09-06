@@ -42,6 +42,7 @@ export class MacroTemplate {
 }
 
 export interface RawVariable {
+  type: "story" | "temp";
   /** The name of the variable being accessed. */
   name: string;
 }
@@ -141,12 +142,20 @@ export class Parser {
           if (!match) {
             throw new Error("'$' which is not part of a variable must be escaped");
           }
-          output.push({ name: match[0] });
+          output.push({ type: "story", name: match[0] });
+          break;
+        }
+
+        case "_": {
+          const match = this.consume(RE.js.identifier);
+          if (!match) {
+            throw new Error("'_' which is not part of a variable must be escaped");
+          }
+          output.push({ name: match[0], type: "temp" });
           break;
         }
 
         case "(":
-        case "_":
         case "?":
         case "[":
         case "]":
@@ -305,6 +314,16 @@ export class Parser {
           match = this.consume(RE.js.identifier);
           if (match) {
             output.push("Brick.vars.", match[0]);
+          } else {
+            throw new Error("Illegal identifier");
+          }
+          break;
+
+        case "_":
+          this.index++;
+          match = this.consume(RE.js.identifier);
+          if (match) {
+            output.push("Brick.temp.", match[0]);
           } else {
             throw new Error("Illegal identifier");
           }

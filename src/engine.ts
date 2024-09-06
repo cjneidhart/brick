@@ -11,6 +11,7 @@ let mainElt: Element;
 let history: Moment[];
 let index: number;
 export let storyVariables: Record<string, unknown>;
+export let tempVariables: Record<string, unknown>;
 
 /** Initialize the engine */
 export function init() {
@@ -18,6 +19,7 @@ export function init() {
   history = [];
   index = -1;
   storyVariables = {};
+  tempVariables = {};
 }
 
 /** Attempt to move backwards in history. Returns whether the navigation was successful. */
@@ -72,6 +74,7 @@ function renderActive() {
   }
 
   storyVariables = clone(moment.vars);
+  tempVariables = {};
 
   mainElt.innerHTML = "";
   const newDiv = document.createElement("div");

@@ -5,8 +5,6 @@ import { render } from "./renderer";
 import { evalAssign, evalExpression } from "./scripting";
 import { uniqueId } from "./util";
 
-const { document } = window;
-
 export interface MacroContext {
   content?: NodeTemplate[];
   name: string;

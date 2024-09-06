@@ -1,4 +1,4 @@
-import { storyVariables } from "./engine";
+import { storyVariables, tempVariables } from "./engine";
 import { get as getMacro } from "./macros";
 import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { evalExpression } from "./scripting";
@@ -121,7 +121,8 @@ export function render(output: Element | DocumentFragment, input: string | NodeT
         }
       }
     } else {
-      output.append(String(storyVariables[nt.name]));
+      const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
+      output.append(String(value));
     }
 
     // if (isPhrasingNode(elt)) {

@@ -3,8 +3,6 @@ import { get as getPassage, init as initPassages } from "./passages";
 import { BrickPublic, evalJavaScript } from "./scripting";
 import { getElementById } from "./util";
 
-const { alert, document } = globalThis;
-
 window.addEventListener("error", (event) => {
   const { error } = event;
   let msg = "";
@@ -65,10 +63,11 @@ if (!storyTitle) {
 const titleElt = getElementById("story-title");
 titleElt.textContent = storyTitle;
 
-document.getElementById("brick-history-backward")?.addEventListener("click", engine.backward);
-document.getElementById("brick-history-forward")?.addEventListener("click", engine.forward);
+function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) => any) {
+  document.getElementById(id)?.addEventListener("click", handler);
+}
 
-document
-  .getElementById("brick-saves")
-  ?.addEventListener("click", () => alert("Sorry, saves aren't supported yet."));
-document.getElementById("brick-restart")?.addEventListener("click", () => window.location.reload());
+addClicker("brick-history-backward", engine.backward);
+addClicker("brick-history-forward", engine.forward);
+addClicker("brick-saves", () => alert("Sorry, saves aren't supported yet."));
+addClicker("brick-restart", () => window.location.reload());

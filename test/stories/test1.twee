@@ -9,8 +9,10 @@ Test 1
 }
 
 :: Start
-@($name = "Orange" + "Chris")
-Hello, $name.
+@($name = "Chris")
+@(_food = "Banana")
+@(_menu = [_food, "orange", "bread"])
+Hello, $name. The food today is _food.
 
 Lorem ipsun is a trad/* BLOCK
 

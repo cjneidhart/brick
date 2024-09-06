@@ -1,5 +1,5 @@
 import { showPassage } from "./dialog";
-import { backward, forward, storyVariables } from "./engine";
+import { backward, forward, storyVariables, tempVariables } from "./engine";
 import * as passages from "./passages";
 
 /** The public API available to authors */
@@ -16,6 +16,9 @@ export const BrickPublic = Object.freeze({
   get vars() {
     return storyVariables;
   },
+  get temp() {
+    return tempVariables;
+  }
 });
 
 export function evalJavaScript(js: string): unknown {

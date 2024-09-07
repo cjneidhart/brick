@@ -28,7 +28,7 @@ export function loadActive(): SaveState | undefined {
   return load(prefix + ".active");
 }
 
-export function load(key: string): SaveState | undefined {
+function load(key: string): SaveState | undefined {
   const json = sm.getItem(key);
   return json ? JSON.parse(json, loadReplacer) : undefined;
 }

@@ -104,10 +104,14 @@ This is a modal!
   }
   @case("banana", "quark") {
     It worked!
-
-    @linkTo("Start", "return")
   }
   @case(265) {
     ERROR 3
   }
 }
+
+@if(window.Math) {
+  Good news, <code>window.Math</code> is truthy!
+}
+
+@linkTo("Start", "return")

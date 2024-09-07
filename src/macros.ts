@@ -262,3 +262,20 @@ add("switch", {
     return output;
   },
 });
+
+add("if", {
+  handler(...args) {
+    if (args.length !== 1) {
+      throw new Error("@if: requires exactly 1 argument");
+    }
+    if (!this.content) {
+      throw new Error("@if: requires body");
+    }
+
+    const output = document.createDocumentFragment();
+    if (args[0]) {
+      render(output, this.content);
+    }
+    return output;
+  },
+});

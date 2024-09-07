@@ -3,7 +3,7 @@
 const fs = require("node:fs");
 const { execSync } = require("node:child_process");
 
-const RE = /\.twee$/;
+const RE = /^(.*)\.twee$/;
 
 for (const dirent of fs.readdirSync("test/stories")) {
   const m = RE.exec(dirent);

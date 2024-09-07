@@ -193,7 +193,7 @@ export class Parser {
       }
       const [_, key, value] = match;
       if (attrs.has(key)) {
-        throw new Error(`Duplicate attribute '${key}`);
+        console.warn(`Ignoring duplicate attribute '${key}`);
       }
       attrs.set(key, value);
     }

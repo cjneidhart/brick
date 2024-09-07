@@ -39,6 +39,8 @@ Now let's try a link: @linkTo('Passage 2')
 
 @linkTo("Modal Test", "Test modal dialogs")
 
+@linkTo("Switch Test", "Test out @switch macros")
+
 
 :: Passage 2
 You have navigated to Passage 2.
@@ -89,3 +91,23 @@ Here's a checkbox:
 
 :: Sample Modal
 This is a modal!
+
+
+:: Switch Test
+@(_value = "quark")
+@switch(_value) {
+  @case() {
+    ERROR
+  }
+  @case("Not this one") {
+    ERROR 2
+  }
+  @case("banana", "quark") {
+    It worked!
+
+    @linkTo("Start", "return")
+  }
+  @case(265) {
+    ERROR 3
+  }
+}

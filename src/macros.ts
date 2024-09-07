@@ -1,5 +1,5 @@
 import { navigate } from "./engine";
-import { NodeTemplate } from "./parser";
+import { MacroTemplate, NodeTemplate } from "./parser";
 import { get as getPassage } from "./passages";
 import { render } from "./renderer";
 import { evalAssign, evalExpression } from "./scripting";
@@ -214,5 +214,51 @@ add("checkBox", {
     const div = makeElement("div", { class: "form-check" }, input, labelElt);
 
     return div;
+  },
+});
+
+add("switch", {
+  handler(...args) {
+    if (args.length !== 1) {
+      throw new Error("@switch: requires 1 arg");
+    }
+    if (!this.content) {
+      throw new Error("@switch: requires a body");
+    }
+
+    const [value] = args;
+
+    const cases: MacroTemplate[] = [];
+    for (const node of this.content) {
+      if (typeof node === "string") {
+        if (node.trim()) {
+          throw new Error("@switch: all children must be @case macros");
+        } else {
+          // pass: skip over text nodes that are all whitespace
+          continue;
+        }
+      } else if (node instanceof MacroTemplate) {
+        if (node.name === "case") {
+          cases.push(node);
+        } else {
+          throw new Error("@switch: all children must be @case macros");
+        }
+      } else {
+        throw new Error("@switch: all children must be @case macros");
+      }
+    }
+
+    const output = document.createDocumentFragment();
+    outerLoop: for (const caseMacro of cases) {
+      for (const arg of caseMacro.args) {
+        const other = evalExpression(arg);
+        if (value === other) {
+          render(output, caseMacro.content);
+          break outerLoop;
+        }
+      }
+    }
+
+    return output;
   },
 });

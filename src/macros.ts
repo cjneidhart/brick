@@ -61,6 +61,27 @@ add("", {
   },
 });
 
+add("link", {
+  handler(...args) {
+    if (args.length !== 2) {
+      throw new Error("@link: requires 2 arguments");
+    }
+
+    const [linkText, onClick] = args;
+    if (typeof linkText !== "string") {
+      throw new Error("@link: first arg (label) was not a string");
+    }
+    if (typeof onClick !== "function") {
+      throw new Error("@link: second arg (handler) was not a function");
+    }
+
+    const anchor = makeElement("a", { class: "link-primary", href: "#" }, linkText);
+    anchor.addEventListener("click", (evt) => onClick.call(this, evt));
+
+    return anchor;
+  },
+});
+
 add("linkTo", {
   handler(...args) {
     let psgName, linkText;

@@ -12,7 +12,6 @@ Test 1
 @($name = "Chris")
 @(_food = "Banana")
 @(_menu = [_food, "orange", "bread"])
-@($colors = new Set(["red", "blue"]))
 Hello, $name. The food today is _food.
 
 Lorem ipsun is a trad/* BLOCK
@@ -23,7 +22,10 @@ single line break
 
 double line break. <em title="hello World!">Then some emphasized text</em>.
 
-Down here is a <a class="foo">L I N K</a>.
+Down here is a @link("L I N K", (event) => {
+  console.log(event);
+  alert("Congrats! You clicked a link!");
+}).
 
 Now we're including a passage:
 

@@ -3,7 +3,7 @@ const DELETED_CHARS = new Set<string>("'\",()[]{}.!`?");
 export function slugify(input: string): string {
   return Array.from(input)
     .map((c) => {
-      if (c >= "a" && c <= "z") {
+      if ((c >= "a" && c <= "z") || (c >= "0" && c <= "9")) {
         return c;
       } else if (c >= "A" && c <= "Z") {
         return c.toLowerCase();

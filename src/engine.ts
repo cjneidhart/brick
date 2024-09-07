@@ -1,8 +1,9 @@
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
+import * as saves from "./saves";
 import { clone, getElementById, makeElement } from "./util";
 
-interface Moment {
+export interface Moment {
   passageName: string;
   vars: Record<string, unknown>;
 }
@@ -28,6 +29,7 @@ export function backward(): boolean {
     return false;
   } else {
     index--;
+    saves.saveActive({ history, index });
     renderActive();
     return true;
   }
@@ -39,6 +41,7 @@ export function forward(): boolean {
     return false;
   } else {
     index++;
+    saves.saveActive({ history, index });
     renderActive();
     return true;
   }
@@ -58,6 +61,7 @@ export function navigate(passage: string | Passage) {
   history.push(newMoment);
   index++;
 
+  saves.saveActive({ history, index });
   renderActive();
 }
 
@@ -81,4 +85,21 @@ function renderActive() {
   render(newDiv, psg.content);
   mainElt.append(newDiv);
   setTimeout(() => newDiv.classList.remove("opacity-0"), 40);
+}
+
+export function loadFromActive(): boolean {
+  const state = saves.loadActive();
+  if (state) {
+    history = state.history;
+    index = state.index;
+    renderActive();
+    return true;
+  } else {
+    return false;
+  }
+}
+
+export function restart() {
+  saves.clearActive();
+  window.location.reload();
 }

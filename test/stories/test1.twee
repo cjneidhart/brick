@@ -12,6 +12,7 @@ Test 1
 @($name = "Chris")
 @(_food = "Banana")
 @(_menu = [_food, "orange", "bread"])
+@($colors = new Set(["red", "blue"]))
 Hello, $name. The food today is _food.
 
 Lorem ipsun is a trad/* BLOCK

@@ -1,5 +1,6 @@
 import * as engine from "./engine";
 import { get as getPassage, init as initPassages } from "./passages";
+import { init as initSaves } from "./saves";
 import { BrickPublic, evalJavaScript } from "./scripting";
 import { getElementById, makeElement } from "./util";
 
@@ -36,12 +37,21 @@ initPassages(storyData);
 const styles = storyData.querySelectorAll('style[type="text/twine-css"]');
 const scripts = storyData.querySelectorAll('script[type="text/twine-javascript"]');
 
+export const storyTitle =
+  storyData.getAttribute("name") ||
+  (() => {
+    throw new Error("Story has no title");
+  })();
+const titleElt = getElementById("story-title");
+titleElt.textContent = storyTitle;
+
 for (const stylesheet of styles) {
   const styleElt = makeElement("style", {}, stylesheet.textContent || "");
   document.head.appendChild(styleElt);
 }
 
 engine.init();
+initSaves();
 
 for (const script of scripts) {
   evalJavaScript(script.textContent || "");
@@ -52,15 +62,9 @@ if (!startPassage) {
   throw new Error("No starting passage found");
 }
 
-engine.navigate(startPassage);
-
-const storyTitle = storyData.getAttribute("name");
-if (!storyTitle) {
-  throw new Error("Story has no title");
+if (!engine.loadFromActive()) {
+  engine.navigate(startPassage);
 }
-
-const titleElt = getElementById("story-title");
-titleElt.textContent = storyTitle;
 
 function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) => unknown) {
   document.getElementById(id)?.addEventListener("click", handler);
@@ -69,4 +73,4 @@ function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) 
 addClicker("brick-history-backward", engine.backward);
 addClicker("brick-history-forward", engine.forward);
 addClicker("brick-saves", () => alert("Sorry, saves aren't supported yet."));
-addClicker("brick-restart", () => window.location.reload());
+addClicker("brick-restart", engine.restart);

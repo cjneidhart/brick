@@ -110,8 +110,10 @@ This is a modal!
   }
 }
 
-@if(window.Math) {
-  Good news, <code>window.Math</code> is truthy!
+@if(!window.Math) {
+  ERROR
+} @else() {
+  CORRECT
 }
 
 @linkTo("Start", "return")

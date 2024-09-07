@@ -88,17 +88,42 @@ export function render(output: Element | DocumentFragment, input: string | NodeT
   }
 
   let pBuffer: (string | Element)[] = [];
-  for (const nt of inputNodes) {
+  for (let i = 0; i < inputNodes.length; i++) {
+    const nt = inputNodes[i];
     let elt: Element | string;
     if (nt instanceof MacroTemplate) {
       const macroData = getMacro(nt.name);
       if (!macroData) {
         throw new Error(`Macro not found: "${nt.name}"`);
       }
-      const params = macroData.skipArgs ? nt.args : nt.args.map((arg) => evalExpression(arg));
-      const context = { name: nt.name, content: nt.content };
-      const node = macroData.handler.apply(context, params);
-      output.append(node);
+
+      if (macroData.trailingMacros) {
+        const templates = [nt];
+        let j = i + 1;
+        for (; j < inputNodes.length; j++) {
+          const nextNode = inputNodes[j];
+          if (
+            nextNode instanceof MacroTemplate &&
+            macroData.trailingMacros.includes(nextNode.name)
+          ) {
+            templates.push(nextNode);
+            i = j;
+          } else if (typeof nextNode === "string" && !nextNode.trim()) {
+            // skip over whitespace
+          } else {
+            break;
+          }
+        }
+
+        const context = { name: nt.name, content: templates };
+        const node = macroData.handler.apply(context, []);
+        output.append(node);
+      } else {
+        const params = macroData.skipArgs ? nt.args : nt.args.map((arg) => evalExpression(arg));
+        const context = { name: nt.name, content: nt.content };
+        const node = macroData.handler.apply(context, params);
+        output.append(node);
+      }
     } else if (nt instanceof ElementTemplate) {
       elt = makeElement(nt.name);
       for (const [attrKey, attrVal] of nt.attributes) {

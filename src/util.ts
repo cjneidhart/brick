@@ -116,3 +116,9 @@ export function makeElement(
 
   return element;
 }
+
+export function assertString(maybeString: unknown): asserts maybeString is string {
+  if (typeof maybeString !== "string") {
+    throw new Error(`Expected string, instead received a ${typeof maybeString}`);
+  }
+}

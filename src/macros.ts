@@ -12,6 +12,7 @@ export interface MacroContext {
 
 interface Macro {
   skipArgs?: boolean;
+  trailingMacros?: string[];
   handler: (this: MacroContext, ...args: unknown[]) => Node;
 }
 
@@ -264,18 +265,24 @@ add("switch", {
 });
 
 add("if", {
-  handler(...args) {
-    if (args.length !== 1) {
-      throw new Error("@if: requires exactly 1 argument");
-    }
+  trailingMacros: ["elseif", "else"],
+  handler() {
     if (!this.content) {
-      throw new Error("@if: requires body");
+      throw new Error("@if: no child templates");
     }
 
-    const output = document.createDocumentFragment();
-    if (args[0]) {
-      render(output, this.content);
+    for (const template of this.content) {
+      if (!(template instanceof MacroTemplate)) {
+        throw new Error("@if: child was not a MacroTemplate");
+      }
+      if (template.name === "else" || evalExpression(template.args.join(","))) {
+        const output = document.createDocumentFragment();
+        render(output, template.content);
+        return output;
+      }
     }
-    return output;
+
+    // no conditions matched
+    return new Text();
   },
 });

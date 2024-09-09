@@ -2,18 +2,24 @@ import { Moment } from "./engine";
 import { storyTitle } from "./main";
 import { slugify } from "./util";
 
-interface SaveState {
+export interface SaveState {
   history: Moment[];
   index: number;
 }
 
 let prefix: string;
 let sm: Storage;
+export let slotTitles: (string | null)[];
 
 export function init() {
   // TODO: add IFID
-  prefix = `brick-${slugify(storyTitle)}`;
+  prefix = `brick.${slugify(storyTitle)}`;
   sm = window.localStorage;
+  slotTitles = JSON.parse(sm.getItem(prefix + ".slotTitles") || "[]");
+  if (slotTitles.length < 8) {
+    slotTitles.length = 8;
+    slotTitles.fill(null);
+  }
 }
 
 export function clearActive() {
@@ -26,6 +32,23 @@ export function saveActive(state: SaveState) {
 
 export function loadActive(): SaveState | undefined {
   return load(prefix + ".active");
+}
+
+export function saveToSlot(slot: number, state: SaveState) {
+  sm.setItem(prefix + ".slot-" + String(slot), JSON.stringify(state, saveReplacer));
+  const title = state.history[state.index].passageName;
+  slotTitles[slot] = title;
+  sm.setItem(prefix + ".slotTitles", JSON.stringify(slotTitles));
+}
+
+export function loadFromSlot(slot: number): SaveState | undefined {
+  return load(prefix + ".slot-" + String(slot));
+}
+
+export function clearSlot(slot: number) {
+  sm.removeItem(prefix + ".slot-" + String(slot));
+  slotTitles[slot] = null;
+  sm.setItem(prefix + ".slotTitles", JSON.stringify(slotTitles));
 }
 
 function load(key: string): SaveState | undefined {

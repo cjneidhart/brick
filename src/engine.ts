@@ -90,13 +90,31 @@ function renderActive() {
 export function loadFromActive(): boolean {
   const state = saves.loadActive();
   if (state) {
-    history = state.history;
-    index = state.index;
-    renderActive();
+    loadState(state);
     return true;
   } else {
     return false;
   }
+}
+
+export function loadFromSlot(slot: number): boolean {
+  const state = saves.loadFromSlot(slot);
+  if (state) {
+    loadState(state);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+export function saveToSlot(slot: number) {
+  saves.saveToSlot(slot, { history, index });
+}
+
+function loadState(state: saves.SaveState) {
+  history = state.history;
+  index = state.index;
+  renderActive();
 }
 
 export function restart() {

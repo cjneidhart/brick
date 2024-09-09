@@ -1,3 +1,4 @@
+import * as dialog from "./dialog";
 import * as engine from "./engine";
 import { get as getPassage, init as initPassages } from "./passages";
 import { init as initSaves } from "./saves";
@@ -72,5 +73,5 @@ function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) 
 
 addClicker("brick-history-backward", engine.backward);
 addClicker("brick-history-forward", engine.forward);
-addClicker("brick-saves", () => alert("Sorry, saves aren't supported yet."));
+addClicker("brick-saves", dialog.showSavesMenu);
 addClicker("brick-restart", engine.restart);

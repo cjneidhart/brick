@@ -58,7 +58,7 @@ add("include", {
 add("", {
   handler(..._args) {
     // Pass: the args have already been evaluated by the renderer
-    return new Text();
+    return document.createDocumentFragment();
   },
 });
 
@@ -250,12 +250,12 @@ add("switch", {
     }
 
     const output = document.createDocumentFragment();
-    outerLoop: for (const caseMacro of cases) {
+    for (const caseMacro of cases) {
       for (const arg of caseMacro.args) {
         const other = evalExpression(arg);
         if (value === other) {
           render(output, caseMacro.content);
-          break outerLoop;
+          return output;
         }
       }
     }
@@ -283,6 +283,6 @@ add("if", {
     }
 
     // no conditions matched
-    return new Text();
+    return document.createDocumentFragment();
   },
 });

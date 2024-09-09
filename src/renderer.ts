@@ -99,8 +99,7 @@ export function render(output: Element | DocumentFragment, input: string | NodeT
 
       if (macroData.trailingMacros) {
         const templates = [nt];
-        let j = i + 1;
-        for (; j < inputNodes.length; j++) {
+        for (let j = i + 1; j < inputNodes.length; j++) {
           const nextNode = inputNodes[j];
           if (
             nextNode instanceof MacroTemplate &&

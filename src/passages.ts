@@ -82,6 +82,11 @@ export function init(storyData: Element) {
       throw new Error(`Passage "${id}" has no name`);
     }
     checkBannedNames(name);
+    if (name.startsWith("::")) {
+      console.warn(
+        `Found a passage named "${name}". Although starting a passage name with "::" is allowed, this is likely a mistake.`,
+      );
+    }
     const tags =
       elt
         .getAttribute("tags")

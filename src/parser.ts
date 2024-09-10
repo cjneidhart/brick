@@ -16,6 +16,8 @@ const RE = {
   whitespace: /\s*/y,
 };
 
+const UNCLOSED_TAGS = ["area", "br", "embed", "hr", "img", "input", "link", "meta", "track", "wbr"];
+
 export class ElementTemplate {
   name: string;
   attributes: Map<string, string>;
@@ -198,7 +200,7 @@ export class Parser {
       attrs.set(key, value);
     }
 
-    const content = this.parse(new RegExp(`</${name}>`, "y"));
+    const content = UNCLOSED_TAGS.includes(name) ? [] : this.parse(new RegExp(`</${name}>`, "y"));
 
     return new ElementTemplate(name, attrs, content);
   }

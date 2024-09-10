@@ -46,10 +46,10 @@ export const storyTitle =
   (() => {
     throw new Error("Story has no title");
   })();
-const titleElt = document.getElementById("story-title");
-if (titleElt) {
-  titleElt.textContent = storyTitle;
-}
+// const titleElt = document.getElementById("story-title");
+// if (titleElt) {
+//   titleElt.textContent = storyTitle;
+// }
 
 for (const stylesheet of styles) {
   const styleElt = makeElement("style", {}, stylesheet.textContent || "");

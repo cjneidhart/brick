@@ -4,6 +4,8 @@ import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { evalExpression } from "./scripting";
 import { makeElement } from "./util";
 
+const BANNED_TAGS = ["base", "body", "link", "head", "html", "meta", "script", "style", "title"];
+
 const PHRASING_TAGS = [
   "abbr",
   "audio",
@@ -124,6 +126,10 @@ export function render(target: Element | DocumentFragment, input: string | NodeT
         target.append(node);
       }
     } else if (nt instanceof ElementTemplate) {
+      // Note: This could be a parse-time error, but renderer errors can be presented better.
+      if (BANNED_TAGS.includes(nt.name)) {
+        throw new Error(`<${nt.name}> elements cannot be created from markup`);
+      }
       elt = makeElement(nt.name);
       for (const [attrKey, attrVal] of nt.attributes) {
         if (attrKey.startsWith("@")) {

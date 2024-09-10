@@ -20,8 +20,8 @@ COMMENT **/itional fil// LINE COMMENT
 ler text.
 single line break
 
-double line break. <em title="hello World!">Then some emphasized text</em>.
-
+double line break. <em title="hello World!">Then some emphasized text</em>.<br>
+<br>
 Down here is a @link("L I N K", (event) => {
   console.log(event);
   alert("Congrats! You clicked a link!");

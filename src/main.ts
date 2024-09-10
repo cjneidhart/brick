@@ -1,9 +1,10 @@
+import * as bootstrap from "bootstrap";
 import * as dialog from "./dialog";
 import * as engine from "./engine";
 import { get as getPassage, init as initPassages } from "./passages";
 import { init as initSaves } from "./saves";
 import { BrickPublic, evalJavaScript } from "./scripting";
-import { getElementById, makeElement } from "./util";
+import { makeElement } from "./util";
 
 window.addEventListener("error", (event) => {
   const { error } = event;
@@ -29,9 +30,11 @@ window.addEventListener("unhandledrejection", (event) => {
 declare global {
   interface Window {
     Brick: typeof BrickPublic;
+    bootstrap: typeof bootstrap;
   }
 }
 window.Brick = BrickPublic;
+window.bootstrap = bootstrap;
 
 const storyData = document.getElementsByTagName("tw-storydata")[0];
 initPassages(storyData);
@@ -43,8 +46,10 @@ export const storyTitle =
   (() => {
     throw new Error("Story has no title");
   })();
-const titleElt = getElementById("story-title");
-titleElt.textContent = storyTitle;
+const titleElt = document.getElementById("story-title");
+if (titleElt) {
+  titleElt.textContent = storyTitle;
+}
 
 for (const stylesheet of styles) {
   const styleElt = makeElement("style", {}, stylesheet.textContent || "");

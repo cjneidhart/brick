@@ -78,7 +78,7 @@ function isPhrasingNode(node: string | Element): boolean {
 /**
  * Render the given brick markup and append it to an element.
  */
-export function render(output: Element | DocumentFragment, input: string | NodeTemplate[]) {
+export function render(target: Element | DocumentFragment, input: string | NodeTemplate[]) {
   let inputNodes;
   if (typeof input === "string") {
     const parser = new Parser(input);
@@ -116,12 +116,12 @@ export function render(output: Element | DocumentFragment, input: string | NodeT
 
         const context = { name: nt.name, content: templates };
         const node = macroData.handler.apply(context, []);
-        output.append(node);
+        target.append(node);
       } else {
         const params = macroData.skipArgs ? nt.args : nt.args.map((arg) => evalExpression(arg));
         const context = { name: nt.name, content: nt.content };
         const node = macroData.handler.apply(context, params);
-        output.append(node);
+        target.append(node);
       }
     } else if (nt instanceof ElementTemplate) {
       elt = makeElement(nt.name);
@@ -132,22 +132,22 @@ export function render(output: Element | DocumentFragment, input: string | NodeT
         elt.setAttribute(attrKey, attrVal);
       }
       render(elt, nt.content);
-      output.append(elt);
+      target.append(elt);
     } else if (typeof nt === "string") {
       elt = nt;
       const paragraphs = elt.split("\n\n");
       let p = paragraphs.shift();
       if (typeof p === "string") {
-        output.append(p);
+        target.append(p);
         while (typeof (p = paragraphs.shift()) === "string") {
-          output.append(makeElement("br"));
-          output.append(makeElement("br"));
-          output.append(p);
+          target.append(makeElement("br"));
+          target.append(makeElement("br"));
+          target.append(p);
         }
       }
     } else {
       const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
-      output.append(String(value));
+      target.append(String(value));
     }
 
     // if (isPhrasingNode(elt)) {
@@ -187,6 +187,6 @@ export function render(output: Element | DocumentFragment, input: string | NodeT
   if (pBuffer.length > 0) {
     const p = document.createElement("p");
     p.append(...pBuffer);
-    output.append(p);
+    target.append(p);
   }
 }

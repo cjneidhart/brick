@@ -21,6 +21,13 @@ export const BrickPublic = Object.freeze({
   get temp() {
     return tempVariables;
   },
+  redo: function () {
+    const doElements = document.querySelectorAll(".brick-macro-do");
+    for (const elt of doElements) {
+      const event = new Event("brick-redo");
+      elt.dispatchEvent(event);
+    }
+  },
 });
 
 export function evalJavaScript(js: string): unknown {

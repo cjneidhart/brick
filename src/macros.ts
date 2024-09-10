@@ -286,3 +286,20 @@ add("if", {
     return document.createDocumentFragment();
   },
 });
+
+add("do", {
+  handler() {
+    const { content } = this;
+    if (!content) {
+      throw new Error("@do: must be called with a body");
+    }
+    const span = makeElement("span", { class: "brick-macro-do" });
+    render(span, content);
+    span.addEventListener("brick-redo", () => {
+      span.innerHTML = "";
+      render(span, content);
+    });
+
+    return span;
+  },
+});

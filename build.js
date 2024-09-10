@@ -43,11 +43,17 @@ function afterWebpack(err, stats) {
   const info = stats.toJson();
 
   if (stats.hasErrors()) {
-    console.error(info.errors);
+    for (const error of info.errors) {
+      console.error(error.message);
+      console.error(error.stack);
+    }
   }
 
   if (stats.hasWarnings()) {
-    console.warn(info.warnings);
+    for (const warning of info.warnings) {
+      console.error(warning.message);
+      console.error(warning.stack);
+    }
   }
 
   const templateText = readTextFile("template.html");
@@ -58,7 +64,7 @@ function afterWebpack(err, stats) {
 
   const storyFormat = templateText
     .replace("{{BOOTSTRAP_CSS}}", bsCss.replaceAll("$", "$$$$"))
-    .replace("{{BOOTSTRAP_SCRIPT}}", bsJs.replaceAll("$", "$$$$"))
+    // .replace("{{BOOTSTRAP_SCRIPT}}", bsJs.replaceAll("$", "$$$$"))
     .replaceAll(/#\s*sourceMappingURL=bootstrap.*map/gm, "")
     .replace("{{BRICK_SCRIPT}}", scriptText.replaceAll("$", "$$$$"))
     .replace("{{BRICK_STYLE}}", brickStyle.replaceAll("$", "$$$$"));

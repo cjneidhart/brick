@@ -41,6 +41,8 @@ Now let's try a link: @linkTo('Passage 2')
 
 @linkTo("Switch Test", "Test out @switch macros")
 
+@linkTo("Do/Redo Test")
+
 
 :: Passage 2
 You have navigated to Passage 2.
@@ -115,5 +117,17 @@ This is a modal!
 } @else() {
   CORRECT
 }
+
+@linkTo("Start", "return")
+
+
+:: Do/Redo Test
+@(_counter = 0)
+Counter: @do() { _counter }
+
+@link("Click this to increment the counter, then call redo()", () => {
+  _counter++;
+  Brick.redo();
+})
 
 @linkTo("Start", "return")

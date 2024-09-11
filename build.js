@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const fs = require("node:fs");
+const process = require("node:process");
 const path = require("node:path");
 const webpack = require("webpack");
 
@@ -8,10 +9,12 @@ function readTextFile(path) {
   return fs.readFileSync(path, { encoding: "utf-8" });
 }
 
+const debug = process.env.BRICK_DEBUG;
+
 const webpackConfig = {
   entry: "./src/main.ts",
-  mode: "development",
-  devtool: "eval-source-map",
+  mode: debug ? "development" : "production",
+  devtool: debug ? "eval-source-map" : undefined,
   module: {
     rules: [
       {

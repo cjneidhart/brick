@@ -5,7 +5,7 @@ export function slugify(input: string): string {
     .map((c) => {
       if ((c >= "a" && c <= "z") || (c >= "0" && c <= "9")) {
         return c;
-      } else if (c >= "A" && c <= "Z") {
+      } else if ((c >= "A" && c <= "Z") || c > "\x7F") {
         return c.toLowerCase();
       } else if (DELETED_CHARS.has(c)) {
         return "";

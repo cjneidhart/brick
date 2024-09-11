@@ -64,12 +64,35 @@ Test \@while:
   <li>List Item Number $i</li>
   @($i++)
 }</ul>
-
+\
 Test \@for:
 @($a = ["apple", "orange", "banana"])
 <ol>@for($food of $a) {
   <li>$food</li>
 }</ol>
+\
+Test \@break:<br>
+Expected: 1 2 3 4 5<br>
+Actual:
+@(_i = 0)
+@while(true) {
+  @(_i++)
+  _i
+  @if(_i >= 5) {
+    @break()
+  }
+}
+
+Test \@continue:<br>
+Expected: 1 2 20 3 4 40 5 6 60 7 8 80 9 10 100<br>
+Actual:
+@(_i = 0)
+@while(_i < 10) {
+  @(_i++, _j = _i * 10)
+  _i
+  @if(_i % 2) { @continue() }
+  _j
+}
 
 @linkTo("Start", 'return')
 

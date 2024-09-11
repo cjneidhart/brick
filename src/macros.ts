@@ -5,9 +5,40 @@ import { render } from "./renderer";
 import { evalAssign, evalExpression } from "./scripting";
 import { makeElement, uniqueId } from "./util";
 
-export interface MacroContext {
+export enum LoopStatus {
+  OUTSIDE_LOOP = 1,
+  IN_LOOP,
+  BREAKING,
+  CONTINUING,
+}
+
+export class MacroContext {
   content?: NodeTemplate[];
   name: string;
+  loopStatus: LoopStatus;
+
+  constructor(name: string, loopStatus: LoopStatus, content?: NodeTemplate[]) {
+    this.name = name;
+    this.loopStatus = loopStatus;
+    this.content = content;
+  }
+
+  render(target: Element | DocumentFragment, input: string | NodeTemplate[]) {
+    switch (this.loopStatus) {
+      case LoopStatus.OUTSIDE_LOOP:
+        render(target, input, this);
+        break;
+      case LoopStatus.IN_LOOP:
+        render(target, input, this);
+        break;
+      case LoopStatus.BREAKING:
+      case LoopStatus.CONTINUING:
+        // pass;
+        break;
+      default:
+        throw new Error(`unknown loopStatus: "${this.loopStatus}"`);
+    }
+  }
 }
 
 interface Macro {
@@ -49,7 +80,7 @@ add("include", {
       throw new Error(`Passage not found: "${psgName}"`);
     }
     const div = makeElement("div");
-    render(div, passage.content);
+    this.render(div, passage.content);
 
     return div;
   },
@@ -122,9 +153,8 @@ add("linkReplace", {
 
     anchor.addEventListener("click", () => {
       const span = makeElement("span", { class: "macro-linkReplace fade-in opacity-0" });
-      render(span, this.content || "");
-      anchor.after(span);
-      anchor.remove();
+      this.render(span, this.content || "");
+      anchor.replaceWith(span);
       setTimeout(() => span.classList.remove("opacity-0"), 40);
     });
 
@@ -142,15 +172,39 @@ add("while", {
     const conditionStr = (args as string[]).join(",");
     const frag = document.createDocumentFragment();
     const { content } = this;
+    this.loopStatus = LoopStatus.IN_LOOP;
     while (evalExpression(conditionStr)) {
       if (content) {
-        render(frag, content);
+        this.render(frag, content);
+        // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
+        this.loopStatus = this.loopStatus as LoopStatus;
+        if (this.loopStatus === LoopStatus.BREAKING) {
+          this.loopStatus = LoopStatus.IN_LOOP;
+          break;
+        } else if (this.loopStatus === LoopStatus.CONTINUING) {
+          this.loopStatus = LoopStatus.IN_LOOP;
+          continue;
+        }
       }
     }
 
     return frag;
   },
 });
+
+add("break", {
+  handler() {
+    this.loopStatus = LoopStatus.BREAKING;
+    return document.createDocumentFragment();
+  },
+});
+
+add("continue", {
+  handler() {
+    this.loopStatus = LoopStatus.CONTINUING;
+    return document.createDocumentFragment();
+  }
+})
 
 add("for", {
   skipArgs: true,
@@ -173,10 +227,20 @@ add("for", {
     }
     const frag = document.createDocumentFragment();
     const { content } = this;
+    this.loopStatus = LoopStatus.IN_LOOP;
     for (const loopVal of iterable) {
       evalAssign(place, loopVal);
       if (content) {
-        render(frag, content);
+        this.render(frag, content);
+        // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
+        this.loopStatus = this.loopStatus as LoopStatus;
+        if (this.loopStatus === LoopStatus.BREAKING) {
+          this.loopStatus = LoopStatus.IN_LOOP;
+          break;
+        } else if (this.loopStatus === LoopStatus.CONTINUING) {
+          this.loopStatus = LoopStatus.IN_LOOP;
+          continue;
+        }
       }
     }
 
@@ -254,7 +318,7 @@ add("switch", {
       for (const arg of caseMacro.args) {
         const other = evalExpression(arg);
         if (value === other) {
-          render(output, caseMacro.content);
+          this.render(output, caseMacro.content);
           return output;
         }
       }
@@ -277,7 +341,7 @@ add("if", {
       }
       if (template.name === "else" || evalExpression(template.args.join(","))) {
         const output = document.createDocumentFragment();
-        render(output, template.content);
+        this.render(output, template.content);
         return output;
       }
     }
@@ -294,10 +358,23 @@ add("do", {
       throw new Error("@do: must be called with a body");
     }
     const span = makeElement("span", { class: "brick-macro-do" });
-    render(span, content);
+    // Catch a bad break/continue on first render
+    this.loopStatus = LoopStatus.OUTSIDE_LOOP;
+    try {
+      this.render(span, content);
+    } catch (error) {
+      if (error instanceof Error) {
+        const re = /^Can't (@break|@continue) from outside a loop$/;
+        const match = re.exec(error.message);
+        if (match) {
+          error.message = `Can't ${match[1]} from within a @do macro`;
+        }
+      }
+      throw error;
+    }
     span.addEventListener("brick-redo", () => {
       span.innerHTML = "";
-      render(span, content);
+      this.render(span, content);
     });
 
     return span;

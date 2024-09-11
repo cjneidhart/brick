@@ -1,5 +1,5 @@
 import { storyVariables, tempVariables } from "./engine";
-import { get as getMacro } from "./macros";
+import { get as getMacro, LoopStatus, MacroContext } from "./macros";
 import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { evalExpression } from "./scripting";
 import { makeElement } from "./util";
@@ -80,7 +80,11 @@ function isPhrasingNode(node: string | Element): boolean {
 /**
  * Render the given brick markup and append it to an element.
  */
-export function render(target: Element | DocumentFragment, input: string | NodeTemplate[]) {
+export function render(
+  target: Element | DocumentFragment,
+  input: string | NodeTemplate[],
+  parentContext?: MacroContext,
+) {
   let inputNodes;
   if (typeof input === "string") {
     const parser = new Parser(input);
@@ -99,6 +103,9 @@ export function render(target: Element | DocumentFragment, input: string | NodeT
         throw new Error(`Macro not found: "${nt.name}"`);
       }
 
+      let childLoopStatus = parentContext?.loopStatus || LoopStatus.OUTSIDE_LOOP;
+      let childContext: MacroContext;
+      let params: unknown[];
       if (macroData.trailingMacros) {
         const templates = [nt];
         for (let j = i + 1; j < inputNodes.length; j++) {
@@ -116,15 +123,28 @@ export function render(target: Element | DocumentFragment, input: string | NodeT
           }
         }
 
-        const context = { name: nt.name, content: templates };
-        const node = macroData.handler.apply(context, []);
-        target.append(node);
+        childContext = new MacroContext(nt.name, childLoopStatus, templates);
+        params = [];
       } else {
-        const params = macroData.skipArgs ? nt.args : nt.args.map((arg) => evalExpression(arg));
-        const context = { name: nt.name, content: nt.content };
-        const node = macroData.handler.apply(context, params);
-        target.append(node);
+        params = macroData.skipArgs ? nt.args : nt.args.map((arg) => evalExpression(arg));
+        childContext = new MacroContext(nt.name, childLoopStatus, nt.content);
       }
+
+      const node = macroData.handler.apply(childContext, params);
+      target.append(node);
+
+      childLoopStatus = childContext.loopStatus;
+      if (childLoopStatus === LoopStatus.BREAKING || childLoopStatus === LoopStatus.CONTINUING) {
+        if (!parentContext || parentContext.loopStatus === LoopStatus.OUTSIDE_LOOP) {
+          const badName = childContext.loopStatus === LoopStatus.BREAKING ? "@break" : "@continue";
+          throw new Error(`Can't ${badName} from outside a loop`);
+        }
+        parentContext.loopStatus = childContext.loopStatus;
+        return;
+      }
+
+      // Markup rendered later is always considered outside a loop
+      childContext.loopStatus = LoopStatus.OUTSIDE_LOOP;
     } else if (nt instanceof ElementTemplate) {
       // Note: This could be a parse-time error, but renderer errors can be presented better.
       if (BANNED_TAGS.includes(nt.name)) {
@@ -137,7 +157,7 @@ export function render(target: Element | DocumentFragment, input: string | NodeT
         }
         elt.setAttribute(attrKey, attrVal);
       }
-      render(elt, nt.content);
+      render(elt, nt.content, parentContext);
       target.append(elt);
     } else if (typeof nt === "string") {
       elt = nt;

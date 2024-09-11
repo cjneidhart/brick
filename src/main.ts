@@ -38,7 +38,7 @@ window.bootstrap = bootstrap;
 
 const storyData = document.getElementsByTagName("tw-storydata")[0];
 initPassages(storyData);
-const styles = storyData.querySelectorAll('style[type="text/twine-css"]');
+const styles = storyData.querySelectorAll<HTMLStyleElement>('style[type="text/twine-css"]');
 const scripts = storyData.querySelectorAll('script[type="text/twine-javascript"]');
 
 export const storyTitle =
@@ -46,13 +46,9 @@ export const storyTitle =
   (() => {
     throw new Error("Story has no title");
   })();
-// const titleElt = document.getElementById("story-title");
-// if (titleElt) {
-//   titleElt.textContent = storyTitle;
-// }
 
 for (const stylesheet of styles) {
-  const styleElt = makeElement("style", {}, stylesheet.textContent || "");
+  const styleElt = makeElement("style", {}, stylesheet.innerText);
   document.head.appendChild(styleElt);
 }
 

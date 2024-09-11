@@ -23,7 +23,8 @@ export class MacroContext {
     this.content = content;
   }
 
-  render(target: Element | DocumentFragment, input: string | NodeTemplate[]) {
+  render(target: Element | DocumentFragment, input?: string | NodeTemplate[]) {
+    input ||= this.content || [];
     switch (this.loopStatus) {
       case LoopStatus.OUTSIDE_LOOP:
         render(target, input, this);
@@ -108,7 +109,10 @@ add("link", {
     }
 
     const anchor = makeElement("a", { class: "link-primary", href: "#" }, linkText);
-    anchor.addEventListener("click", (evt) => onClick.call(this, evt));
+    anchor.addEventListener("click", (event) => {
+      event.preventDefault();
+      onClick.call(this, event);
+    });
 
     return anchor;
   },
@@ -133,7 +137,10 @@ add("linkTo", {
 
     const className = getPassage(psgName) ? "link-primary" : "link-danger";
     const anchor = makeElement("a", { href: "#", class: className }, linkText);
-    anchor.addEventListener("click", () => navigate(psgName));
+    anchor.addEventListener("click", (event) => {
+      event.preventDefault();
+      navigate(psgName);
+    });
 
     return anchor;
   },
@@ -151,9 +158,12 @@ add("linkReplace", {
 
     const anchor = makeElement("a", { href: "#", class: "link-primary" }, linkText);
 
-    anchor.addEventListener("click", () => {
+    anchor.addEventListener("click", (event) => {
+      event.preventDefault();
       const span = makeElement("span", { class: "macro-linkReplace fade-in opacity-0" });
-      this.render(span, this.content || "");
+      if (this.content) {
+        this.render(span);
+      }
       anchor.replaceWith(span);
       setTimeout(() => span.classList.remove("opacity-0"), 40);
     });
@@ -174,17 +184,15 @@ add("while", {
     const { content } = this;
     this.loopStatus = LoopStatus.IN_LOOP;
     while (evalExpression(conditionStr)) {
-      if (content) {
-        this.render(frag, content);
-        // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
-        this.loopStatus = this.loopStatus as LoopStatus;
-        if (this.loopStatus === LoopStatus.BREAKING) {
-          this.loopStatus = LoopStatus.IN_LOOP;
-          break;
-        } else if (this.loopStatus === LoopStatus.CONTINUING) {
-          this.loopStatus = LoopStatus.IN_LOOP;
-          continue;
-        }
+      this.render(frag, content);
+      // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
+      this.loopStatus = this.loopStatus as LoopStatus;
+      if (this.loopStatus === LoopStatus.BREAKING) {
+        this.loopStatus = LoopStatus.IN_LOOP;
+        break;
+      } else if (this.loopStatus === LoopStatus.CONTINUING) {
+        this.loopStatus = LoopStatus.IN_LOOP;
+        continue;
       }
     }
 
@@ -203,8 +211,8 @@ add("continue", {
   handler() {
     this.loopStatus = LoopStatus.CONTINUING;
     return document.createDocumentFragment();
-  }
-})
+  },
+});
 
 add("for", {
   skipArgs: true,
@@ -230,17 +238,15 @@ add("for", {
     this.loopStatus = LoopStatus.IN_LOOP;
     for (const loopVal of iterable) {
       evalAssign(place, loopVal);
-      if (content) {
-        this.render(frag, content);
-        // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
-        this.loopStatus = this.loopStatus as LoopStatus;
-        if (this.loopStatus === LoopStatus.BREAKING) {
-          this.loopStatus = LoopStatus.IN_LOOP;
-          break;
-        } else if (this.loopStatus === LoopStatus.CONTINUING) {
-          this.loopStatus = LoopStatus.IN_LOOP;
-          continue;
-        }
+      this.render(frag, content);
+      // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
+      this.loopStatus = this.loopStatus as LoopStatus;
+      if (this.loopStatus === LoopStatus.BREAKING) {
+        this.loopStatus = LoopStatus.IN_LOOP;
+        break;
+      } else if (this.loopStatus === LoopStatus.CONTINUING) {
+        this.loopStatus = LoopStatus.IN_LOOP;
+        continue;
       }
     }
 
@@ -361,7 +367,7 @@ add("do", {
     // Catch a bad break/continue on first render
     this.loopStatus = LoopStatus.OUTSIDE_LOOP;
     try {
-      this.render(span, content);
+      this.render(span);
     } catch (error) {
       if (error instanceof Error) {
         const re = /^Can't (@break|@continue) from outside a loop$/;
@@ -374,7 +380,7 @@ add("do", {
     }
     span.addEventListener("brick-redo", () => {
       span.innerHTML = "";
-      this.render(span, content);
+      this.render(span);
     });
 
     return span;

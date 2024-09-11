@@ -21,7 +21,7 @@ export const BrickPublic = Object.freeze({
   get temp() {
     return tempVariables;
   },
-  redo: function (this: void) {
+  redo: function (this: null) {
     const doElements = document.querySelectorAll(".brick-macro-do");
     for (const elt of doElements) {
       const event = new Event("brick-redo");

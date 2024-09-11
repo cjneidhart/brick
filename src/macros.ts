@@ -304,16 +304,16 @@ add("switch", {
       if (typeof node === "string") {
         if (node.trim()) {
           throw new Error("@switch: all children must be @case macros");
-        } else {
-          // pass: skip over text nodes that are all whitespace
-          continue;
         }
+        // pass: skip over text nodes that are all whitespace
       } else if (node instanceof MacroTemplate) {
-        if (node.name === "case") {
-          cases.push(node);
-        } else {
+        if (node.name !== "case") {
           throw new Error("@switch: all children must be @case macros");
         }
+        if (node.args.length === 0) {
+          throw new Error("@switch: @case macro requires at least one argument");
+        }
+        cases.push(node);
       } else {
         throw new Error("@switch: all children must be @case macros");
       }

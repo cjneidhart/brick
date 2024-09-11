@@ -7,6 +7,7 @@ Like SugarCube, this format comes with a standard API for save management using 
 But where SugarCube macros are styled like HTML elements, Brick macros are styled like JavaScript function calls.
 
 ## Example
+
 ```brick
 // Code within @(...) is executed as JavaScript,
 // with the addition of '$' and '_' to denote story and temporary variables.
@@ -38,6 +39,7 @@ But where SugarCube macros are styled like HTML elements, Brick macros are style
 ```
 
 ## Usage
+
 [NodeJS](https://nodejs.org/en) is necessary to build this project.
 First, run `npm install` (this only needs to be done after initially downloading or updating Brick).
 Then, run `node build.js`.

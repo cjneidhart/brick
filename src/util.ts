@@ -122,3 +122,29 @@ export function assertString(maybeString: unknown): asserts maybeString is strin
     throw new Error(`Expected string, instead received a ${typeof maybeString}`);
   }
 }
+
+export function* numberRange(
+  startOrStop: number,
+  stop?: number,
+  step = 1,
+): IterableIterator<number> {
+  let nextValue: number;
+  if (typeof stop === "undefined") {
+    nextValue = 0;
+    stop = startOrStop;
+  } else {
+    nextValue = startOrStop;
+  }
+
+  if (step > 0) {
+    while (nextValue < stop) {
+      yield nextValue;
+      nextValue += step;
+    }
+  } else {
+    while (nextValue > stop) {
+      yield nextValue;
+      nextValue += step;
+    }
+  }
+}

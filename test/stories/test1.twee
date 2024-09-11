@@ -121,9 +121,6 @@ This is a modal!
 :: Switch Test
 @(_value = "quark")
 @switch(_value) {
-  @case() {
-    ERROR
-  }
   @case("Not this one") {
     ERROR 2
   }
@@ -137,7 +134,7 @@ This is a modal!
 
 @if(!window.Math) {
   ERROR
-} @else() {
+} @else {
   CORRECT
 }
 
@@ -146,7 +143,7 @@ This is a modal!
 
 :: Do/Redo Test
 @(_counter = 0)
-Counter: @do() { _counter }
+Counter: @do { _counter }
 
 @link("Click this to increment the counter, then call redo()", () => {
   _counter++;

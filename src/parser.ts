@@ -10,7 +10,7 @@ const RE = {
     stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/y,
     stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/y,
   },
-  macroInvoke: /([A-Za-z0-9_]*)\s*\(/y,
+  macroInvoke: /[A-Za-z0-9_]*/y,
   normalChars: /[^[\]{}\\($_?<@/]+/y,
   singleChar: /.|\s/y,
   whitespace: /\s*/y,
@@ -210,14 +210,20 @@ export class Parser {
     if (!match) {
       throw new Error("Unescaped '@'");
     }
-    const macroName = match[1];
+    const macroName = match[0];
 
-    const args = macroName === "for" ? this.parseForArgs() : this.parseJsArgs();
+    let args: string[] | null = null;
+    if (this.consume(/\s*\(/y)) {
+      args = macroName === "for" ? this.parseForArgs() : this.parseJsArgs();
+    }
 
     const hasContent = this.consume(/\s*\{/y);
+    if (!args && !hasContent) {
+      throw new Error("Macro invocations require (arguments) or a { body }");
+    }
     const content = hasContent ? this.parse(/\}/y) : [];
 
-    return new MacroTemplate(macroName, args, content);
+    return new MacroTemplate(macroName, args || [], content);
   }
 
   parseForArgs(): string[] {

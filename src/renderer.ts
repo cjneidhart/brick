@@ -60,7 +60,7 @@ const PHRASING_TAGS = [
 
 const SOMETIMES_PHRASING_TAGS = ["a", "del", "ins", "map"];
 
-function isPhrasingNode(node: string | Element): boolean {
+function _isPhrasingNode(node: string | Element): boolean {
   // TODO:
   // <link> and <meta> if the `itemprop` attribute is present
   // <area> if it is a descendant of a <map> element
@@ -70,7 +70,7 @@ function isPhrasingNode(node: string | Element): boolean {
     return Array.from(node.childNodes).every(
       (n) =>
         n.nodeType === Node.TEXT_NODE ||
-        (n.nodeType === Node.ELEMENT_NODE && isPhrasingNode(n as Element)),
+        (n.nodeType === Node.ELEMENT_NODE && _isPhrasingNode(n as Element)),
     );
   } else {
     return false;
@@ -93,7 +93,7 @@ export function render(
     inputNodes = input;
   }
 
-  let pBuffer: (string | Element)[] = [];
+  // let pBuffer: (string | Element)[] = [];
   for (let i = 0; i < inputNodes.length; i++) {
     const nt = inputNodes[i];
     let elt: Element | string;
@@ -210,9 +210,9 @@ export function render(
     // }
   }
 
-  if (pBuffer.length > 0) {
-    const p = document.createElement("p");
-    p.append(...pBuffer);
-    target.append(p);
-  }
+  // if (pBuffer.length > 0) {
+  //   const p = document.createElement("p");
+  //   p.append(...pBuffer);
+  //   target.append(p);
+  // }
 }

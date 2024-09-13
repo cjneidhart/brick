@@ -11,10 +11,11 @@ function readTextFile(path) {
 
 const debug = process.env.BRICK_DEBUG;
 
-const webpackConfig = {
+/** @type {webpack.Configuration} */
+const runtimeConfig = {
   entry: "./src/main.ts",
   mode: debug ? "development" : "production",
-  devtool: debug ? "eval-source-map" : undefined,
+  devtool: debug ? "eval-source-map" : false,
   module: {
     rules: [
       {
@@ -34,13 +35,13 @@ const webpackConfig = {
   },
 };
 
-function afterWebpack(err, stats) {
+function checkWebpackErrors(err, stats) {
   if (err) {
     console.error(err.stack || err);
     if (err.details) {
       console.error(err.details);
     }
-    return;
+    return false;
   }
 
   const info = stats.toJson();
@@ -59,11 +60,20 @@ function afterWebpack(err, stats) {
     }
   }
 
+  return true;
+}
+
+function afterWebpack(err, stats) {
+  if (!checkWebpackErrors(err, stats)) {
+    return;
+  }
+
   const templateText = readTextFile("template.html");
   const scriptText = readTextFile("dist/brick.js");
   const brickStyle = readTextFile("src/brick.css");
   const bsCss = readTextFile("node_modules/bootstrap/dist/css/bootstrap.min.css");
-  const bsJs = readTextFile("node_modules/bootstrap/dist/js/bootstrap.bundle.min.js");
+  // const bsJs = readTextFile("node_modules/bootstrap/dist/js/bootstrap.bundle.min.js");
+  const editorExtensionsJs = readTextFile("twine-editor.js");
 
   const storyFormat = templateText
     .replace("{{BOOTSTRAP_CSS}}", bsCss.replaceAll("$", "$$$$"))
@@ -76,6 +86,7 @@ function afterWebpack(err, stats) {
     version: "0.1",
     author: "OrangeChris",
     source: storyFormat,
+    hydrate: editorExtensionsJs,
   };
   const outString = `window.storyFormat(${JSON.stringify(storyJson)});`;
 
@@ -85,4 +96,4 @@ function afterWebpack(err, stats) {
 fs.mkdirSync("dist", { recursive: true });
 fs.mkdirSync("storyformats/brick", { recursive: true });
 
-webpack(webpackConfig, afterWebpack);
+webpack(runtimeConfig, afterWebpack);

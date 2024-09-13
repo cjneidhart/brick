@@ -16,6 +16,8 @@ export class MacroContext {
   content?: NodeTemplate[];
   name: string;
   loopStatus: LoopStatus;
+  parent?: MacroContext;
+  captures?: string[];
 
   constructor(name: string, loopStatus: LoopStatus, content?: NodeTemplate[]) {
     this.name = name;

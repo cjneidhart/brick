@@ -171,6 +171,13 @@ export function render(
           target.append(p);
         }
       }
+    } else if (nt.type === "linkBox") {
+      const macroData = getMacro("linkTo");
+      if (!macroData) {
+        throw new Error("Can't find @linkTo macro for wiki-style [[link]]");
+      }
+      const childContext = new MacroContext("linkTo", LoopStatus.OUTSIDE_LOOP);
+      target.append(macroData.handler.call(childContext, nt.link, nt.text ?? nt.link));
     } else {
       const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
       target.append(String(value));

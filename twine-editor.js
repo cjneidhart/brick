@@ -10,17 +10,19 @@ function startState() {
   };
 }
 
-const KEYWORDS = ("break case catch class const continue debugger default delete"
-  + "do else export extends false finally for function if import in instanceof"
-  + "new null return super switch this throw true try typeof var void while"
-  + "with let static yield await enum implements interface package private"
-  + "protected public arguments as async eval from get of set undefined")
+const KEYWORDS = (
+  "break case catch class const continue debugger default delete" +
+  "do else export extends false finally for function if import in instanceof" +
+  "new null return super switch this throw true try typeof var void while" +
+  "with let static yield await enum implements interface package private" +
+  "protected public arguments as async eval from get of set undefined"
+)
   .split(" ")
   .filter((kw) => kw);
 
 function tokenJs(stream, state) {
   if (stream.match(/[!%&*+-<=>^|~]+/)) {
-    return "operator"
+    return "operator";
   }
 
   if (stream.match(/[$_a-zA-Z][$_a-zA-Z0-9]*/)) {
@@ -183,7 +185,7 @@ function mode() {
 this.editorExtensions = {
   twine: {
     "^2.0.0": {
-      codeMirror: { mode }
-    }
-  }
+      codeMirror: { mode },
+    },
+  },
 };

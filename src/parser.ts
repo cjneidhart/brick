@@ -49,7 +49,14 @@ export interface RawVariable {
   name: string;
 }
 
-export type NodeTemplate = ElementTemplate | MacroTemplate | string | RawVariable;
+/** A [[Link]] */
+export interface LinkBox {
+  type: "linkBox";
+  link: string;
+  text?: string;
+}
+
+export type NodeTemplate = ElementTemplate | MacroTemplate | string | RawVariable | LinkBox;
 
 export class Parser {
   input: string;
@@ -157,9 +164,32 @@ export class Parser {
           break;
         }
 
+        case "[":
+          if (this.consume(/\[/y)) {
+            const m = this.consume(/(.*)(?<!\\)\]\]/y);
+            if (!m) {
+              throw new Error("Unmatched `[[`");
+            }
+            const linkBoxFull = m[1];
+            const hasRightArrow = linkBoxFull.includes("->");
+            const hasLeftArrow = linkBoxFull.includes("<-");
+            const hasPipe = linkBoxFull.includes("|");
+            const sum = Number(hasRightArrow) + Number(hasLeftArrow) + Number(hasPipe);
+            if (sum > 1) {
+              throw new Error("Link boxes can only have one of '->', '<-', or '|'");
+            } else if (sum === 0) {
+              output.push({ type: "linkBox", link: linkBoxFull });
+            } else {
+              const separator = hasRightArrow ? "->" : hasLeftArrow ? "<-" : "|";
+              output.push(makeLinkBox(linkBoxFull, separator));
+            }
+          } else {
+            output.push("[");
+          }
+          break;
+
         case "(":
         case "?":
-        case "[":
         case "]":
           throw new Error(`Cannot yet handle unescaped '${c}' (U+${c.charCodeAt(0)})`);
 
@@ -368,5 +398,20 @@ export class Parser {
     }
 
     return output.join("");
+  }
+}
+
+function makeLinkBox(fullText: string, separator: string): LinkBox {
+  const split = fullText.split(separator);
+  if (split.length <= 1) {
+    throw new Error(`makeLinkBox: fulltext did not contain "${separator}"`);
+  }
+  if (split.length >= 3) {
+    throw new Error(`Links in [[...]] can only contain "${separator}" once`);
+  }
+  if (separator === "<-") {
+    return { type: "linkBox", link: split[0], text: split[1] };
+  } else {
+    return { type: "linkBox", link: split[1], text: split[0] };
   }
 }

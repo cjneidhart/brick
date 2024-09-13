@@ -31,15 +31,16 @@ Now we're including a passage:
 
 @include("Passage \"3\"")
 
-Now let's try a link: @linkTo('Passage 2')
+Now let's try a link: @linkTo('Passage 2') or maybe [[Passage 2]]
 
 @linkTo("Loop Test", "Test out some loops")
 
-@linkTo("Input Macros", "Test input macros")
+// @linkTo("Input Macros", "Test input macros")
+[[Test input macros|Input Macros]]
 
-@linkTo("Modal Test", "Test modal dialogs")
+[[Test modal dialogs->Modal Test]]
 
-@linkTo("Switch Test", "Test out @switch macros")
+[[Switch Test<-Test out @switch macros]]
 
 @linkTo("Do/Redo Test")
 

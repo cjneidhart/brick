@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const fs = require("node:fs");
 const process = require("node:process");
 const path = require("node:path");
@@ -10,6 +8,10 @@ function readTextFile(path) {
 }
 
 const debug = process.env.BRICK_DEBUG;
+const { npm_package_version } = process.env;
+if (!npm_package_version) {
+  throw new Error("This script must be run as `npm run build`");
+}
 
 /** @type {webpack.Configuration} */
 const runtimeConfig = {
@@ -83,7 +85,7 @@ function afterWebpack(err, stats) {
     .replace("{{BRICK_STYLE}}", brickStyle.replaceAll("$", "$$$$"));
   const storyJson = {
     name: "Brick",
-    version: "0.1",
+    version: npm_package_version,
     author: "OrangeChris",
     image: "icon.svg",
     description:

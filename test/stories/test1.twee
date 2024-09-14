@@ -5,7 +5,7 @@ Test 1
 {
   "ifid": "D5585FCC-9F03-41AE-9D24-73BF341E66E6",
   "format": "Brick",
-  "format-version": "0.1"
+  "format-version": "0.0.1"
 }
 
 :: Start

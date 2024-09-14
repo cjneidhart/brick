@@ -176,8 +176,11 @@ export function render(
       if (!macroData) {
         throw new Error("Can't find @linkTo macro for wiki-style [[link]]");
       }
+      if (!nt.text) {
+        throw new Error("The text of a [[link box]] cannot be empty");
+      }
       const childContext = new MacroContext("linkTo", LoopStatus.OUTSIDE_LOOP);
-      target.append(macroData.handler.call(childContext, nt.link, nt.text ?? nt.link));
+      target.append(macroData.handler.call(childContext, nt.link, nt.text));
     } else {
       const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
       target.append(String(value));

@@ -53,7 +53,7 @@ export interface RawVariable {
 export interface LinkBox {
   type: "linkBox";
   link: string;
-  text?: string;
+  text: string;
 }
 
 export type NodeTemplate = ElementTemplate | MacroTemplate | string | RawVariable | LinkBox;
@@ -178,7 +178,7 @@ export class Parser {
             if (sum > 1) {
               throw new Error("Link boxes can only have one of '->', '<-', or '|'");
             } else if (sum === 0) {
-              output.push({ type: "linkBox", link: linkBoxFull });
+              output.push({ type: "linkBox", link: linkBoxFull, text: linkBoxFull });
             } else {
               const separator = hasRightArrow ? "->" : hasLeftArrow ? "<-" : "|";
               output.push(makeLinkBox(linkBoxFull, separator));

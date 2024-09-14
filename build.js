@@ -85,12 +85,20 @@ function afterWebpack(err, stats) {
     name: "Brick",
     version: "0.1",
     author: "OrangeChris",
+    image: "icon.svg",
+    description:
+      "A fully featured, highly customizable story format with numerous programming features and a rich passage editor." +
+      " No Harlowe experience required." +
+      ' <a href="https://github.com/cjneidhart/brick">Homepage</a>',
     source: storyFormat,
     hydrate: editorExtensionsJs,
+    // url: null,
+    // license: null,
   };
   const outString = `window.storyFormat(${JSON.stringify(storyJson)});`;
 
   fs.writeFileSync("storyformats/brick/format.js", outString);
+  fs.copyFileSync("icon.svg", "storyformats/brick/icon.svg");
 }
 
 fs.mkdirSync("dist", { recursive: true });

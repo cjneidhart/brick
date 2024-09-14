@@ -6,8 +6,8 @@ import { clearSlot, slotTitles } from "./saves";
 import { getElementById, makeElement } from "./util";
 
 const modalElement = getElementById("brick-dialog");
-let titleElt: Element;
-let modalBody: Element;
+let titleElt: HTMLElement;
+let modalBody: HTMLElement;
 reset();
 const bsModal = new bootstrap.Modal(modalElement);
 

@@ -77,7 +77,7 @@ export function clone<T>(original: T): T {
 }
 
 /** Similar to `document.getElementById`, but throws an error if the element wasn't found. */
-export function getElementById(elementId: string): Element {
+export function getElementById(elementId: string): HTMLElement {
   const elt = document.getElementById(elementId);
   if (!elt) {
     throw new Error(`No element with id "${elementId}" found`);

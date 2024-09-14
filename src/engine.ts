@@ -8,7 +8,7 @@ export interface Moment {
   vars: Record<string, unknown>;
 }
 
-let mainElt: Element;
+let mainElt: HTMLElement;
 let history: Moment[];
 let index: number;
 export let storyVariables: Record<string, unknown>;

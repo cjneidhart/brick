@@ -110,13 +110,10 @@ add("link", {
       throw new Error("@link: second arg (handler) was not a function");
     }
 
-    const anchor = makeElement("a", { class: "link-primary", href: "#" }, linkText);
-    anchor.addEventListener("click", (event) => {
-      event.preventDefault();
-      onClick.call(this, event);
-    });
+    const button = makeElement("button", { class: "btn btn-outline-primary", type: "button" }, linkText);
+    button.addEventListener("click", (event) => onClick.call(this, event));
 
-    return anchor;
+    return button;
   },
 });
 
@@ -137,14 +134,11 @@ add("linkTo", {
       throw new Error("@linkTo: second arg (link text) must be a string");
     }
 
-    const className = getPassage(psgName) ? "link-primary" : "link-danger";
-    const anchor = makeElement("a", { href: "#", class: className }, linkText);
-    anchor.addEventListener("click", (event) => {
-      event.preventDefault();
-      navigate(psgName);
-    });
+    const className = getPassage(psgName) ? "btn-outline-primary" : "btn-outline-danger";
+    const button = makeElement("button", { class: `btn ${className}`, type: "button" }, linkText);
+    button.addEventListener("click", (event) => navigate(psgName));
 
-    return anchor;
+    return button;
   },
 });
 
@@ -158,19 +152,19 @@ add("linkReplace", {
       throw new Error("@linkReplace: first arg (link text) must be a string");
     }
 
-    const anchor = makeElement("a", { href: "#", class: "link-primary" }, linkText);
+    const button = makeElement("button", { class: "btn btn-outline-primary", type: "button" }, linkText);
 
-    anchor.addEventListener("click", (event) => {
+    button.addEventListener("click", (event) => {
       event.preventDefault();
       const span = makeElement("span", { class: "macro-linkReplace fade-in opacity-0" });
       if (this.content) {
         this.render(span);
       }
-      anchor.replaceWith(span);
+      button.replaceWith(span);
       setTimeout(() => span.classList.remove("opacity-0"), 40);
     });
 
-    return anchor;
+    return button;
   },
 });
 

@@ -121,7 +121,7 @@ This is a modal!
 
 :: Switch Test
 @(_value = "quark")
-@switch(_value) {
+Test 1: @switch(_value) {
   @case("Not this one") {
     ERROR 2
   }
@@ -133,7 +133,16 @@ This is a modal!
   }
 }
 
-@if(!window.Math) {
+Test 2: @switch(_value) {
+  @case("foo", "bar") {
+    ERROR 3
+  }
+  @default {
+    CORRECT
+  }
+}
+
+Test 3: @if(!window.Math) {
   ERROR
 } @else {
   CORRECT

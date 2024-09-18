@@ -110,7 +110,11 @@ add("link", {
       throw new Error("@link: second arg (handler) was not a function");
     }
 
-    const button = makeElement("button", { class: "btn btn-outline-primary", type: "button" }, linkText);
+    const button = makeElement(
+      "button",
+      { class: "btn btn-outline-primary", type: "button" },
+      linkText,
+    );
     button.addEventListener("click", (event) => onClick.call(this, event));
 
     return button;
@@ -136,7 +140,7 @@ add("linkTo", {
 
     const className = getPassage(psgName) ? "btn-outline-primary" : "btn-outline-danger";
     const button = makeElement("button", { class: `btn ${className}`, type: "button" }, linkText);
-    button.addEventListener("click", (event) => navigate(psgName));
+    button.addEventListener("click", () => navigate(psgName));
 
     return button;
   },
@@ -152,7 +156,8 @@ add("linkReplace", {
       throw new Error("@linkReplace: first arg (link text) must be a string");
     }
 
-    const button = makeElement("button", { class: "btn btn-outline-primary", type: "button" }, linkText);
+    const className = "btn btn-outline-primary";
+    const button = makeElement("button", { class: className, type: "button" }, linkText);
 
     button.addEventListener("click", (event) => {
       event.preventDefault();
@@ -295,7 +300,7 @@ add("switch", {
 
     const [value] = args;
 
-    const cases: MacroTemplate[] = [];
+    const children: MacroTemplate[] = [];
     for (const node of this.content) {
       if (typeof node === "string") {
         if (node.trim()) {
@@ -303,24 +308,38 @@ add("switch", {
         }
         // pass: skip over text nodes that are all whitespace
       } else if (node instanceof MacroTemplate) {
-        if (node.name !== "case") {
-          throw new Error("@switch: all children must be @case macros");
-        }
-        if (node.args.length === 0) {
-          throw new Error("@switch: @case macro requires at least one argument");
-        }
-        cases.push(node);
+        children.push(node);
       } else {
         throw new Error("@switch: all children must be @case macros");
       }
     }
 
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
+      if (child.name === "default") {
+        if (i !== children.length - 1) {
+          throw new Error("@switch: @default must be the last macro");
+        }
+        if (child.args.length > 0) {
+          throw new Error("@switch: @default cannot receive any arguments");
+        }
+      } else if (child.name !== "case") {
+        throw new Error("@switch: all children must be @case macros");
+      } else if (child.args.length === 0) {
+        throw new Error("@switch: @case macro requires at least one argument");
+      }
+    }
+
     const output = document.createDocumentFragment();
-    for (const caseMacro of cases) {
-      for (const arg of caseMacro.args) {
+    for (const child of children) {
+      if (child.name === "default") {
+        this.render(output, child.content);
+        return output;
+      }
+      for (const arg of child.args) {
         const other = evalExpression(arg);
         if (value === other) {
-          this.render(output, caseMacro.content);
+          this.render(output, child.content);
           return output;
         }
       }

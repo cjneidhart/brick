@@ -30,7 +30,7 @@ The above markup is equivalent to:
 ```brick
 This is plain text that will be printed.
 
-Here's some mroe text. This text will be printed as well.
+Here's some more text. This text will be printed as well.
 ```
 
 ### Naked Variables
@@ -116,7 +116,7 @@ Their structure must be, in order:
 
 - one `@if` macro
 - any number of `@elseif` macros
-- zero or one `@else` macros
+- an optional `@else` macro
 
 Each `@if` and `@elseif` will have its condition tested, in order.
 The first true condition will have its body displayed.

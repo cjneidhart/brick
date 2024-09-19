@@ -9,30 +9,24 @@
   </head>
   <body>
     {{STORY_DATA}}
-    <div id="brick-viewport" class="container-fluid">
-      <div class="row gx-0">
-        <aside class="col-lg-2">
-          <div id="ui-bar" class="offcanvas-lg offcanvas-start px-2" data-bs-scroll="true" data-bs-backdrop="false">
-            <div class="btn-group text-center w-100 my-2">
-              <button id="brick-history-backward" class="btn btn-outline-primary" type="button">&#x2190;</button>
-              <button id="brick-history-forward" class="btn btn-outline-primary" type="button">&#x2192;</button>
-            </div>
-            <h1 id="story-title" class="text-center">{{STORY_NAME}}</h1>
-            <div class="btn-group-vertical w-100" role="group" aria-label="label">
-              <button id="brick-saves" class="btn btn-outline-primary w-100">SAVES</button>
-              <button id="brick-restart" class="btn btn-outline-primary w-100">RESTART</button>
-            </div>
-          </div>
-        </aside>
-
-        <div class="col p-3">
-          <main id="brick-main" class="mx-auto">
-            <noscript>JavaScript must be enabled to play this story.</noscript>
-          </main>
+    <div id="brick-viewport">
+      <aside id="ui-bar">
+        <div id="brick-history-controls">
+          <button id="brick-history-backward" class="brick-sidebar-btn" type="button">&#x2190;</button>
+          <button id="brick-history-forward" class="brick-sidebar-btn" type="button">&#x2192;</button>
         </div>
+        <h1 id="story-title">{{STORY_NAME}}</h1>
+        <ul id="brick-menu-core">
+          <li><button id="brick-saves" class="brick-sidebar-btn" type="button">SAVES</button></li>
+          <li><button id="brick-restart" class="brick-sidebar-btn" type="button">RESTART</button></li>
+        </ul>
+      </aside>
+
+      <div id="brick-passages">
+        <noscript>JavaScript must be enabled to play this story.</noscript>
       </div>
     </div>
-    <div id="brick-dialog" class="modal" tabindex="-1"></div>
+    <dialog id="brick-dialog"></div>
     <script id="script-brick" type="text/javascript">{{BRICK_SCRIPT}}</script>
   </body>
 </html>

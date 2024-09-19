@@ -1,29 +1,119 @@
-/* tw-storydata {
-  display: hidden;
-} */
+#brick-viewport {
+  display: flex;
+  flex-direction: inline;
 
-/* #story {
-  margin: 2rem;
-  margin-left: calc(400px + 2rem);
-} */
-
-#brick-main {
-  max-width: 60rem;
+  > * {
+    flex: 1;
+  }
 }
 
-.fade-in {
-  transition: opacity 0.5s;
+.brick-linkReplace,
+.brick-active-passage {
+  transition: opacity 0.4s;
+}
+
+.brick-transparent {
+  opacity: 0;
 }
 
 #ui-bar {
   height: 100vh;
+  height: 100dvh;
   border-right: 1px solid black;
+  max-width: 24rem;
+  overflow-block: scroll;
+  padding: 0.5rem;
+  position: sticky;
+  top: 0;
 }
 
-#brick-viewport {
+.brick-sidebar-btn {
+  background: none;
+  border: 1px solid black;
+  padding-block: 0.25rem;
+  transition:
+    color 0.15s ease-in-out,
+    background-color 0.15s ease-in-out;
+  &:hover {
+    color: white;
+    background-color: black;
+  }
+  &:disabled {
+    color: var(--bs-secondary);
+  }
+}
+
+#brick-history-controls {
+  display: flex;
+  flex-direction: row;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 0.5rem;
+
+  > * {
+    flex-grow: 1;
+  }
+}
+
+#story-title {
+  text-align: center;
+}
+
+#brick-menu-core {
+  width: 100%;
+  text-align: center;
+  list-style: none;
   padding: 0;
 
-  & > .row {
-    margin: 0;
+  button {
+    width: 100%;
   }
+}
+
+#brick-passages {
+  max-width: 60rem;
+  margin-inline: auto;
+  padding-top: 1rem;
+}
+
+#brick-dialog {
+  border-radius: 0.5rem;
+  margin-top: 2rem;
+  max-width: 90vw;
+  max-width: 90svw;
+  min-width: 30rem;
+  overflow-x: scroll;
+  &::backdrop {
+    backdrop-filter: brightness(50%) blur(0.25rem);
+  }
+}
+
+#brick-dialog.brick-saves table {
+  border: 1px solid black;
+  width: 100%;
+
+  :is(th, td) {
+    border: 1px solid black;
+  }
+
+  :is(th, td):nth-child(3) {
+    width: 100%;
+  }
+}
+
+.brick-link {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-decoration: underline #0d6efd;
+  color: #0d6efd;
+
+  &:hover {
+    color: #0a58ca;
+    text-decoration-color: #0a58ca;
+  }
+}
+
+.brick-text-secondary {
+  color: var(--bs-secondary);
 }

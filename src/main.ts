@@ -1,4 +1,3 @@
-import * as bootstrap from "bootstrap";
 import * as dialog from "./dialog";
 import * as engine from "./engine";
 import { get as getPassage, init as initPassages } from "./passages";
@@ -30,11 +29,9 @@ window.addEventListener("unhandledrejection", (event) => {
 declare global {
   interface Window {
     Brick: typeof BrickPublic;
-    bootstrap: typeof bootstrap;
   }
 }
 window.Brick = BrickPublic;
-window.bootstrap = bootstrap;
 
 const storyData = document.getElementsByTagName("tw-storydata")[0];
 initPassages(storyData);
@@ -52,6 +49,7 @@ for (const stylesheet of styles) {
   document.head.appendChild(styleElt);
 }
 
+dialog.init();
 engine.init();
 initSaves();
 

@@ -110,11 +110,7 @@ add("link", {
       throw new Error("@link: second arg (handler) was not a function");
     }
 
-    const button = makeElement(
-      "button",
-      { class: "btn btn-outline-primary", type: "button" },
-      linkText,
-    );
+    const button = makeElement("button", { class: "brick-link", type: "button" }, linkText);
     button.addEventListener("click", (event) => onClick.call(this, event));
 
     return button;
@@ -138,8 +134,8 @@ add("linkTo", {
       throw new Error("@linkTo: second arg (link text) must be a string");
     }
 
-    const className = getPassage(psgName) ? "btn-outline-primary" : "btn-outline-danger";
-    const button = makeElement("button", { class: `btn ${className}`, type: "button" }, linkText);
+    // const className = getPassage(psgName) ? "btn-outline-primary" : "btn-outline-danger";
+    const button = makeElement("button", { class: "brick-link", type: "button" }, linkText);
     button.addEventListener("click", () => navigate(psgName));
 
     return button;
@@ -156,17 +152,16 @@ add("linkReplace", {
       throw new Error("@linkReplace: first arg (link text) must be a string");
     }
 
-    const className = "btn btn-outline-primary";
-    const button = makeElement("button", { class: className, type: "button" }, linkText);
+    const button = makeElement("button", { class: "brick-link", type: "button" }, linkText);
 
     button.addEventListener("click", (event) => {
       event.preventDefault();
-      const span = makeElement("span", { class: "macro-linkReplace fade-in opacity-0" });
+      const span = makeElement("span", { class: "brick-linkReplace brick-transparent" });
       if (this.content) {
         this.render(span);
       }
       button.replaceWith(span);
-      setTimeout(() => span.classList.remove("opacity-0"), 40);
+      setTimeout(() => span.classList.remove("brick-transparent"), 40);
     });
 
     return button;

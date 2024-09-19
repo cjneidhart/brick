@@ -8,7 +8,7 @@ export interface Moment {
   vars: Record<string, unknown>;
 }
 
-let mainElt: HTMLElement;
+let container: HTMLElement;
 let history: Moment[];
 let index: number;
 export let storyVariables: Record<string, unknown>;
@@ -16,7 +16,7 @@ export let tempVariables: Record<string, unknown>;
 
 /** Initialize the engine */
 export function init() {
-  mainElt = getElementById("brick-main");
+  container = getElementById("brick-passages");
   history = [];
   index = -1;
   storyVariables = {};
@@ -80,11 +80,11 @@ function renderActive() {
   storyVariables = clone(moment.vars);
   tempVariables = {};
 
-  mainElt.innerHTML = "";
-  const newDiv = makeElement("div", { class: "opacity-0 fade-in" });
-  render(newDiv, psg.content);
-  mainElt.append(newDiv);
-  setTimeout(() => newDiv.classList.remove("opacity-0"), 40);
+  container.innerHTML = "";
+  const main = makeElement("main", { class: "brick-active-passage brick-transparent" });
+  render(main, psg.content);
+  container.append(main);
+  setTimeout(() => main.classList.remove("brick-transparent"), 40);
 }
 
 export function loadFromActive(): boolean {

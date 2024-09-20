@@ -1,10 +1,10 @@
 # Brick
 
-This is a WIP Story Format for Twine/Tweego. Currently, only Tweego is supported.
+This is a WIP Story Format for Twine/Tweego.
 
 This format is intended to be a midpoint between [Snowman](https://videlais.github.io/snowman/) and [SugarCube](https://www.motoslave.net/sugarcube/2/).
-Like SugarCube, this format comes with a standard API for save management using local storage, and other high-quality features.
-But where SugarCube macros are styled like HTML elements, Brick macros are styled like JavaScript function calls.
+Like SugarCube, this format will be “full featured” and “highly customizable”, but it will have more JavaScript-like syntax.
+Where SugarCube macros are styled like HTML elements, Brick macros are styled like JavaScript function calls.
 
 ## Example
 
@@ -13,7 +13,7 @@ But where SugarCube macros are styled like HTML elements, Brick macros are style
 // with the addition of '$' and '_' to denote story and temporary variables.
 @($inventory = ["apple", "sword", "cloak"])
 
-// "if", "for", "while" and "switch" work like their JavaScript counterparts
+// "if", "for", and "while" work like their JavaScript counterparts
 @if ($inventory.length === 0) {
   Your inventory is currently empty.
 } @else {
@@ -38,7 +38,11 @@ But where SugarCube macros are styled like HTML elements, Brick macros are style
 @include("Inventory Comment".toLowerCase())
 
 // Wiki-style links of course
-[[Shop]] [[Go to Bed->Sleep]]
+[[Shop]] // This will create a hyperlink to the passage "Shop"
+
+// This will create a hyperlink with the text "Go to Bed",
+// that links to the passage "Sleep"
+[[Go to Bed->Sleep]]
 ```
 
 ## Usage

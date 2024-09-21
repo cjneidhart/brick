@@ -44,6 +44,8 @@ Now let's try a link: @linkTo('Passage 2') or maybe [[Passage 2]]
 
 @linkTo("Do/Redo Test")
 
+[[Error Test]]
+
 
 :: Passage 2
 You have navigated to Passage 2.
@@ -161,3 +163,9 @@ Counter: @do { _counter }
 })
 
 @linkTo("Start", "return")
+
+
+:: Error Test
+@linkTo("Start")
+
+Here's an error: [[Passage|Maybe->Maybe Not]]

@@ -1,5 +1,5 @@
-const config: { preRender: undefined | Function } = {
-  preRender: undefined,
+const config: { preProcessText: undefined | Function } = {
+  preProcessText: undefined,
 };
 
 function throwTypeError(location: string, expected: string, got: unknown): never {
@@ -7,18 +7,14 @@ function throwTypeError(location: string, expected: string, got: unknown): never
 }
 
 export default {
-  get preRender(): Function | undefined {
-    return config.preRender;
+  get preProcessText(): Function | undefined {
+    return config.preProcessText;
   },
-  set preRender(func: unknown) {
-    switch (typeof func) {
-      case "undefined":
-      case "function":
-        config.preRender = func;
-        break;
 
-      default:
-        throwTypeError("Config.preRender", "function or undefined", func);
+  set preProcessText(func: unknown) {
+    if (typeof func !== "undefined" && typeof func !== "function") {
+      throwTypeError("Config.preProcessText", "function or undefined", func);
     }
+    config.preProcessText = func;
   },
 };

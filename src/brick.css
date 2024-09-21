@@ -128,3 +128,14 @@
 .brick-text-secondary {
   color: var(--bs-secondary);
 }
+
+.brick-error {
+  background-color: hsl(0 80 20);
+  border-inline: 0.25rem solid red;
+  padding: 0.25rem;
+
+  code {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+  }
+}

@@ -49,21 +49,35 @@ export interface RawVariable {
   name: string;
 }
 
-/** A [[Link]] */
+/** A wiki-style [[Link]] */
 export interface LinkBox {
   type: "linkBox";
   link: string;
   text: string;
 }
 
-export type NodeTemplate = ElementTemplate | MacroTemplate | string | RawVariable | LinkBox;
+/** A parse error that should be displayed */
+export interface ErrorMessage {
+  type: "error";
+  /** A description of the error */
+  message: string;
+  /** A snippet of the text where the error was found. */
+  locationSample: string;
+}
+
+export type NodeTemplate =
+  | ElementTemplate
+  | MacroTemplate
+  | string
+  | RawVariable
+  | LinkBox
+  | ErrorMessage;
 
 export class Parser {
   input: string;
   index: number;
 
   constructor(source: string) {
-    console.log(source);
     this.input = source;
     this.index = 0;
   }
@@ -167,17 +181,22 @@ export class Parser {
 
         case "[":
           if (this.consume(/\[/y)) {
-            const m = this.consume(/(.*)(?<!\\)\]\]/y);
+            const m = this.consume(/((?:[^\\\]]|\\.)*)\]\]/y);
             if (!m) {
               throw new Error("Unmatched `[[`");
             }
             const linkBoxFull = m[1];
+            console.log(linkBoxFull);
             const hasRightArrow = linkBoxFull.includes("->");
             const hasLeftArrow = linkBoxFull.includes("<-");
             const hasPipe = linkBoxFull.includes("|");
             const sum = Number(hasRightArrow) + Number(hasLeftArrow) + Number(hasPipe);
             if (sum > 1) {
-              throw new Error("Link boxes can only have one of '->', '<-', or '|'");
+              output.push({
+                type: "error",
+                message: "Link boxes can only have one of '->', '<-', or '|'",
+                locationSample: `[[${linkBoxFull}]]`,
+              });
             } else if (sum === 0) {
               output.push({ type: "linkBox", link: linkBoxFull, text: linkBoxFull });
             } else {
@@ -190,7 +209,6 @@ export class Parser {
           break;
 
         case "(":
-        case "?":
         case "]":
           throw new Error(`Cannot yet handle unescaped '${c}' (U+${c.charCodeAt(0)})`);
 
@@ -222,7 +240,6 @@ export class Parser {
     while (!this.consume(RE.closeTag)) {
       const match = this.consume(RE.htmlAttr);
       if (!match) {
-        console.log(name);
         throw new Error("closing '>' expected");
       }
       const [_, key, value] = match;

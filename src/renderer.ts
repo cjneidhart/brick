@@ -92,10 +92,10 @@ export function render(
     const parser = new Parser(input);
     inputNodes = parser.parse();
   } else if (input instanceof Passage) {
-    if (Config.preRender) {
-      const text = Config.preRender(input);
+    if (Config.preProcessText) {
+      const text = Config.preProcessText(input);
       if (typeof text !== "string") {
-        throw new TypeError(`Config.preRender returned a ${typeof text}, expected a string`);
+        throw new TypeError(`Config.preProcessText returned a ${typeof text}, expected a string`);
       }
       return render(target, text);
     } else {
@@ -193,6 +193,11 @@ export function render(
       }
       const childContext = new MacroContext("linkTo", LoopStatus.OUTSIDE_LOOP);
       target.append(macroData.handler.call(childContext, nt.link, nt.text));
+    } else if (nt.type === "error") {
+      const br = makeElement("br");
+      const loc = makeElement("code", {}, nt.locationSample);
+      const span = makeElement("span", { class: "brick-error" }, `ERROR: ${nt.message}`, br, loc);
+      target.append(span);
     } else {
       const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
       target.append(String(value));

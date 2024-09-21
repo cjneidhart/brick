@@ -69,20 +69,25 @@ export function remove(name: string): boolean {
 
 add("include", {
   handler(...args: unknown[]) {
-    const [psgName] = args;
+    const [psgName, elementName] = args;
 
-    if (args.length !== 1) {
+    if (args.length < 1 || args.length > 2) {
       throw new Error("@include must be called with 1 argument");
     }
     if (typeof psgName !== "string") {
       throw new Error("@include: first arg (passage name) must be a string");
     }
+    if (typeof elementName !== "undefined" && typeof elementName !== "string") {
+      throw new Error("@include: second arg (element type) must be a string or undefined");
+    }
+
+    const actualEltName = elementName || "div";
 
     const passage = getPassage(psgName);
     if (!passage) {
       throw new Error(`Passage not found: "${psgName}"`);
     }
-    const div = makeElement("div");
+    const div = makeElement(actualEltName);
     this.render(div, passage);
 
     return div;

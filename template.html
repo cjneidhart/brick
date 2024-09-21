@@ -1,32 +1,39 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>{{STORY_NAME}}</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <style id="style-bootstrap">{{BOOTSTRAP_CSS}}</style>
-    <style id="style-brick">{{BRICK_STYLE}}</style>
-  </head>
-  <body>
-    {{STORY_DATA}}
-    <div id="brick-viewport">
-      <aside id="ui-bar">
-        <div id="brick-history-controls">
-          <button id="brick-history-backward" class="brick-sidebar-btn" type="button">&#x2190;</button>
-          <button id="brick-history-forward" class="brick-sidebar-btn" type="button">&#x2192;</button>
-        </div>
-        <h1 id="story-title">{{STORY_NAME}}</h1>
-        <ul id="brick-menu-core">
-          <li><button id="brick-saves" class="brick-sidebar-btn" type="button">SAVES</button></li>
-          <li><button id="brick-restart" class="brick-sidebar-btn" type="button">RESTART</button></li>
-        </ul>
-      </aside>
+<html lang="en-US" data-bs-theme="dark">
 
-      <div id="brick-passages">
-        <noscript>JavaScript must be enabled to play this story.</noscript>
+<head>
+  <meta charset="utf-8">
+  <title>{{STORY_NAME}}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style id="style-bootstrap">
+    /*BOOTSTRAP_STYLE*/
+  </style>
+  <style id="style-brick">
+    /*BRICK_STYLE*/
+  </style>
+</head>
+
+<body>
+  {{STORY_DATA}}
+  <div id="brick-viewport">
+    <aside id="ui-bar">
+      <div id="brick-history-controls">
+        <button id="brick-history-backward" class="brick-sidebar-btn" type="button">&#x2190;</button>
+        <button id="brick-history-forward" class="brick-sidebar-btn" type="button">&#x2192;</button>
       </div>
+      <h1 id="story-title">{{STORY_NAME}}</h1>
+      <ul id="brick-menu-core">
+        <li><button id="brick-saves" class="brick-sidebar-btn" type="button">SAVES</button></li>
+        <li><button id="brick-restart" class="brick-sidebar-btn" type="button">RESTART</button></li>
+      </ul>
+    </aside>
+
+    <div id="brick-passages">
+      <noscript>JavaScript must be enabled to play this story.</noscript>
     </div>
-    <dialog id="brick-dialog"></div>
-    <script id="script-brick" type="text/javascript">{{BRICK_SCRIPT}}</script>
-  </body>
+  </div>
+  <dialog id="brick-dialog"></dialog>
+  <script id="script-brick" type="text/javascript">/*BRICK_SCRIPT*/</script>
+</body>
+
 </html>

@@ -22,9 +22,10 @@ export default tseslint.config(
           ignoreRestSiblings: true,
         },
       ],
+      "@typescript-eslint/no-unsafe-function-type": "off",
     },
   },
   {
-    ignores: ["dist/", "storyformats/", "build.js", "test.js"],
+    ignores: ["dist/", "storyformats/", "test/", "build.js", "test.js"],
   },
 );

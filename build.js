@@ -78,11 +78,10 @@ function afterWebpack(err, stats) {
   const editorExtensionsJs = readTextFile("twine-editor.js");
 
   const storyFormat = templateText
-    .replace("{{BOOTSTRAP_CSS}}", bsCss.replaceAll("$", "$$$$"))
-    // .replace("{{BOOTSTRAP_SCRIPT}}", bsJs.replaceAll("$", "$$$$"))
+    .replace("/*BOOTSTRAP_STYLE*/", bsCss.replaceAll("$", "$$$$"))
     .replaceAll(/#\s*sourceMappingURL=bootstrap.*map/gm, "")
-    .replace("{{BRICK_SCRIPT}}", scriptText.replaceAll("$", "$$$$"))
-    .replace("{{BRICK_STYLE}}", brickStyle.replaceAll("$", "$$$$"));
+    .replace("/*BRICK_SCRIPT*/", scriptText.replaceAll("$", "$$$$"))
+    .replace("/*BRICK_STYLE*/", brickStyle.replaceAll("$", "$$$$"));
   const storyJson = {
     name: "Brick",
     version: npm_package_version,

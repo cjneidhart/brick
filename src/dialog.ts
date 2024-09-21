@@ -104,7 +104,8 @@ function updateSaveMenuRow(slotNumber: number, row: HTMLTableRowElement) {
     });
   } else {
     deleteButton.disabled = true;
-    row.append(makeElement("td", { class: "brick-text-secondary" }, "Empty"));
+    const em = makeElement("em", {}, "Empty");
+    row.append(makeElement("td", { class: "brick-text-secondary" }, em));
     saveLoadButton.innerText = "Save";
     saveLoadButton.addEventListener("click", () => {
       engine.saveToSlot(slotNumber);

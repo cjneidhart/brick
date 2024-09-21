@@ -30,9 +30,32 @@ export const BrickPublic = Object.freeze({
   },
 });
 
+const envKeys = ["Brick", "Dialog", "Passages", "Util"];
+
+const envValues = [
+  Object.freeze({
+    forward,
+    backward,
+    get vars() {
+      return storyVariables;
+    },
+    get temp() {
+      return tempVariables;
+    },
+    redo: function (this: null) {
+      for (const element of document.querySelectorAll(".brick-macro-do")) {
+        element.dispatchEvent(new Event("brick-redo"));
+      }
+    },
+  }),
+  Object.freeze({ showPassage }),
+  Object.freeze({ get: passages.get }),
+  Object.freeze(Util),
+];
+
 export function evalJavaScript(js: string): unknown {
-  const fn = new Function(`'use strict';${js}`);
-  return fn();
+  const fn = new Function(...envKeys, `'use strict';${js}`);
+  return fn(...envValues);
 }
 
 export function evalExpression(js: string): unknown {
@@ -40,6 +63,6 @@ export function evalExpression(js: string): unknown {
 }
 
 export function evalAssign(place: string, value: unknown) {
-  const fn = new Function(`"use strict"; ${place} = arguments[0]`);
-  fn(value);
+  const fn = new Function(...envKeys, `"use strict"; ${place} = arguments[arguments.length - 1]`);
+  fn(...envValues, value);
 }

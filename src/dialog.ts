@@ -55,7 +55,7 @@ export function showPassage(passageName: string) {
   reset();
 
   titleElt.append(passageName);
-  render(modalBody, passage.content);
+  render(modalBody, passage);
 
   dialogElement.showModal();
 }

@@ -82,7 +82,7 @@ function renderActive() {
 
   container.innerHTML = "";
   const main = makeElement("main", { class: "brick-active-passage brick-transparent" });
-  render(main, psg.content);
+  render(main, psg);
   container.append(main);
   setTimeout(() => main.classList.remove("brick-transparent"), 40);
 }

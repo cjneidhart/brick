@@ -2,7 +2,7 @@ const RE = {
   closeTag: />/y,
   commentBlock: /\*(?:[^])*?\*\//y,
   commentLine: /\/.*\n?/y,
-  elementName: /[a-zA-Z]+/y,
+  elementName: /[a-zA-Z0-9]+/y,
   htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/y,
   js: {
     identifier: /[a-zA-Z][a-zA-Z0-9_$]*/y,
@@ -63,6 +63,7 @@ export class Parser {
   index: number;
 
   constructor(source: string) {
+    console.log(source);
     this.input = source;
     this.index = 0;
   }
@@ -221,6 +222,7 @@ export class Parser {
     while (!this.consume(RE.closeTag)) {
       const match = this.consume(RE.htmlAttr);
       if (!match) {
+        console.log(name);
         throw new Error("closing '>' expected");
       }
       const [_, key, value] = match;

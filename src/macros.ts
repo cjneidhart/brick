@@ -1,6 +1,6 @@
 import { navigate } from "./engine";
 import { MacroTemplate, NodeTemplate } from "./parser";
-import { get as getPassage } from "./passages";
+import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
 import { evalAssign, evalExpression } from "./scripting";
 import { makeElement, uniqueId } from "./util";
@@ -25,7 +25,7 @@ export class MacroContext {
     this.content = content;
   }
 
-  render(target: Element | DocumentFragment, input?: string | NodeTemplate[]) {
+  render(target: Element | DocumentFragment, input?: string | NodeTemplate[] | Passage) {
     input ||= this.content || [];
     switch (this.loopStatus) {
       case LoopStatus.OUTSIDE_LOOP:
@@ -83,7 +83,7 @@ add("include", {
       throw new Error(`Passage not found: "${psgName}"`);
     }
     const div = makeElement("div");
-    this.render(div, passage.content);
+    this.render(div, passage);
 
     return div;
   },

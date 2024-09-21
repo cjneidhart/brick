@@ -1,3 +1,4 @@
+import Config from "./config";
 import { showPassage } from "./dialog";
 import { backward, forward, storyVariables, tempVariables } from "./engine";
 import * as passages from "./passages";
@@ -30,7 +31,7 @@ export const BrickPublic = Object.freeze({
   },
 });
 
-const envKeys = ["Brick", "Dialog", "Passages", "Util"];
+const envKeys = ["Brick", "Config", "Dialog", "Passages", "Util"];
 
 const envValues = [
   Object.freeze({
@@ -48,6 +49,7 @@ const envValues = [
       }
     },
   }),
+  Object.freeze(Config),
   Object.freeze({ showPassage }),
   Object.freeze({ get: passages.get }),
   Object.freeze(Util),

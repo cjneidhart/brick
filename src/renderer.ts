@@ -1,6 +1,8 @@
+import Config from "./config";
 import { storyVariables, tempVariables } from "./engine";
 import { get as getMacro, LoopStatus, MacroContext } from "./macros";
 import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
+import { Passage } from "./passages";
 import { evalExpression } from "./scripting";
 import { makeElement } from "./util";
 
@@ -82,13 +84,23 @@ function _isPhrasingNode(node: string | Element): boolean {
  */
 export function render(
   target: Element | DocumentFragment,
-  input: string | NodeTemplate[],
+  input: string | NodeTemplate[] | Passage,
   parentContext?: MacroContext,
 ) {
   let inputNodes;
   if (typeof input === "string") {
     const parser = new Parser(input);
     inputNodes = parser.parse();
+  } else if (input instanceof Passage) {
+    if (Config.preRender) {
+      const text = Config.preRender(input);
+      if (typeof text !== "string") {
+        throw new TypeError(`Config.preRender returned a ${typeof text}, expected a string`);
+      }
+      return render(target, text);
+    } else {
+      return render(target, input.content);
+    }
   } else {
     inputNodes = input;
   }

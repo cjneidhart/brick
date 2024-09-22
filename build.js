@@ -70,7 +70,7 @@ function afterWebpack(err, stats) {
     return;
   }
 
-  const templateText = readTextFile("template.html");
+  const templateText = readTextFile("src/brick.html");
   const scriptText = readTextFile("dist/brick.js");
   const brickStyle = readTextFile("src/brick.css");
   const bsCss = readTextFile("node_modules/bootstrap/dist/css/bootstrap-reboot.min.css");

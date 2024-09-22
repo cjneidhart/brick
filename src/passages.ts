@@ -83,6 +83,7 @@ function checkBannedTags(tags: readonly string[], passageName: string) {
 
 const byId = new Map<string, Passage>();
 const byName = new Map<string, Passage>();
+let startPassage: Passage;
 
 export function init(storyData: Element) {
   const passageElements = storyData.getElementsByTagName("tw-passagedata");
@@ -114,6 +115,21 @@ export function init(storyData: Element) {
     byId.set(id, passage);
     byName.set(name, passage);
   }
+
+  const startPid = storyData.getAttribute("startnode");
+  if (startPid) {
+    const maybeStart = byId.get(startPid);
+    if (!maybeStart) {
+      throw new Error(`Could not determine starting passage; no passage with ${startPid}`);
+    }
+    startPassage = maybeStart;
+  } else {
+    const maybeStart = byName.get("Start");
+    if (!maybeStart) {
+      throw new Error(`Could not find a passage named "Start"`);
+    }
+    startPassage = maybeStart;
+  }
 }
 
 export function filter(predicate: (passage: Passage) => boolean): Passage[] {
@@ -137,6 +153,10 @@ export function find(predicate: (passage: Passage) => boolean): Passage | undefi
 
 export function get(name: string): Passage | undefined {
   return byName.get(name);
+}
+
+export function start(): Passage {
+  return startPassage;
 }
 
 export function withTag(tag: string): Passage[] {

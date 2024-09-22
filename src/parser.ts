@@ -186,7 +186,6 @@ export class Parser {
               throw new Error("Unmatched `[[`");
             }
             const linkBoxFull = m[1];
-            console.log(linkBoxFull);
             const hasRightArrow = linkBoxFull.includes("->");
             const hasLeftArrow = linkBoxFull.includes("<-");
             const hasPipe = linkBoxFull.includes("|");

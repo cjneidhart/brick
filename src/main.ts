@@ -1,6 +1,6 @@
 import * as dialog from "./dialog";
 import * as engine from "./engine";
-import { get as getPassage, init as initPassages } from "./passages";
+import * as passages from "./passages";
 import { init as initSaves } from "./saves";
 import { BrickPublic, evalJavaScript } from "./scripting";
 import { makeElement } from "./util";
@@ -34,7 +34,7 @@ declare global {
 window.Brick = BrickPublic;
 
 const storyData = document.getElementsByTagName("tw-storydata")[0];
-initPassages(storyData);
+passages.init(storyData);
 const styles = storyData.querySelectorAll<HTMLStyleElement>('style[type="text/twine-css"]');
 const scripts = storyData.querySelectorAll('script[type="text/twine-javascript"]');
 
@@ -57,13 +57,13 @@ for (const script of scripts) {
   evalJavaScript(script.textContent || "");
 }
 
-const startPassage = getPassage("Start");
+const startPassage = passages.get("Start");
 if (!startPassage) {
   throw new Error("No starting passage found");
 }
 
 if (!engine.loadFromActive()) {
-  engine.navigate(startPassage);
+  engine.navigate(passages.start());
 }
 
 function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) => unknown) {

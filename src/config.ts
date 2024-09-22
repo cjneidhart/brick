@@ -1,5 +1,11 @@
-const config: { preProcessText: undefined | Function } = {
+interface Config {
+  preProcessText?: Function;
+  stream: boolean;
+}
+
+const config: Config = {
   preProcessText: undefined,
+  stream: false,
 };
 
 function throwTypeError(location: string, expected: string, got: unknown): never {
@@ -16,5 +22,13 @@ export default {
       throwTypeError("Config.preProcessText", "function or undefined", func);
     }
     config.preProcessText = func;
+  },
+
+  get stream(): boolean {
+    return config.stream;
+  },
+
+  set stream(value: unknown) {
+    config.stream = !!value;
   },
 };

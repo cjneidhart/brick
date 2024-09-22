@@ -1,3 +1,4 @@
+import config from "./config";
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
 import * as saves from "./saves";
@@ -8,7 +9,7 @@ export interface Moment {
   vars: Record<string, unknown>;
 }
 
-let container: HTMLElement;
+let mainElement: HTMLElement;
 let history: Moment[];
 let index: number;
 export let storyVariables: Record<string, unknown>;
@@ -16,7 +17,8 @@ export let tempVariables: Record<string, unknown>;
 
 /** Initialize the engine */
 export function init() {
-  container = getElementById("brick-passages");
+  mainElement = getElementById("brick-main");
+  mainElement.innerHTML = "";
   history = [];
   index = -1;
   storyVariables = {};
@@ -80,11 +82,25 @@ function renderActive() {
   storyVariables = clone(moment.vars);
   tempVariables = {};
 
-  container.innerHTML = "";
-  const main = makeElement("main", { class: "brick-active-passage brick-transparent" });
-  render(main, psg);
-  container.append(main);
-  setTimeout(() => main.classList.remove("brick-transparent"), 40);
+  if (config.stream) {
+    for (const elt of mainElement.querySelectorAll(":enabled")) {
+      elt.setAttribute("disabled", "");
+    }
+    for (const elt of document.querySelectorAll(".brick-active-passage")) {
+      elt.classList.remove("brick-active-passage");
+    }
+    // container.append(makeElement("hr"));
+  } else {
+    mainElement.innerHTML = "";
+  }
+
+  const article = makeElement("article", {
+    class: "brick-passage brick-active-passage brick-transparent",
+  });
+  render(article, psg);
+  mainElement.append(article);
+  article.scrollIntoView();
+  setTimeout(() => article.classList.remove("brick-transparent"), 40);
 }
 
 export function loadFromActive(): boolean {

@@ -46,6 +46,9 @@ Now let's try a link: @linkTo('Passage 2') or maybe [[Passage 2]]
 
 [[Error Test]]
 
+Here's a big block:
+<div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
+
 
 :: Passage 2
 You have navigated to Passage 2.

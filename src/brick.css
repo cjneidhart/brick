@@ -70,10 +70,24 @@
   }
 }
 
-#brick-passages {
+#brick-main {
   max-width: 60rem;
   margin-inline: auto;
+  /* padding-top: 1rem; */
+}
+
+.brick-passage {
   padding-top: 1rem;
+}
+
+.brick-passage:not(:last-child) {
+  border-bottom: 1px solid currentColor;
+  /* margin-bottom: 1rem; */
+  padding-bottom: 1rem;
+}
+
+.brick-active-passage {
+  margin-bottom: 5rem;
 }
 
 #brick-dialog {
@@ -119,9 +133,15 @@
   text-decoration: underline var(--bs-link-color);
   color: var(--bs-link-color);
 
-  &:hover {
+  &:hover:enabled {
     color: var(--bs-link-hover-color);
     text-decoration-color: var(--bs-link-hover-color);
+  }
+
+  &:disabled {
+    color: var(--bs-secondary);
+    cursor: not-allowed;
+    text-decoration-color: var(--bs-secondary);
   }
 }
 
@@ -132,10 +152,12 @@
 .brick-error {
   background-color: hsl(0 80 20);
   border-inline: 0.25rem solid red;
+  line-height: 2;
   padding: 0.25rem;
 
   code {
     background-color: var(--bs-body-bg);
     color: var(--bs-body-color);
+    padding: 0.125rem;
   }
 }

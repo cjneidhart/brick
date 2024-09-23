@@ -97,7 +97,11 @@ function renderActive() {
   const article = makeElement("article", {
     class: "brick-passage brick-active-passage brick-transparent",
   });
+  const header = getPassage("StoryHeader");
+  const footer = getPassage("StoryFooter");
+  if (header) render(article, header);
   render(article, psg);
+  if (footer) render(article, footer);
   mainElement.append(article);
   article.scrollIntoView();
   setTimeout(() => article.classList.remove("brick-transparent"), 40);

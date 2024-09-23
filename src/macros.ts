@@ -159,8 +159,7 @@ add("linkReplace", {
 
     const button = makeElement("button", { class: "brick-link", type: "button" }, linkText);
 
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
+    button.addEventListener("click", () => {
       const span = makeElement("span", { class: "brick-linkReplace brick-transparent" });
       if (this.content) {
         this.render(span);

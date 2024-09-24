@@ -7,9 +7,73 @@ export interface SaveState {
   index: number;
 }
 
+interface SerializeDefinition {
+  constructor: Function;
+  name: string;
+  serialize: Function;
+  deserialize: Function;
+}
+
 let prefix: string;
 let sm: Storage;
 export let slotTitles: (string | null)[];
+
+const specialClasses: SerializeDefinition[] = [];
+
+addSerializer(
+  Date,
+  undefined,
+  (date: Date) => date.valueOf(),
+  (value: number) => new Date(value),
+);
+addSerializer(Map, undefined, Array.from, (plain: [unknown, unknown][]) => new Map(plain));
+addSerializer(
+  RegExp,
+  undefined,
+  (value: RegExp) => [value.source, value.flags],
+  (plain: [string, string]) => new RegExp(...plain),
+);
+addSerializer(Set, undefined, Array.from, (plain: unknown[]) => new Set(plain));
+
+export function addSerializer(
+  constructor: unknown,
+  name?: unknown,
+  serialize?: unknown,
+  deserialize?: unknown,
+) {
+  if (typeof constructor !== "function") {
+    throw new Error("addSerializer: `constructor` must be a function");
+  }
+  if (name === undefined) {
+    name = constructor.name;
+  }
+  if (typeof name !== "string") {
+    throw new Error("addSerializer: `name` must be undefined or a string");
+  }
+  if (serialize === undefined) {
+    const c = constructor as unknown as Record<string, unknown>;
+    serialize = c.serialize;
+  }
+  if (typeof serialize !== "function") {
+    throw new Error("addSerializer: `serialize` must be undefined or a string");
+  }
+  if (deserialize === undefined) {
+    const c = constructor as unknown as Record<string, unknown>;
+    deserialize = c.deserialize;
+  }
+  if (typeof deserialize !== "function") {
+    throw new Error("addSerializer: `deserialize` must be undefined or a string");
+  }
+  if (specialClasses.some((specialClass) => specialClass.name === name) || name === "undefined") {
+    throw new Error(`addSerializer: "${name}" has already been registered`);
+  }
+  specialClasses.push({
+    constructor,
+    name,
+    serialize,
+    deserialize,
+  });
+}
 
 export function init() {
   // TODO: add IFID
@@ -57,8 +121,21 @@ function load(key: string): SaveState | undefined {
 }
 
 function loadReplacer(_key: string, value: unknown) {
-  if (typeof value === "object" && value && "!brick-revive" in value) {
-    console.warn(`Cannot yet handle ${value["!brick-revive"]} revivers`);
+  if (Array.isArray(value) && typeof value[0] === "string") {
+    if (value[0] === "!brick-revive:undefined") {
+      return undefined;
+    } else if (value[0].startsWith("!brick-revive:")) {
+      if (value.length !== 2) {
+        throw new Error("malformed save data");
+      }
+      const defn = specialClasses.find((defn) => defn.name === value[0].substring(14));
+      if (!defn) {
+        throw new Error("malformed save data");
+      }
+      return defn.deserialize(value[1]);
+    } else if (/^!{2,}brick-revive:/.test(value[0])) {
+      value[0] = value[0].substring(1);
+    }
   }
   return value;
 }
@@ -72,36 +149,30 @@ function saveReplacer(_key: string, value: unknown) {
     case "bigint":
     case "function":
     case "symbol":
-    case "undefined":
       throw new Error(`Cannot serialize a ${typeof value}`);
-    case "object":
+    case "undefined":
+      return ["!brick-revive:undefined"];
+    case "object": {
       if (value === null) {
         return null;
-      } else if ("toJSON" in value && typeof value.toJSON === "function") {
-        const json = value.toJSON();
-        if (typeof json !== "string") {
-          throw new Error("toJSON() did not return a string");
-        }
-        return json;
-      } else if (value instanceof Array) {
-        return value;
-      } else if (value instanceof Date) {
-        return { "!brick-revive": "date", value: value.valueOf() };
-      } else if (value instanceof Map) {
-        return { "!brick-revive": "map", entries: Array.from(value.entries()) };
-      } else if (value instanceof RegExp) {
-        return { "!brick-revive": "regexp", source: value.source, flags: value.flags };
-      } else if (value instanceof Set) {
-        return { "!brick-revive": "set", values: Array.from(value.values()) };
-      } else {
-        // generic object
-        const proto = Object.getPrototypeOf(value);
-        if (proto !== null && proto !== Object.prototype) {
-          throw new Error(
-            "Can't serialize an object with an unknown prototype and no `.toJSON()` method",
-          );
-        }
-        return value;
       }
+      if (Array.isArray(value)) {
+        if (typeof value[0] === "string" && /^!+brick-revive:/.test(value[0])) {
+          return ["!" + value[0], ...value.slice(1)];
+        } else {
+          return value;
+        }
+      }
+      for (const defn of specialClasses) {
+        if (value instanceof defn.constructor) {
+          return [`!brick-revive:${defn.name}`, defn.serialize(value)];
+        }
+      }
+      const proto = Object.getPrototypeOf(value);
+      if (proto !== null && proto !== Object.prototype) {
+        throw new Error("Can't serialize an object with an unknown prototype");
+      }
+      return value;
+    }
   }
 }

@@ -30,6 +30,12 @@ export function backward(): boolean {
   if (index === 0) {
     return false;
   } else {
+    if (config.stream) {
+      const elts = Array.from(document.querySelectorAll(".brick-passage"));
+      for (const elt of elts.slice(-2)) {
+        elt.remove();
+      }
+    }
     index--;
     saves.saveActive({ history, index });
     renderActive();
@@ -133,8 +139,16 @@ export function saveToSlot(slot: number) {
 
 function loadState(state: saves.SaveState) {
   history = state.history;
-  index = state.index;
-  renderActive();
+  if (config.stream) {
+    mainElement.innerHTML = "";
+    for (let i = 0; i <= state.index; i++) {
+      index = i;
+      renderActive();
+    }
+  } else {
+    index = state.index;
+    renderActive();
+  }
 }
 
 export function restart() {

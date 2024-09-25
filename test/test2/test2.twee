@@ -25,7 +25,7 @@ Next: @linkTo('Passage 2')
   @if (Math !== undefined) {
     Math is real!
   } @else {
-    Math is not real?
+    Math is not real\?
   }
 </p>
 <p>@linkTo('Start', 'Return to Start')</p>

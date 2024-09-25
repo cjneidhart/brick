@@ -209,6 +209,7 @@ export class Parser {
 
         case "(":
         case "]":
+        case "?":
           throw new Error(`Cannot yet handle unescaped '${c}' (U+${c.charCodeAt(0)})`);
 
         case undefined:

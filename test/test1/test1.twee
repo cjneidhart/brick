@@ -46,6 +46,8 @@ Now let's try a link: @linkTo('Passage 2') or maybe [[Passage 2]]
 
 [[Error Test]]
 
+[[Captures Test]]
+
 Here's a big block:
 <div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
 
@@ -73,8 +75,8 @@ Test \@while:
 \
 Test \@for:
 @($a = ["apple", "orange", "banana"])
-<ol>@for($food of $a) {
-  <li>$food</li>
+<ol>@for(_food of $a) {
+  <li>_food</li>
 }</ol>
 \
 Test \@break:<br>
@@ -172,3 +174,14 @@ Counter: @do { _counter }
 @linkTo("Start")
 
 Here's an error: [[Passage|Maybe->Maybe Not]]
+
+
+:: Captures Test
+Here's a list:
+<ul>
+  @for(_i of [1, 2, 3, 4]) {
+    <li>@link("Link #" + _i, () => alert("You clicked Link #" + _i + "!"))</li>
+  }
+</ul>
+
+[[Start]]

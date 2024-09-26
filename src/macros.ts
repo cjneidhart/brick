@@ -1,4 +1,4 @@
-import { navigate } from "./engine";
+import { navigate, tempVariables } from "./engine";
 import { MacroTemplate, NodeTemplate } from "./parser";
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
@@ -12,17 +12,28 @@ export enum LoopStatus {
   CONTINUING,
 }
 
+interface CapturedVar {
+  name: string;
+  value: unknown;
+}
+
 export class MacroContext {
   content?: NodeTemplate[];
   name: string;
   loopStatus: LoopStatus;
   parent?: MacroContext;
-  captures?: string[];
+  captures?: CapturedVar[];
 
-  constructor(name: string, loopStatus: LoopStatus, content?: NodeTemplate[]) {
+  constructor(name: string, parent?: MacroContext, content?: NodeTemplate[]) {
     this.name = name;
-    this.loopStatus = loopStatus;
+    this.loopStatus = parent?.loopStatus || LoopStatus.OUTSIDE_LOOP;
     this.content = content;
+    if (parent?.captures) {
+      this.captures = parent.captures;
+    }
+    if (this.name === "link") {
+      console.log(this.captures);
+    }
   }
 
   render(target: Element | DocumentFragment, input?: string | NodeTemplate[] | Passage) {
@@ -41,6 +52,36 @@ export class MacroContext {
       default:
         throw new Error(`unknown loopStatus: "${this.loopStatus}"`);
     }
+  }
+
+  createCallback<F extends (this: T, ...args: A[]) => Q, T, Q, A>(
+    func: F,
+  ): (this: T, ...args: A[]) => Q {
+    const context = this;
+    const wrapped = function (this: T, ...args: A[]): Q {
+      if (!context.captures) {
+        return func.apply(this, args);
+      }
+      const oldVals: Record<string, unknown> = {};
+      for (const capture of context.captures) {
+        // In case of repeats, avoid overwriting existing old value
+        if (!(capture.name in oldVals)) {
+          oldVals[capture.name] = tempVariables[capture.name];
+        }
+        tempVariables[capture.name] = capture.value;
+      }
+
+      let returnValue: Q;
+      try {
+        returnValue = func.apply(this, args);
+      } finally {
+        Object.assign(tempVariables, oldVals);
+      }
+
+      return returnValue;
+    };
+
+    return wrapped;
   }
 }
 
@@ -116,7 +157,10 @@ add("link", {
     }
 
     const button = makeElement("button", { class: "brick-link", type: "button" }, linkText);
-    button.addEventListener("click", (event) => onClick.call(this, event));
+    button.addEventListener(
+      "click",
+      this.createCallback((event) => onClick.call(this, event)),
+    );
 
     return button;
   },
@@ -225,19 +269,23 @@ add("for", {
     }
 
     const [varStr, iterableStr] = args as string[];
-    if (!varStr.startsWith("$")) {
-      throw new Error("@for: loop variable must be a story variable for now");
+    if (!varStr.startsWith("_")) {
+      throw new Error("@for: loop variable must be a temp variable");
     }
-    const place = `Brick.vars.${varStr.substring(1)}`;
+    const varName = varStr.substring(1);
+    const place = `Brick.temp.${varName}`;
     const iterable = evalExpression(iterableStr) as Iterable<unknown>;
     if (typeof iterable[Symbol.iterator] !== "function") {
       throw new Error("@for: Right-hand side must be an iterable value, such as an array");
     }
+
     const frag = document.createDocumentFragment();
     const { content } = this;
     this.loopStatus = LoopStatus.IN_LOOP;
+    const actualCaptures = this.captures || [];
     for (const loopVal of iterable) {
       evalAssign(place, loopVal);
+      this.captures = [...actualCaptures, { name: varName, value: loopVal }];
       this.render(frag, content);
       // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
       this.loopStatus = this.loopStatus as LoopStatus;
@@ -246,9 +294,9 @@ add("for", {
         break;
       } else if (this.loopStatus === LoopStatus.CONTINUING) {
         this.loopStatus = LoopStatus.IN_LOOP;
-        continue;
       }
     }
+    this.captures = actualCaptures;
 
     return frag;
   },

@@ -115,7 +115,6 @@ export function render(
         throw new Error(`Macro not found: "${nt.name}"`);
       }
 
-      let childLoopStatus = parentContext?.loopStatus || LoopStatus.OUTSIDE_LOOP;
       let childContext: MacroContext;
       let params: unknown[];
       if (macroData.trailingMacros) {
@@ -135,17 +134,17 @@ export function render(
           }
         }
 
-        childContext = new MacroContext(nt.name, childLoopStatus, templates);
+        childContext = new MacroContext(nt.name, parentContext, templates);
         params = [];
       } else {
         params = macroData.skipArgs ? nt.args : nt.args.map((arg) => evalExpression(arg));
-        childContext = new MacroContext(nt.name, childLoopStatus, nt.content);
+        childContext = new MacroContext(nt.name, parentContext, nt.content);
       }
 
       const node = macroData.handler.apply(childContext, params);
       target.append(node);
 
-      childLoopStatus = childContext.loopStatus;
+      const childLoopStatus = childContext.loopStatus;
       if (childLoopStatus === LoopStatus.BREAKING || childLoopStatus === LoopStatus.CONTINUING) {
         if (!parentContext || parentContext.loopStatus === LoopStatus.OUTSIDE_LOOP) {
           const badName = childContext.loopStatus === LoopStatus.BREAKING ? "@break" : "@continue";
@@ -191,7 +190,7 @@ export function render(
       if (!nt.text) {
         throw new Error("The text of a [[link box]] cannot be empty");
       }
-      const childContext = new MacroContext("linkTo", LoopStatus.OUTSIDE_LOOP);
+      const childContext = new MacroContext("linkTo");
       target.append(macroData.handler.call(childContext, nt.link, nt.text));
     } else if (nt.type === "error") {
       const br = makeElement("br");

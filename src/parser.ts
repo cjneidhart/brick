@@ -2,7 +2,7 @@ const RE = {
   closeTag: />/y,
   commentBlock: /\*(?:[^])*?\*\//y,
   commentLine: /\/.*\n?/y,
-  elementName: /[a-zA-Z0-9]+/y,
+  elementName: /([-_a-zA-Z0-9]+)(#[-_a-zA-Z0-9]+)?((?:\.[-_a-zA-Z0-9]+)*)/y,
   htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/y,
   js: {
     identifier: /[a-zA-Z][a-zA-Z0-9_$]*/y,
@@ -229,14 +229,22 @@ export class Parser {
   }
 
   parseElement(): ElementTemplate {
-    const name = this.consume(RE.elementName)?.[0];
-    if (!name) {
+    const longName = this.consume(RE.elementName);
+    if (!longName) {
       throw new Error("Element names must contain only ASCII letters");
     }
 
-    this.consume(RE.whitespace);
-    const attrs = new Map<string, string>();
+    const [_fullMatch, name, id, className] = longName;
 
+    const attrs = new Map<string, string>();
+    if (id) {
+      attrs.set("id", id.slice(1));
+    }
+    if (className.length) {
+      attrs.set("class", className.replace(".", " ").trim());
+    }
+
+    this.consume(RE.whitespace);
     while (!this.consume(RE.closeTag)) {
       const match = this.consume(RE.htmlAttr);
       if (!match) {

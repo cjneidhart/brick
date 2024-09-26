@@ -54,11 +54,9 @@ export class MacroContext {
     }
   }
 
-  createCallback<F extends (this: T, ...args: A[]) => Q, T, Q, A>(
-    func: F,
-  ): (this: T, ...args: A[]) => Q {
+  createCallback<F extends Function>(func: F): F {
     const context = this;
-    const wrapped = function (this: T, ...args: A[]): Q {
+    const wrapped = function (this: unknown, ...args: unknown[]) {
       if (!context.captures) {
         return func.apply(this, args);
       }
@@ -71,7 +69,7 @@ export class MacroContext {
         tempVariables[capture.name] = capture.value;
       }
 
-      let returnValue: Q;
+      let returnValue: unknown;
       try {
         returnValue = func.apply(this, args);
       } finally {
@@ -81,7 +79,7 @@ export class MacroContext {
       return returnValue;
     };
 
-    return wrapped;
+    return wrapped as unknown as F;
   }
 }
 

@@ -79,8 +79,19 @@ You can also include HTML elements in markup.
 
 ```brick
 // This uses <code> to display text in a monospace font.
-<code>I'm sorry Dave, I'm afraid I can't do that<code>, said HAL.
+<code>I'm sorry Dave, I'm afraid I can't do that<code>,
+said <abbr title="Heuristically Programmed Algorithmic Computer">HAL</abbr>.
 ```
+
+In addition to normal HTML, Brick adds a shorthand for setting an element's `id` or `class` attributes.
+
+| Shorthand                      | Same as                                     |
+| ------------------------------ | ------------------------------------------- |
+| `<span#foo></span>`            | `<span id="foo"></span>`                    |
+| `<span.blast></span>`          | `<span class="blast"></span>`               |
+| `<span#foo.blast.bang></span>` | `<span id="foo" class="blast bang"></span>` |
+
+When using this short syntax, the id and class must consist of only ASCII letters and numbers, hyphens, and underscores.
 
 ## Macros
 
@@ -225,7 +236,7 @@ An optional `@default` macro at the end will be rendered if none of the `@case`s
 _Warning: the `@do` macro is unrelated to JavaScript's `do...while` statement_
 
 Sometimes, you need to re-render part of a passage, without re-rendering the entire passage.
-In those situations, the macro `@do` can be used to mark a section of markup for re-rendering.
+In those situations, the macro `@do` can designate a section of markup for re-rendering.
 After the passage is rendered, you can call `Brick.redo()` to re-render all markup contained in `@do` macros.
 
 ```brick

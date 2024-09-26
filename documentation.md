@@ -42,6 +42,25 @@ Story and temporary variables can be included in markup without needing the `@pr
 You have $appleCount apples in your inventory.
 ```
 
+### Links (Wiki-style)
+
+Links to other passages can be created using `[[Double Brackets]]`.
+You can use an "arrow" (either `->` or `<-`) to give the link a different text.
+For historical reasons, you can also use `|` as a separator, which is the same as `->`
+
+```brick
+// Link to the passage "Home"
+[[Home]]
+
+// Link to the passage "Pond", with the link's text as "Go to the Pond"
+[[Go to the Pond->Pond]]
+[[Go to the Pond|Pond]]
+[[Pond<-Go to the Pond]]
+```
+
+Note that within Wiki-style links, you cannot escape any characters or use any other markup.
+For that, you'll have to use the `@link` macro.
+
 ### Macros
 
 Macros are invoked with the `@` character.

@@ -6,7 +6,7 @@ const RE = {
   htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/y,
   js: {
     identifier: /[a-zA-Z][a-zA-Z0-9_$]*/y,
-    normalChars: /[^"'`()[\]{}/$_,a-zA-Z]*/y,
+    normalChars: /[^"'`[\]{}/$_,a-zA-Z]*/y,
     stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/y,
     stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/y,
   },
@@ -104,13 +104,30 @@ export class Parser {
     return this.input[this.index] || null;
   }
 
+  locationSample(): string {
+    // edge case: we are at a line break
+    if (this.input[this.index] === "\n") {
+      const start = this.input.lastIndexOf("\n", this.index - 1) + 1;
+      return this.input.slice(start, this.index);
+    }
+    // This will be zero if a newline is not found
+    const start = this.input.lastIndexOf("\n", this.index - 1) + 1;
+    const end = this.input.indexOf("\n", this.index + 1);
+    return this.input.slice(start, end);
+  }
+
+  error(message: string): ErrorMessage {
+    return { type: "error", message, locationSample: this.locationSample() };
+  }
+
   parse(closer?: RegExp): NodeTemplate[] {
     const output: NodeTemplate[] = [];
 
     let iterations = 0;
     outer: while (this.index < this.input.length) {
       if (iterations >= 1_000_000) {
-        throw new Error("Parser stuck in loop");
+        output.push(this.error("Parser stuck in infinite loop"));
+        return output;
       } else {
         iterations++;
       }
@@ -129,9 +146,11 @@ export class Parser {
         case "\\": {
           const c2 = this.lookahead();
           if (!c2) {
-            throw new Error("Trailing '\\'");
+            // Assume they meant to place an escaped newline, that got trimmed.
+            output.push("\n");
+          } else {
+            output.push(c2);
           }
-          output.push(c2);
           this.index++;
           break;
         }
@@ -151,31 +170,36 @@ export class Parser {
               break;
             case "*":
               if (!this.consume(RE.commentBlock)) {
-                throw new Error("Unclosed block comment");
+                output.push(this.error("Missing trailing `*/` to close the block comment"));
+                return output;
               }
               break;
             default:
               output.push(c);
-              // leave the second character for now
               break;
           }
           break;
 
         case "$": {
           const match = this.consume(RE.js.identifier);
-          if (!match) {
-            throw new Error("'$' which is not part of a variable must be escaped");
+          if (match) {
+            output.push({ type: "story", name: match[0] });
+          } else {
+            const msg = "`$` must be part of a story variable, or escaped with a backslash `\\`";
+            output.push(this.error(msg));
           }
-          output.push({ type: "story", name: match[0] });
           break;
         }
 
         case "_": {
           const match = this.consume(RE.js.identifier);
-          if (!match) {
-            throw new Error("'_' which is not part of a variable must be escaped");
+          if (match) {
+            output.push({ type: "temp", name: match[0] });
+          } else {
+            const msg =
+              "`_` must be part of a temporary variable, or escaped with a backslash `\\`";
+            output.push(this.error(msg));
           }
-          output.push({ name: match[0], type: "temp" });
           break;
         }
 
@@ -191,25 +215,21 @@ export class Parser {
             const hasPipe = linkBoxFull.includes("|");
             const sum = Number(hasRightArrow) + Number(hasLeftArrow) + Number(hasPipe);
             if (sum > 1) {
-              output.push({
-                type: "error",
-                message: "Link boxes can only have one of '->', '<-', or '|'",
-                locationSample: `[[${linkBoxFull}]]`,
-              });
+              output.push(this.error("Link boxes can only have one of '->', '<-', or '|'"));
             } else if (sum === 0) {
               output.push({ type: "linkBox", link: linkBoxFull, text: linkBoxFull });
             } else {
               const separator = hasRightArrow ? "->" : hasLeftArrow ? "<-" : "|";
-              output.push(makeLinkBox(linkBoxFull, separator));
+              output.push(this.makeLinkBox(linkBoxFull, separator));
             }
           } else {
             output.push("[");
           }
           break;
 
-        case "(":
         case "]":
         case "?":
+        case ">":
           throw new Error(`Cannot yet handle unescaped '${c}' (U+${c.charCodeAt(0)})`);
 
         case undefined:
@@ -228,10 +248,12 @@ export class Parser {
     return output;
   }
 
-  parseElement(): ElementTemplate {
+  parseElement(): ElementTemplate | ErrorMessage {
     const longName = this.consume(RE.elementName);
     if (!longName) {
-      throw new Error("Element names must contain only ASCII letters");
+      return this.error(
+        "Element names can contain only hyphens, underscores, and ASCII letters and numbers",
+      );
     }
 
     const [_fullMatch, name, id, className] = longName;
@@ -248,7 +270,7 @@ export class Parser {
     while (!this.consume(RE.closeTag)) {
       const match = this.consume(RE.htmlAttr);
       if (!match) {
-        throw new Error("closing '>' expected");
+        return this.error("Missing trailing `>` to close the HTML tag");
       }
       const [_, key, value] = match;
       if (attrs.has(key)) {
@@ -262,10 +284,10 @@ export class Parser {
     return new ElementTemplate(name, attrs, content);
   }
 
-  parseMacro(): MacroTemplate {
+  parseMacro(): MacroTemplate | ErrorMessage {
     const match = this.consume(RE.macroInvoke);
     if (!match) {
-      throw new Error("Unescaped '@'");
+      return this.error("`@` must be followed by a macro name, or be escaped with a `\\`");
     }
     const macroName = match[0];
 
@@ -276,7 +298,7 @@ export class Parser {
 
     const hasContent = this.consume(/\s*\{/y);
     if (!args && !hasContent) {
-      throw new Error("Macro invocations require (arguments) or a { body }");
+      return this.error("Macro invocations must be followed by `(` or `[`")
     }
     const content = hasContent ? this.parse(/\}/y) : [];
 
@@ -426,19 +448,20 @@ export class Parser {
 
     return output.join("");
   }
-}
 
-function makeLinkBox(fullText: string, separator: string): LinkBox {
-  const split = fullText.split(separator);
-  if (split.length <= 1) {
-    throw new Error(`makeLinkBox: fulltext did not contain "${separator}"`);
-  }
-  if (split.length >= 3) {
-    throw new Error(`Links in [[...]] can only contain "${separator}" once`);
-  }
-  if (separator === "<-") {
-    return { type: "linkBox", link: split[0], text: split[1] };
-  } else {
-    return { type: "linkBox", link: split[1], text: split[0] };
+  makeLinkBox(fullText: string, separator: string): LinkBox | ErrorMessage {
+    const split = fullText.split(separator);
+    // if (split.length < 2) {
+    //   throw new Error(`makeLinkBox: fulltext did not contain "${separator}"`);
+    // }
+    if (split.length !== 2) {
+      const msg = `Links in [[...]] can only contain "${separator}" once`;
+      return this.error(msg);
+    }
+    if (separator === "<-") {
+      return { type: "linkBox", link: split[0], text: split[1] };
+    } else {
+      return { type: "linkBox", link: split[1], text: split[0] };
+    }
   }
 }

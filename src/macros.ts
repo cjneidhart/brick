@@ -31,9 +31,6 @@ export class MacroContext {
     if (parent?.captures) {
       this.captures = parent.captures;
     }
-    if (this.name === "link") {
-      console.log(this.captures);
-    }
   }
 
   render(target: Element | DocumentFragment, input?: string | NodeTemplate[] | Passage) {

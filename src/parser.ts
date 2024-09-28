@@ -2,20 +2,23 @@ const RE = {
   closeTag: />/y,
   commentBlock: /\*(?:[^])*?\*\//y,
   commentLine: /\/.*\n?/y,
-  elementName: /([-_a-zA-Z0-9]+)(#[-_a-zA-Z0-9]+)?((?:\.[-_a-zA-Z0-9]+)*)/y,
-  htmlAttr: /\s*([@a-zA-Z_0-9]+)="([^"]*)"/y,
+  elementName: /([-\p{ID_Continue}]+)(#[-\p{ID_Continue}]+)?((?:\.[-\p{ID_Continue}]+)*)/uy,
+  htmlAttr: /\s*([-@\p{ID_Start}][-\p{ID_Continue}]*)="([^"]*)"/uy,
   js: {
-    identifier: /[a-zA-Z][a-zA-Z0-9_$]*/y,
-    normalChars: /[^"'`[\]{}/$_,a-zA-Z]*/y,
+    identifier: /\p{ID_Start}[$\p{ID_Continue}]*/uy,
+    normalChars: /[^"'`[\]{}()/$_,a-zA-Z]+/y,
     stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/y,
     stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/y,
   },
-  macroInvoke: /[A-Za-z0-9_]*/y,
+  macroArgsStart: /\s*\(/y,
+  macroBodyStart: /\s*\{/y,
+  macroName: /[-_=<>\p{ID_Start}][-=<>\p{ID_Continue}]*/uy,
   normalChars: /[^[\]{}\\($_?<@/]+/y,
   singleChar: /.|\s/y,
   whitespace: /\s*/y,
 };
 
+// These HTML elements don't allow a closing tag.
 const UNCLOSED_TAGS = ["area", "br", "embed", "hr", "img", "input", "link", "meta", "track", "wbr"];
 
 export class ElementTemplate {
@@ -204,7 +207,8 @@ export class Parser {
         }
 
         case "[":
-          if (this.consume(/\[/y)) {
+          if (this.lookahead() === "[") {
+            this.index++;
             const m = this.consume(/((?:[^\\\]]|\\.)*)\]\]/y);
             if (!m) {
               throw new Error("Unmatched `[[`");
@@ -213,10 +217,10 @@ export class Parser {
             const hasRightArrow = linkBoxFull.includes("->");
             const hasLeftArrow = linkBoxFull.includes("<-");
             const hasPipe = linkBoxFull.includes("|");
-            const sum = Number(hasRightArrow) + Number(hasLeftArrow) + Number(hasPipe);
-            if (sum > 1) {
+            const separatorCount = Number(hasRightArrow) + Number(hasLeftArrow) + Number(hasPipe);
+            if (separatorCount > 1) {
               output.push(this.error("Link boxes can only have one of '->', '<-', or '|'"));
-            } else if (sum === 0) {
+            } else if (separatorCount === 0) {
               output.push({ type: "linkBox", link: linkBoxFull, text: linkBoxFull });
             } else {
               const separator = hasRightArrow ? "->" : hasLeftArrow ? "<-" : "|";
@@ -285,20 +289,27 @@ export class Parser {
   }
 
   parseMacro(): MacroTemplate | ErrorMessage {
-    const match = this.consume(RE.macroInvoke);
-    if (!match) {
-      return this.error("`@` must be followed by a macro name, or be escaped with a `\\`");
+    const match = this.consume(RE.macroName);
+    let macroName;
+    if (match) {
+      macroName = match[0];
+    } else {
+      // edge case: unnamed macro
+      if (this.lookahead() === "(") {
+        macroName = "";
+      } else {
+        return this.error("`@` must be followed by a macro name, or be escaped with a `\\`");
+      }
     }
-    const macroName = match[0];
 
     let args: string[] | null = null;
-    if (this.consume(/\s*\(/y)) {
+    if (this.consume(RE.macroArgsStart)) {
       args = macroName === "for" ? this.parseForArgs() : this.parseJsArgs();
     }
 
-    const hasContent = this.consume(/\s*\{/y);
+    const hasContent = this.consume(RE.macroBodyStart);
     if (!args && !hasContent) {
-      return this.error("Macro invocations must be followed by `(` or `[`")
+      return this.error("Macro invocations must be followed by `(` or `[`");
     }
     const content = hasContent ? this.parse(/\}/y) : [];
 

@@ -1,3 +1,4 @@
+import config from "./config";
 import { navigate, tempVariables } from "./engine";
 import { MacroTemplate, NodeTemplate } from "./parser";
 import { get as getPassage, Passage } from "./passages";
@@ -222,7 +223,14 @@ add("while", {
     const frag = document.createDocumentFragment();
     const { content } = this;
     this.loopStatus = LoopStatus.IN_LOOP;
+    let iterations = 1;
     while (evalExpression(conditionStr)) {
+      if (iterations > config.maxLoopIterations) {
+        throw new Error(
+          `@for: Too many iterations (Config.maxLoopIterations = ${config.maxLoopIterations})`,
+        );
+      }
+      iterations++;
       this.render(frag, content);
       // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
       this.loopStatus = this.loopStatus as LoopStatus;
@@ -278,7 +286,14 @@ add("for", {
     const { content } = this;
     this.loopStatus = LoopStatus.IN_LOOP;
     const actualCaptures = this.captures || [];
+    let iterations = 1;
     for (const loopVal of iterable) {
+      if (iterations > config.maxLoopIterations) {
+        throw new Error(
+          `@for: Too many iterations (Config.maxLoopIterations = ${config.maxLoopIterations})`,
+        );
+      }
+      iterations++;
       evalAssign(place, loopVal);
       this.captures = [...actualCaptures, { name: varName, value: loopVal }];
       this.render(frag, content);

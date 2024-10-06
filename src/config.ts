@@ -1,9 +1,9 @@
-interface Config {
+const config: {
+  maxLoopIterations: number;
   preProcessText?: Function;
   stream: boolean;
-}
-
-const config: Config = {
+} = {
+  maxLoopIterations: 100_000,
   preProcessText: undefined,
   stream: false,
 };
@@ -13,6 +13,17 @@ function throwTypeError(location: string, expected: string, got: unknown): never
 }
 
 export default {
+  get maxLoopIterations(): number {
+    return config.maxLoopIterations;
+  },
+
+  set maxLoopIterations(value: unknown) {
+    if (typeof value !== "number" || value <= 0 || value % 1 !== 0) {
+      throw new TypeError("Config.maxLoopIterations must be a positive integer");
+    }
+    config.maxLoopIterations = value;
+  },
+
   get preProcessText(): Function | undefined {
     return config.preProcessText;
   },

@@ -96,6 +96,14 @@ export function add(name: string, macro: Macro) {
   macros.set(name, macro);
 }
 
+export function alias(oldName: string, newName: string) {
+  const m = macros.get(oldName);
+  if (!m) {
+    throw new Error(`No macro "${oldName}" found`);
+  }
+  macros.set(newName, m);
+}
+
 export function get(name: string): Macro | null {
   return macros.get(name) || null;
 }
@@ -137,6 +145,20 @@ add("", {
     return document.createDocumentFragment();
   },
 });
+
+add("print", {
+  handler(...args) {
+    if (args.length !== 1) {
+      throw new Error(`@print: requires 1 argument (got ${args.length})`);
+    }
+    if (this.content) {
+      throw new Error("@print: no body allowed");
+    }
+    return new Text(String(args[0]));
+  },
+});
+
+alias("print", "-");
 
 add("link", {
   handler(...args) {

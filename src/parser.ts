@@ -37,9 +37,9 @@ export class ElementTemplate {
 export class MacroTemplate {
   name: string;
   args: string[];
-  content: NodeTemplate[];
+  content?: NodeTemplate[];
 
-  constructor(name: string, args: string[], content: NodeTemplate[]) {
+  constructor(name: string, args: string[], content?: NodeTemplate[]) {
     this.name = name;
     this.args = args;
     this.content = content;
@@ -311,7 +311,7 @@ export class Parser {
     if (!args && !hasContent) {
       return this.error("Macro invocations must be followed by `(` or `[`");
     }
-    const content = hasContent ? this.parse(/\}/y) : [];
+    const content = hasContent ? this.parse(/\}/y) : undefined;
 
     return new MacroTemplate(macroName, args || [], content);
   }

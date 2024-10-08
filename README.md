@@ -49,7 +49,7 @@ Where SugarCube macros are styled like HTML elements, Brick macros are styled li
 
 [NodeJS](https://nodejs.org/en) is necessary to build this project.
 First, run `npm install` (this only needs to be done after initially downloading or updating Brick).
-Then, run `node build.js`.
+Then, run `npm run build`.
 This will create a `format.js` file in the directory `storyformats/brick/`.
 
 ### Tweego

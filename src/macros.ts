@@ -355,19 +355,13 @@ add("checkBox", {
     const input = makeElement("input", {
       type: "checkbox",
       id: uniqueId(),
-      class: "form-check-input",
     });
     input.checked = !!initValue;
     input.addEventListener("change", () => evalAssign(place, input.checked));
 
-    const labelElt = makeElement(
-      "label",
-      { class: "form-check-label", for: input.id },
-      " ",
-      labelText,
-    );
+    const labelElt = makeElement("label", { for: input.id }, labelText);
 
-    const div = makeElement("div", { class: "form-check" }, input, labelElt);
+    const div = makeElement("div", {}, input, " ", labelElt);
 
     return div;
   },

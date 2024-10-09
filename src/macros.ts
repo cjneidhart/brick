@@ -149,16 +149,33 @@ add("", {
 add("print", {
   handler(...args) {
     if (args.length !== 1) {
-      throw new Error(`@print: requires 1 argument (got ${args.length})`);
+      throw new Error(`@${this.name}: requires 1 argument (got ${args.length})`);
     }
     if (this.content) {
-      throw new Error("@print: no body allowed");
+      throw new Error(`@${this.name}: no body allowed`);
     }
     return new Text(String(args[0]));
   },
 });
 
 alias("print", "-");
+
+add("render", {
+  handler(...args) {
+    if (args.length !== 1) {
+      throw new Error(`@${this.name}: requires 1 argument (got ${args.length})`);
+    }
+    if (this.content) {
+      throw new Error(`@${this.name}: no body allowed`);
+    }
+    const frag = document.createDocumentFragment();
+    // TODO prevent infinite recursion
+    this.render(frag, String(args[0]));
+    return frag;
+  },
+});
+
+alias("render", "=");
 
 add("link", {
   handler(...args) {

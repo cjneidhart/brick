@@ -62,7 +62,7 @@ You have navigated to Passage 2.
 
 :: Passage "3"
 Congrats!
-You've included a passage.
+You've @=("@print('included')") a passage.
 
 
 :: Loop Test

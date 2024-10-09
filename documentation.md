@@ -139,6 +139,38 @@ Unlike other macros, the unnamed macro can execute multiple statements:
 )
 ```
 
+### `@print` and `@-`
+
+`@print` can be used to insert strings into the rendered markup.
+If you just need to print the value of a variable, you can simply write that variable in markup.
+But for situations where you need to alter the variable slightly before printing, you can use `@print`.
+
+`@-` is an alias of `@print`.
+
+```brick
+You need an additional @print(500 - $money) gold to afford this sword.
+```
+
+### `@render` and `@=`
+
+`@render` is the supercharged version of `@print`.
+While `@print` inserts a string directly into the output, `@render` actually renders the string as Brick markup.
+This means the string can contain HTML elements or additional macros and they will be processed appropriately.
+
+`@=` is an alias of `@render`
+
+```brick
+// In your story JS
+C.red = function (text) {
+  return '<span class="red">' + text + '</span>';
+}
+
+// In a passage
+You encounter a scary @render(C.red("ogre")).
+// Renders as:
+You encounter a scary <span class="red">ogre</span>.
+```
+
 ### `@if`, `@elseif`, and `@else`
 
 These macros are the most basic tool for conditional logic.

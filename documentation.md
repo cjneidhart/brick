@@ -291,17 +291,15 @@ An optional `@default` macro at the end will be rendered if none of the `@case`s
 }
 ```
 
-### `@do`
-
-_Warning: the `@do` macro is unrelated to JavaScript's `do...while` statement_
+### `@redoable`
 
 Sometimes, you need to re-render part of a passage, without re-rendering the entire passage.
-In those situations, the macro `@do` can designate a section of markup for re-rendering.
-After the passage is rendered, you can call `Brick.redo()` to re-render all markup contained in `@do` macros.
+In those situations, the macro `@redoable` can designate a section of markup for re-rendering.
+After the passage is rendered, you can call `Brick.redo()` to re-render all markup contained in `@redoable` macros.
 
 ```brick
 // Display the player's money (purchase buttons can call `Brick.redo()` to update this)
-You have @do { $money } credits in your wallet.
+You have @redoable { $money } credits in your wallet.
 
 // Example purchase link (very basic, test this carefully before using it)
 @button("Buy a soda", () => {

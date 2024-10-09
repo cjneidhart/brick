@@ -44,7 +44,7 @@ const envValues = [
       return tempVariables;
     },
     redo: function (this: null) {
-      for (const element of document.querySelectorAll(".brick-macro-do")) {
+      for (const element of document.querySelectorAll(".brick-macro-redoable")) {
         element.dispatchEvent(new Event("brick-redo"));
       }
     },

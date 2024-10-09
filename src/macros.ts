@@ -467,13 +467,13 @@ add("if", {
   },
 });
 
-add("do", {
+add("redoable", {
   handler() {
     const { content } = this;
     if (!content) {
-      throw new Error("@do: must be called with a body");
+      throw new Error("@redoable: must be called with a body");
     }
-    const span = makeElement("span", { class: "brick-macro-do" });
+    const span = makeElement("span", { class: "brick-macro-redoable" });
     // Catch a bad break/continue on first render
     this.loopStatus = LoopStatus.OUTSIDE_LOOP;
     try {

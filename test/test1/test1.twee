@@ -160,7 +160,7 @@ Test 3: @if(!window.Math) {
 
 :: Do/Redo Test
 @(_counter = 0)
-Counter: @do { _counter }
+Counter: @redoable { _counter }
 
 @link("Click this to increment the counter, then call redo()", () => {
   _counter++;

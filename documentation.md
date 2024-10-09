@@ -52,7 +52,8 @@ For historical reasons, you can also use `|` as a separator, which is the same a
 // Link to the passage "Home"
 [[Home]]
 
-// Link to the passage "Pond", with the link's text as "Go to the Pond"
+// Create a link that reads "Go to the Pond".
+// When clicked, the link will navigate to the passage "Pond".
 [[Go to the Pond->Pond]]
 [[Go to the Pond|Pond]]
 [[Pond<-Go to the Pond]]
@@ -116,7 +117,7 @@ When using this short syntax, the id and class must consist of only ASCII letter
 
 This is a list of built-in macros.
 
-### `@(`, the unnamed macro
+### `@(...statements)`, the unnamed macro
 
 This macro can be used to silently execute JavaScript.
 It is mostly useful for setting story/temporary variables, or for calling other functions with side effects.
@@ -139,7 +140,7 @@ Unlike other macros, the unnamed macro can execute multiple statements:
 )
 ```
 
-### `@print` and `@-`
+### `@print(text)` and `@-(text)`
 
 `@print` can be used to insert strings into the rendered markup.
 If you just need to print the value of a variable, you can simply write that variable in markup.
@@ -151,13 +152,13 @@ But for situations where you need to alter the variable slightly before printing
 You need an additional @print(500 - $money) gold to afford this sword.
 ```
 
-### `@render` and `@=`
+### `@render(text)` and `@=(text)`
 
 `@render` is the supercharged version of `@print`.
-While `@print` inserts a string directly into the output, `@render` actually renders the string as Brick markup.
+While `@print` emits `text` as-is, `@render` actually renders `text` as Brick markup.
 This means the string can contain HTML elements or additional macros and they will be processed appropriately.
 
-`@=` is an alias of `@render`
+`@=` is an alias of `@render`.
 
 ```brick
 // In your story JS
@@ -171,7 +172,7 @@ You encounter a scary @render(C.red("ogre")).
 You encounter a scary <span class="red">ogre</span>.
 ```
 
-### `@if`, `@elseif`, and `@else`
+### `@if(condition)`, `@elseif(condition)`, and `@else`
 
 These macros are the most basic tool for conditional logic.
 Their structure must be, in order:
@@ -195,7 +196,7 @@ If none of the conditions are true, and an `@else` macro is present, its body wi
 }
 ```
 
-### `@while`
+### `@while(condition)`
 
 Like the JavaScript keyword, `@while` renders its body repeatedly _while_ its condition is true.
 
@@ -208,7 +209,7 @@ Like the JavaScript keyword, `@while` renders its body repeatedly _while_ its co
 }
 ```
 
-### `@for`
+### `@for(variable of collection)`
 
 `@for` can be used to efficiently loop over the contents of a _collection_, usually an array.
 `@for` is similar to JavaScript's
@@ -230,7 +231,7 @@ except that you must use a Brick temporary variable (which starts with `_`) inst
 // Output: "1, 2, 3, 4,"
 ```
 
-### `@continue`
+### `@continue()`
 
 `@continue` can only be used within `@for` and `@while` loops.
 It stops the current loop iteration, and _continues_ from the next iteration.
@@ -247,7 +248,7 @@ NPCs you haven't visited today:
 </ul>
 ```
 
-### `@break`
+### `@break()`
 
 `@break` can only be used within `@for` and `@while` loops.
 It _breaks_ out of the current loop;
@@ -255,18 +256,26 @@ no more markup from the current iteration will be rendered,
 and all following iterations will be skipped over.
 
 ```brick
-// TODO: break example
+// This is a simplified example of each character in a party taking turns to
+// attack an enemy. We use @break to end the loop once the enemy is defeated.
+@for (_character of $partyMembers) {
+  @($enemyHP -= _character.attack)
+  @print(_character.name) hit the enemy for @print(_character.attack) damage!
+  @if ($enemyHP <= 0) {
+    @break()
+  }
+}
 ```
 
-### `@switch`
+### `@switch(value)`
 
-`@switch` can be used to conveniently handle situations where a variable could be one of many possible values
+`@switch` can be used to conveniently handle situations where a variable could be one of many possible values.
 Within a `@switch` macro, multiple `@case` macros should be used to declare possible blocks of markup to render.
 The first `@case` macro that has an argument matching the initial argument to `@switch` will be rendered.
 An optional `@default` macro at the end will be rendered if none of the `@case`s matched.
 
 ```brick
-@switch ($playerName) {
+@switch ($houseShape) {
   @case("triangle") {
     3 sides is the best for building structures.
   }

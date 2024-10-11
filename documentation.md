@@ -42,6 +42,16 @@ Story and temporary variables can be included in markup without needing the `@pr
 You have $appleCount apples in your inventory.
 ```
 
+You can also access properties of naked variables:
+
+```brick
+@(_weapons = ["sword", "axe"])
+Your weapons are a _weapons[0] and a _weapons[1].
+
+@($player = { strength: 15 })
+Your Strength is $player.strength.
+```
+
 ### Links (Wiki-style)
 
 Links to other passages can be created using `[[Double Brackets]]`.
@@ -260,7 +270,7 @@ and all following iterations will be skipped over.
 // attack an enemy. We use @break to end the loop once the enemy is defeated.
 @for (_character of $partyMembers) {
   @($enemyHP -= _character.attack)
-  @print(_character.name) hit the enemy for @print(_character.attack) damage!
+  _character.name hit the enemy for _character.attack damage!
   @if ($enemyHP <= 0) {
     @break()
   }

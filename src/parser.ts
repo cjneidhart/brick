@@ -24,29 +24,19 @@ const RE = {
 // These HTML elements don't allow a closing tag.
 const UNCLOSED_TAGS = ["area", "br", "embed", "hr", "img", "input", "link", "meta", "track", "wbr"];
 
-export class ElementTemplate {
+export interface ElementTemplate {
+  type: "element";
   name: string;
   attributes: Map<string, string>;
   content: NodeTemplate[];
-
-  constructor(name: string, attrs: Map<string, string>, content: NodeTemplate[]) {
-    this.name = name;
-    this.attributes = attrs;
-    this.content = content;
-  }
 }
 
 // Represents a not-yet-invoked macro
-export class MacroTemplate {
+export interface MacroTemplate {
+  type: "macro";
   name: string;
   args: string[];
   content?: NodeTemplate[];
-
-  constructor(name: string, args: string[], content?: NodeTemplate[]) {
-    this.name = name;
-    this.args = args;
-    this.content = content;
-  }
 }
 
 export interface NakedVariable {
@@ -252,12 +242,12 @@ export class Parser {
 
     const [_fullMatch, name, id, className] = longName;
 
-    const attrs = new Map<string, string>();
+    const attributes = new Map<string, string>();
     if (id) {
-      attrs.set("id", id.slice(1));
+      attributes.set("id", id.slice(1));
     }
     if (className.length) {
-      attrs.set("class", className.replace(".", " ").trim());
+      attributes.set("class", className.replace(".", " ").trim());
     }
 
     this.consume(RE.whitespace);
@@ -267,15 +257,15 @@ export class Parser {
         return this.error("Missing trailing `>` to close the HTML tag");
       }
       const [_, key, value] = match;
-      if (attrs.has(key)) {
+      if (attributes.has(key)) {
         console.warn(`Ignoring duplicate attribute '${key}`);
       }
-      attrs.set(key, value);
+      attributes.set(key, value);
     }
 
     const content = UNCLOSED_TAGS.includes(name) ? [] : this.parse(new RegExp(`</${name}>`, "y"));
 
-    return new ElementTemplate(name, attrs, content);
+    return { type: "element", name, attributes, content };
   }
 
   parseNakedVariable(type: "story" | "temp"): NakedVariable | MacroTemplate | ErrorMessage {
@@ -318,7 +308,11 @@ export class Parser {
     } else {
       // more complicated: substitute with @print
       const prefix = type === "story" ? "Brick.vars." : "Brick.temp.";
-      return new MacroTemplate("print", [prefix + this.input.substring(startIdx, this.index)]);
+      return {
+        type: "macro",
+        name: "print",
+        args: [prefix + this.input.substring(startIdx, this.index)],
+      };
     }
   }
 
@@ -347,7 +341,12 @@ export class Parser {
     }
     const content = hasContent ? this.parse(/\}/y) : undefined;
 
-    return new MacroTemplate(macroName, args || [], content);
+    return {
+      type: "macro",
+      name: macroName,
+      args: args || [],
+      content,
+    };
   }
 
   parseForArgs(): string[] {

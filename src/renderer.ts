@@ -1,7 +1,7 @@
 import Config from "./config";
 import { storyVariables, tempVariables } from "./engine";
 import { get as getMacro, LoopStatus, MacroContext } from "./macros";
-import { ElementTemplate, MacroTemplate, NodeTemplate, Parser } from "./parser";
+import { NodeTemplate, Parser } from "./parser";
 import { Passage } from "./passages";
 import { evalExpression } from "./scripting";
 import { makeElement } from "./util";
@@ -109,7 +109,19 @@ export function render(
   for (let i = 0; i < inputNodes.length; i++) {
     const nt = inputNodes[i];
     let elt: Element | string;
-    if (nt instanceof MacroTemplate) {
+    if (typeof nt === "string") {
+      elt = nt;
+      const paragraphs = elt.split("\n\n");
+      let p = paragraphs.shift();
+      if (typeof p === "string") {
+        target.append(p);
+        while (typeof (p = paragraphs.shift()) === "string") {
+          target.append(makeElement("br"));
+          target.append(makeElement("br"));
+          target.append(p);
+        }
+      }
+    } else if (nt.type === "macro") {
       const macroData = getMacro(nt.name);
       if (!macroData) {
         throw new Error(`Macro not found: "${nt.name}"`);
@@ -122,7 +134,8 @@ export function render(
         for (let j = i + 1; j < inputNodes.length; j++) {
           const nextNode = inputNodes[j];
           if (
-            nextNode instanceof MacroTemplate &&
+            typeof nextNode === "object" &&
+            nextNode.type === "macro" &&
             macroData.trailingMacros.includes(nextNode.name)
           ) {
             templates.push(nextNode);
@@ -156,7 +169,7 @@ export function render(
 
       // Markup rendered later is always considered outside a loop
       childContext.loopStatus = LoopStatus.OUTSIDE_LOOP;
-    } else if (nt instanceof ElementTemplate) {
+    } else if (nt.type === "element") {
       // Note: This could be a parse-time error, but renderer errors can be presented better.
       if (BANNED_TAGS.includes(nt.name)) {
         throw new Error(`<${nt.name}> elements cannot be created from markup`);
@@ -170,18 +183,6 @@ export function render(
       }
       render(elt, nt.content, parentContext);
       target.append(elt);
-    } else if (typeof nt === "string") {
-      elt = nt;
-      const paragraphs = elt.split("\n\n");
-      let p = paragraphs.shift();
-      if (typeof p === "string") {
-        target.append(p);
-        while (typeof (p = paragraphs.shift()) === "string") {
-          target.append(makeElement("br"));
-          target.append(makeElement("br"));
-          target.append(p);
-        }
-      }
     } else if (nt.type === "linkBox") {
       const macroData = getMacro("linkTo");
       if (!macroData) {

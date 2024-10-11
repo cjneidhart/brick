@@ -402,7 +402,7 @@ add("switch", {
           throw new Error("@switch: all children must be @case macros");
         }
         // pass: skip over text nodes that are all whitespace
-      } else if (node instanceof MacroTemplate) {
+      } else if (node.type === "macro") {
         children.push(node);
       } else {
         throw new Error("@switch: all children must be @case macros");
@@ -452,7 +452,7 @@ add("if", {
     }
 
     for (const template of this.content) {
-      if (!(template instanceof MacroTemplate)) {
+      if (!(typeof template === "object" && template.type === "macro")) {
         throw new Error("@if: child was not a MacroTemplate");
       }
       if (template.name === "else" || evalExpression(template.args.join(","))) {

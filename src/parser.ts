@@ -5,6 +5,9 @@ const RE = {
   elementName: /([-\p{ID_Continue}]+)(#[-\p{ID_Continue}]+)?((?:\.[-\p{ID_Continue}]+)*)/uy,
   htmlAttr: /\s*([-@\p{ID_Start}][-\p{ID_Continue}]*)="([^"]*)"/uy,
   js: {
+    closingParen: /\s*\)/y,
+    closingSquareBracket: /\s*\]/y,
+    field: /\.\p{ID_Start}[$\p{ID_Continue}]*/uy,
     identifier: /\p{ID_Start}[$\p{ID_Continue}]*/uy,
     normalChars: /[^"'`[\]{}()/$_,a-zA-Z]+/y,
     stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/y,
@@ -46,7 +49,7 @@ export class MacroTemplate {
   }
 }
 
-export interface RawVariable {
+export interface NakedVariable {
   type: "story" | "temp";
   /** The name of the variable being accessed. */
   name: string;
@@ -72,7 +75,7 @@ export type NodeTemplate =
   | ElementTemplate
   | MacroTemplate
   | string
-  | RawVariable
+  | NakedVariable
   | LinkBox
   | ErrorMessage;
 
@@ -184,25 +187,12 @@ export class Parser {
           break;
 
         case "$": {
-          const match = this.consume(RE.js.identifier);
-          if (match) {
-            output.push({ type: "story", name: match[0] });
-          } else {
-            const msg = "`$` must be part of a story variable, or escaped with a backslash `\\`";
-            output.push(this.error(msg));
-          }
+          output.push(this.parseNakedVariable("story"));
           break;
         }
 
         case "_": {
-          const match = this.consume(RE.js.identifier);
-          if (match) {
-            output.push({ type: "temp", name: match[0] });
-          } else {
-            const msg =
-              "`_` must be part of a temporary variable, or escaped with a backslash `\\`";
-            output.push(this.error(msg));
-          }
+          output.push(this.parseNakedVariable("temp"));
           break;
         }
 
@@ -288,6 +278,50 @@ export class Parser {
     return new ElementTemplate(name, attrs, content);
   }
 
+  parseNakedVariable(type: "story" | "temp"): NakedVariable | MacroTemplate | ErrorMessage {
+    const startIdx = this.index;
+    let match = this.consume(RE.js.identifier);
+    if (!match) {
+      const leadingChar = type === "story" ? "$" : "_";
+      const bs = "or escaped with a backslash `\\`";
+      return this.error(`${leadingChar} must be part of a ${type} variable, ${bs}`);
+    }
+    const baseVarName = match[0];
+    const suffixStart = this.index;
+    while (true) {
+      switch (this.lookahead()) {
+        case ".":
+          match = this.consume(RE.js.field);
+          if (match) {
+            continue;
+          }
+          // not a match: break out, the period will be treated as plain markup later
+          break;
+
+        case "[":
+          this.index++;
+          this.parseJsArgs("]");
+          continue;
+
+        case "(":
+          this.index++;
+          this.parseJsArgs(")");
+          continue;
+      }
+
+      break;
+    }
+
+    if (this.index === suffixStart) {
+      // simple: just a plain variable
+      return { type, name: baseVarName };
+    } else {
+      // more complicated: substitute with @print
+      const prefix = type === "story" ? "Brick.vars." : "Brick.temp.";
+      return new MacroTemplate("print", [prefix + this.input.substring(startIdx, this.index)]);
+    }
+  }
+
   parseMacro(): MacroTemplate | ErrorMessage {
     const match = this.consume(RE.macroName);
     let macroName;
@@ -304,7 +338,7 @@ export class Parser {
 
     let args: string[] | null = null;
     if (this.consume(RE.macroArgsStart)) {
-      args = macroName === "for" ? this.parseForArgs() : this.parseJsArgs();
+      args = macroName === "for" ? this.parseForArgs() : this.parseJsArgs(")");
     }
 
     const hasContent = this.consume(RE.macroBodyStart);
@@ -336,7 +370,7 @@ export class Parser {
     return [loopVar, loopCond];
   }
 
-  parseJsArgs(): string[] {
+  parseJsArgs(closer: "]" | ")"): string[] {
     const args = [];
     let arg;
     while ((arg = this.parseJsExpression())) {
@@ -346,9 +380,11 @@ export class Parser {
       }
     }
 
-    if (!this.consume(/\s*\)/uy)) {
-      throw new Error("No closing paren");
+    this.consume(RE.whitespace);
+    if (this.lookahead() !== closer) {
+      throw new Error(`Missing a closing \`${closer}\``);
     }
+    this.index++;
 
     return args;
   }
@@ -462,9 +498,6 @@ export class Parser {
 
   makeLinkBox(fullText: string, separator: string): LinkBox | ErrorMessage {
     const split = fullText.split(separator);
-    // if (split.length < 2) {
-    //   throw new Error(`makeLinkBox: fulltext did not contain "${separator}"`);
-    // }
     if (split.length !== 2) {
       const msg = `Links in [[...]] can only contain "${separator}" once`;
       return this.error(msg);

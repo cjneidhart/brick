@@ -1,14 +1,14 @@
-const fs = require("node:fs");
-const process = require("node:process");
-const path = require("node:path");
-const webpack = require("webpack");
+import fs from "node:fs";
+import { env } from "node:process";
+import { resolve } from "node:path";
+import webpack from "webpack";
 
 function readTextFile(path) {
   return fs.readFileSync(path, { encoding: "utf-8" });
 }
 
-const debug = process.env.BRICK_DEBUG;
-const { npm_package_version } = process.env;
+const debug = env.BRICK_DEBUG;
+const { npm_package_version } = env;
 if (!npm_package_version) {
   throw new Error("This script must be run as `npm run build`");
 }
@@ -33,7 +33,7 @@ const runtimeConfig = {
   output: {
     clean: true,
     filename: "brick.js",
-    path: path.resolve(__dirname, "dist"),
+    path: resolve("./dist"),
   },
 };
 

@@ -1,10 +1,11 @@
 {
   "name": "brick",
   "version": "0.0.1",
-  "description": "",
+  "description": "A modern story format for Twine/Tweego",
   "author": "Chris Neidhart",
   "private": true,
   "license": "GPL-3.0-only",
+  "type": "module",
   "devDependencies": {
     "@eslint/js": "^9.9.0",
     "@types/bootstrap": "^5.2.10",

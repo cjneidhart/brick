@@ -4,6 +4,7 @@ import { render } from "./renderer";
 import * as saves from "./saves";
 import { clone, getElementById, makeElement } from "./util";
 
+/** A single entry within the history */
 export interface Moment {
   passageName: string;
   vars: Record<string, unknown>;
@@ -113,6 +114,10 @@ function renderActive() {
   setTimeout(() => article.classList.remove("brick-transparent"), 40);
 }
 
+/**
+ * Attempt to load from the "active" entry in storage.
+ * Return whether the save existed and was loaded successfully.
+ */
 export function loadFromActive(): boolean {
   const state = saves.loadActive();
   if (state) {
@@ -123,6 +128,10 @@ export function loadFromActive(): boolean {
   }
 }
 
+/**
+ * Attempt to load from the given slot.
+ * Return whether the load was successful.
+ */
 export function loadFromSlot(slot: number): boolean {
   const state = saves.loadFromSlot(slot);
   if (state) {
@@ -133,6 +142,7 @@ export function loadFromSlot(slot: number): boolean {
   }
 }
 
+/** Save the most recent moment to the given slot. */
 export function saveToSlot(slot: number) {
   saves.saveToSlot(slot, { history, index });
 }
@@ -151,6 +161,7 @@ function loadState(state: saves.SaveState) {
   }
 }
 
+/** Restart the game (by clearing the active slot then reloading the page). */
 export function restart() {
   saves.clearActive();
   window.location.reload();

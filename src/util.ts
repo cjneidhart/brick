@@ -1,5 +1,7 @@
 const DELETED_CHARS = new Set<string>("'\",()[]{}.!`?");
 
+/** Convert a string into a "slug" which is easier to use within CSS
+ * Example: "The Iron Giant" becomes "the-iron-giant" */
 export function slugify(input: string): string {
   return Array.from(input)
     .map((c) => {
@@ -17,6 +19,7 @@ export function slugify(input: string): string {
     .replace(/-+/g, "-");
 }
 
+/** Perform a deep clone of a given object */
 export function clone<T>(original: T): T {
   // TODO: circular reference detection
   switch (typeof original) {
@@ -58,8 +61,8 @@ export function clone<T>(original: T): T {
         return newSet as T;
       } else {
         // generic object
-        const proto = Object.getPrototypeOf(original);
-        if (proto !== null && proto !== Object.prototype) {
+        const prototype = Object.getPrototypeOf(original);
+        if (prototype !== null && prototype !== Object.prototype) {
           throw new Error(
             "Can't clone an object with an unknown prototype and no `.clone()` method",
           );
@@ -117,12 +120,14 @@ export function makeElement(
   return element;
 }
 
+/** Assert that a value is a string */
 export function assertString(maybeString: unknown): asserts maybeString is string {
   if (typeof maybeString !== "string") {
     throw new Error(`Expected string, instead received a ${typeof maybeString}`);
   }
 }
 
+/** Return an iterator, similar to Python's `range()` */
 export function* numberRange(
   startOrStop: number,
   stop?: number,

@@ -6,6 +6,7 @@ import { Passage } from "./passages";
 import { evalExpression } from "./scripting";
 import { makeElement } from "./util";
 
+/** Tags which are not allowed to be descended from `<body>` */
 const BANNED_TAGS = ["base", "body", "link", "head", "html", "meta", "script", "style", "title"];
 
 const PHRASING_TAGS = [
@@ -79,9 +80,7 @@ function _isPhrasingNode(node: string | Element): boolean {
   }
 }
 
-/**
- * Render the given brick markup and append it to an element.
- */
+/** Render the given Brick markup and append it to an element. */
 export function render(
   target: Element | DocumentFragment,
   input: string | NodeTemplate[] | Passage,
@@ -202,44 +201,5 @@ export function render(
       const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
       target.append(String(value));
     }
-
-    // if (isPhrasingNode(elt)) {
-    //   if (typeof elt === "string") {
-    //     const paragraphs = elt.split("\n\n");
-    //     if (paragraphs.length > 1) {
-    //       // first p
-    //       const p = document.createElement("p");
-    //       p.append(...pBuffer);
-    //       pBuffer.length = 0;
-    //       p.append(paragraphs[0]);
-    //       output.append(p);
-
-    //       // middle ps
-    //       for (let i = 1; i < paragraphs.length - 1; i++) {
-    //         const p = document.createElement("p");
-    //         p.textContent = paragraphs[i];
-    //         output.append(p);
-    //       }
-
-    //       // last p - back on the stack
-    //       pBuffer.push(paragraphs[paragraphs.length - 1]);
-    //     } else {
-    //       // elt is a string without any double-linebreaks
-    //       pBuffer.push(elt);
-    //     }
-    //   } else {
-    //     // elt is an Element that falls under 'phrasing content'
-    //     pBuffer.push(elt);
-    //   }
-    // } else {
-    //   // elt is an Element that does not fall under 'phrasing content'
-    //   output.append(elt);
-    // }
   }
-
-  // if (pBuffer.length > 0) {
-  //   const p = document.createElement("p");
-  //   p.append(...pBuffer);
-  //   target.append(p);
-  // }
 }

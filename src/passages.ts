@@ -23,7 +23,7 @@ export class Passage {
       element
         .getAttribute("tags")
         ?.split(" ")
-        .filter((x) => x) || [];
+        .filter((tag) => tag.length >= 0) || [];
     this.#element = element;
   }
 
@@ -32,6 +32,7 @@ export class Passage {
   }
 }
 
+// TODO: provide more detailed error messages, which recommend an alternative.
 const BANNED_NAMES = [
   "PassageDone",
   "PassageFooter",
@@ -85,6 +86,7 @@ const byId = new Map<string, Passage>();
 const byName = new Map<string, Passage>();
 let startPassage: Passage;
 
+/** @param storyData The `<tw-storydata>` element */
 export function init(storyData: Element) {
   const passageElements = storyData.getElementsByTagName("tw-passagedata");
 
@@ -132,6 +134,7 @@ export function init(storyData: Element) {
   }
 }
 
+/** @returns all passages for which `predicate` returned true */
 export function filter(predicate: (passage: Passage) => boolean): Passage[] {
   const result = [];
   for (const passage of byName.values()) {
@@ -142,6 +145,7 @@ export function filter(predicate: (passage: Passage) => boolean): Passage[] {
   return result;
 }
 
+/** @returns a passage for which `predicate` returned true */
 export function find(predicate: (passage: Passage) => boolean): Passage | undefined {
   for (const passage of byName.values()) {
     if (predicate(passage)) {
@@ -151,14 +155,17 @@ export function find(predicate: (passage: Passage) => boolean): Passage | undefi
   return undefined;
 }
 
+/** @returns the passage with the given name */
 export function get(name: string): Passage | undefined {
   return byName.get(name);
 }
 
+/** @returns the passage that should be used as the story start */
 export function start(): Passage {
   return startPassage;
 }
 
+/** @returns all passages with the given tag */
 export function withTag(tag: string): Passage[] {
   return filter((psg) => psg.tags.includes(tag));
 }

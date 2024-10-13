@@ -33,13 +33,6 @@ export function reset() {
   dialogElement.className = "";
 
   titleElt = makeElement("h1");
-  // const closeButton = makeElement("button", {
-  //   type: "button",
-  //   class: "btn-close",
-  //   "data-bs-dismiss": "modal",
-  //   "aria-label": "Close",
-  // });
-  // const modalHeader = makeElement("div", { class: "modal-header" }, titleElt, closeButton);
   const modalHeader = makeElement("div", {}, titleElt);
 
   modalBody = makeElement("div");

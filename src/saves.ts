@@ -20,22 +20,31 @@ export let slotTitles: (string | null)[];
 
 const specialClasses: SerializeDefinition[] = [];
 
-addSerializer(
+registerClass(
   Date,
   undefined,
   (date: Date) => date.valueOf(),
   (value: number) => new Date(value),
 );
-addSerializer(Map, undefined, Array.from, (plain: [unknown, unknown][]) => new Map(plain));
-addSerializer(
+registerClass(Map, undefined, Array.from, (plain: [unknown, unknown][]) => new Map(plain));
+registerClass(
   RegExp,
   undefined,
   (value: RegExp) => [value.source, value.flags],
   (plain: [string, string]) => new RegExp(...plain),
 );
-addSerializer(Set, undefined, Array.from, (plain: unknown[]) => new Set(plain));
+registerClass(Set, undefined, Array.from, (plain: unknown[]) => new Set(plain));
 
-export function addSerializer(
+/**
+ * Register a class in the save system.
+ * @param constructor The class to register.
+ * @param name A unique name to refer to the class by, defaults to `constructor.name`
+ * @param serialize A method which converts an object of this class to a JSON-stringifiable object
+ * or array. Defaults to `constructor.deserialize`.
+ * @param deserialize A method which converts data from `serialize` back to an object of this
+ * class. Defaults to `constructor.deserialize`.
+ */
+export function registerClass(
   constructor: unknown,
   name?: unknown,
   serialize?: unknown,

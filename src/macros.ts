@@ -18,11 +18,18 @@ interface CapturedVar {
   value: unknown;
 }
 
+/** Each time a macro is called, it receives a MacroContext as its `this`. */
 export class MacroContext {
+  /** The "body" (additional markup in "{}") this macro was invoked with,
+   * or `undefined` if it was not given any. */
   content?: NodeTemplate[];
+  /** The name this macro was called by */
   name: string;
+  /** Whether this macro is in a for/while loop */
   loopStatus: LoopStatus;
+  /** The nearest ancestor macro's context */
   parent?: MacroContext;
+  /** Any captured variables this macro must be aware of */
   captures?: CapturedVar[];
 
   constructor(name: string, parent?: MacroContext, content?: NodeTemplate[]) {
@@ -34,12 +41,15 @@ export class MacroContext {
     }
   }
 
+  /**
+   * Render `input` into `target`.
+   * No-op if the macro is after a `@break` or `@continue`.
+   * `input` defaults to the macro's content field.
+   */
   render(target: Element | DocumentFragment, input?: string | NodeTemplate[] | Passage) {
     input ||= this.content || [];
     switch (this.loopStatus) {
       case LoopStatus.OUTSIDE_LOOP:
-        render(target, input, this);
-        break;
       case LoopStatus.IN_LOOP:
         render(target, input, this);
         break;
@@ -52,6 +62,7 @@ export class MacroContext {
     }
   }
 
+  /** Create a callback that will properly respect this macro's captured variables. */
   createCallback<F extends Function>(func: F): F {
     const context = this;
     const wrapped = function (this: unknown, ...args: unknown[]) {
@@ -89,6 +100,7 @@ interface Macro {
 
 const macros = new Map<string, Macro>();
 
+/** Add a new macro */
 export function add(name: string, macro: Macro) {
   if (macros.has(name)) {
     console.warn(`Replacing an existing macro: "${name}"`);
@@ -96,6 +108,8 @@ export function add(name: string, macro: Macro) {
   macros.set(name, macro);
 }
 
+/** Add a new macro, identical to another.
+ * If the older macro is later removed, the newer macro will be unaffected. */
 export function alias(oldName: string, newName: string) {
   const m = macros.get(oldName);
   if (!m) {
@@ -104,10 +118,12 @@ export function alias(oldName: string, newName: string) {
   macros.set(newName, m);
 }
 
+/** Get a macro definition */
 export function get(name: string): Macro | null {
   return macros.get(name) || null;
 }
 
+/** Remove a macro definition */
 export function remove(name: string): boolean {
   return macros.delete(name);
 }

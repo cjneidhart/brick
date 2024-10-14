@@ -1,7 +1,7 @@
 import Config from "./config";
 import { storyVariables, tempVariables } from "./engine";
 import { get as getMacro, LoopStatus, MacroContext } from "./macros";
-import { NodeTemplate, Parser } from "./parser";
+import { isMacro, NodeTemplate, Parser } from "./parser";
 import { Passage } from "./passages";
 import { evalExpression } from "./scripting";
 import { makeElement } from "./util";
@@ -132,11 +132,7 @@ export function render(
         const templates = [nt];
         for (let j = i + 1; j < inputNodes.length; j++) {
           const nextNode = inputNodes[j];
-          if (
-            typeof nextNode === "object" &&
-            nextNode.type === "macro" &&
-            macroData.trailingMacros.includes(nextNode.name)
-          ) {
+          if (isMacro(nextNode) && macroData.trailingMacros.includes(nextNode.name)) {
             templates.push(nextNode);
             i = j;
           } else if (typeof nextNode === "string" && !nextNode.trim()) {

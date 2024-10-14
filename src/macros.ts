@@ -1,6 +1,6 @@
 import config from "./config";
 import { navigate, tempVariables } from "./engine";
-import { MacroTemplate, NodeTemplate } from "./parser";
+import { isMacro, MacroTemplate, NodeTemplate } from "./parser";
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
 import { evalAssign, evalExpression } from "./scripting";
@@ -468,7 +468,7 @@ add("if", {
     }
 
     for (const template of this.content) {
-      if (!(typeof template === "object" && template.type === "macro")) {
+      if (!isMacro(template)) {
         throw new Error("@if: child was not a MacroTemplate");
       }
       if (template.name === "else" || evalExpression(template.args.join(","))) {

@@ -69,6 +69,10 @@ export type NodeTemplate =
   | LinkBox
   | ErrorMessage;
 
+export function isMacro(nt: NodeTemplate): nt is MacroTemplate {
+  return typeof nt === "object" && nt.type === "macro";
+}
+
 export class Parser {
   input: string;
   index: number;

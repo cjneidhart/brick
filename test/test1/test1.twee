@@ -19,6 +19,7 @@ Lorem ipsun is a trad/* BLOCK
 COMMENT **/itional fil// LINE COMMENT
 ler text.
 single line break
+@($bla = 5, $fish = "red"; $one = 1, $two = "2";)
 
 double line break. <em title="hello World!">Then some emphasized text</em>.<br>
 <br>

@@ -3,7 +3,7 @@ import { navigate, tempVariables } from "./engine";
 import { isMacro, MacroTemplate, NodeTemplate } from "./parser";
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
-import { evalAssign, evalExpression } from "./scripting";
+import { evalAssign, evalExpression, evalJavaScript } from "./scripting";
 import { makeElement, uniqueId } from "./util";
 
 export enum LoopStatus {
@@ -156,8 +156,9 @@ add("include", {
 });
 
 add("", {
-  handler(..._args) {
-    // Pass: the args have already been evaluated by the renderer
+  skipArgs: true,
+  handler(...args) {
+    evalJavaScript(args.join(", "));
     return document.createDocumentFragment();
   },
 });

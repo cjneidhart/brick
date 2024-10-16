@@ -166,3 +166,9 @@ export function restart() {
   saves.clearActive();
   window.location.reload();
 }
+
+export function redo() {
+  for (const elt of document.querySelectorAll(".brick-macro-do")) {
+    elt.dispatchEvent(new CustomEvent("brick-redo"));
+  }
+}

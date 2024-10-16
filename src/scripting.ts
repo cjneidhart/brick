@@ -1,6 +1,6 @@
 import Config from "./config";
 import { showPassage } from "./dialog";
-import { backward, forward, storyVariables, tempVariables } from "./engine";
+import { backward, forward, redo, storyVariables, tempVariables } from "./engine";
 import * as passages from "./passages";
 import * as Util from "./util";
 
@@ -9,6 +9,7 @@ import * as Util from "./util";
 export const BrickPublic = Object.freeze({
   forward,
   backward,
+  redo,
   Dialog: Object.freeze({
     showPassage,
   }),
@@ -22,13 +23,6 @@ export const BrickPublic = Object.freeze({
   get temp() {
     return tempVariables;
   },
-  redo: function (this: null) {
-    const doElements = document.querySelectorAll(".brick-macro-do");
-    for (const elt of doElements) {
-      const event = new Event("brick-redo");
-      elt.dispatchEvent(event);
-    }
-  },
 });
 
 const envKeys = ["Brick", "Config", "Dialog", "Passages", "Util"];
@@ -37,16 +31,12 @@ const envValues = [
   Object.freeze({
     forward,
     backward,
+    redo,
     get vars() {
       return storyVariables;
     },
     get temp() {
       return tempVariables;
-    },
-    redo: function (this: null) {
-      for (const element of document.querySelectorAll(".brick-macro-redoable")) {
-        element.dispatchEvent(new Event("brick-redo"));
-      }
     },
   }),
   Object.freeze(Config),

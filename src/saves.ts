@@ -23,8 +23,8 @@ const specialClasses: SerializeDefinition[] = [];
 registerClass(
   Date,
   undefined,
-  (date: Date) => date.valueOf(),
-  (value: number) => new Date(value),
+  (date: Date) => date.toJSON(),
+  (value: string) => new Date(value),
 );
 registerClass(Map, undefined, Array.from, (plain: [unknown, unknown][]) => new Map(plain));
 registerClass(
@@ -126,33 +126,57 @@ export function clearSlot(slot: number) {
 
 function load(key: string): SaveState | undefined {
   const json = sm.getItem(key);
-  return json ? JSON.parse(json, loadReplacer) : undefined;
+  return json ? (reviveSaveObject(JSON.parse(json)) as SaveState) : undefined;
 }
 
-function loadReplacer(_key: string, value: unknown) {
-  if (Array.isArray(value) && typeof value[0] === "string") {
-    if (value[0] === "!brick-revive:undefined") {
+function revivePrimitive(tag: string) {
+  switch (tag) {
+    case "undefined":
       return undefined;
-    } else if (value[0].startsWith("!brick-revive:")) {
-      if (value.length !== 2) {
+    case "nan":
+      return NaN;
+    case "infinity":
+      return Infinity;
+    case "negative-infinity":
+      return -Infinity;
+    default:
+      return false;
+  }
+}
+
+function reviveSaveObject(object: Record<string, unknown>): unknown {
+  for (const key in object) {
+    const value = object[key];
+    if (typeof value === "object" && value !== null) {
+      object[key] = reviveSaveObject(value as Record<string, unknown>);
+    }
+  }
+  if (object instanceof Array && typeof object[0] === "string") {
+    if (object[0].startsWith("!brick-revive:")) {
+      const tag = object[0].substring(14);
+      console.log(tag);
+      const primitive = revivePrimitive(tag);
+      if (primitive !== false) {
+        return primitive;
+      }
+      if (object.length !== 2) {
         throw new Error("malformed save data");
       }
-      const defn = specialClasses.find((defn) => defn.name === value[0].substring(14));
+      const defn = specialClasses.find((defn) => defn.name === tag);
       if (!defn) {
         throw new Error("malformed save data");
       }
-      return defn.deserialize(value[1]);
-    } else if (/^!{2,}brick-revive:/.test(value[0])) {
-      value[0] = value[0].substring(1);
+      return defn.deserialize(object[1]);
+    } else if (/^!{2,}brick-revive:/.test(object[0])) {
+      object[0] = object[0].substring(1);
     }
   }
-  return value;
+  return object;
 }
 
 function saveReplacer(_key: string, value: unknown) {
   switch (typeof value) {
     case "boolean":
-    case "number":
     case "string":
       return value;
     case "bigint":
@@ -161,6 +185,16 @@ function saveReplacer(_key: string, value: unknown) {
       throw new Error(`Cannot serialize a ${typeof value}`);
     case "undefined":
       return ["!brick-revive:undefined"];
+    case "number":
+      if (isNaN(value)) {
+        return ["!brick-revive:nan"];
+      } else if (value === Infinity) {
+        return ["!brick-revive:infinity"];
+      } else if (value === -Infinity) {
+        return ["!brick-revive:negative-infinity"];
+      } else {
+        return value;
+      }
     case "object": {
       if (value === null) {
         return null;

@@ -305,16 +305,16 @@ An optional `@default` macro at the end will be rendered if none of the `@case`s
 
 Sometimes, you need to re-render part of a passage, without re-rendering the entire passage.
 In those situations, the macro `@redoable` can designate a section of markup for re-rendering.
-After the passage is rendered, you can call `Brick.redo()` to re-render all markup contained in `@redoable` macros.
+After the passage is rendered, you can call `Engine.redo()` to re-render all markup contained in `@redoable` macros.
 
 ```brick
-// Display the player's money (purchase buttons can call `Brick.redo()` to update this)
+// Display the player's money (purchase buttons can call `Engine.redo()` to update this)
 You have @redoable { $money } credits in your wallet.
 
 // Example purchase link (very basic, test this carefully before using it)
 @button("Buy a soda", () => {
   $inventory.push("soda");
   $money -= 10;
-  Brick.redo();
+  Engine.redo();
 })
 ```

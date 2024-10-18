@@ -169,7 +169,7 @@ Counter: @redoable { _counter }
 
 @link("Click this to increment the counter, then call redo()", () => {
   _counter++;
-  Brick.redo();
+  Engine.redo();
 })
 
 @linkTo("Start", "return")

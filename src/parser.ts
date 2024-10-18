@@ -312,7 +312,7 @@ export class Parser {
       return { type, name: baseVarName };
     } else {
       // more complicated: substitute with @print
-      const prefix = type === "story" ? "Brick.vars." : "Brick.temp.";
+      const prefix = type === "story" ? "Engine.vars." : "Engine.temp.";
       return {
         type: "macro",
         name: "print",
@@ -457,7 +457,7 @@ export class Parser {
           this.index++;
           match = this.consume(RE.js.identifier);
           if (match) {
-            output.push("Brick.vars.", match[0]);
+            output.push("Engine.vars.", match[0]);
           } else {
             throw new Error("Illegal identifier");
           }
@@ -467,7 +467,7 @@ export class Parser {
           this.index++;
           match = this.consume(RE.js.identifier);
           if (match) {
-            output.push("Brick.temp.", match[0]);
+            output.push("Engine.temp.", match[0]);
           } else {
             throw new Error("Illegal identifier");
           }

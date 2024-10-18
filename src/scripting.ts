@@ -1,34 +1,13 @@
 import Config from "./config";
 import { showPassage } from "./dialog";
 import { backward, forward, redo, storyVariables, tempVariables } from "./engine";
-import * as passages from "./passages";
+import * as Passages from "./passages";
 import * as Util from "./util";
 
 /** The public API available to authors */
 // TODO: type-checking
-export const BrickPublic = Object.freeze({
-  forward,
-  backward,
-  redo,
-  Dialog: Object.freeze({
-    showPassage,
-  }),
-  Passages: Object.freeze({
-    get: passages.get,
-  }),
-  Util: Object.freeze(Util),
-  get vars() {
-    return storyVariables;
-  },
-  get temp() {
-    return tempVariables;
-  },
-});
-
-const envKeys = ["Brick", "Config", "Dialog", "Passages", "Util"];
-
-const envValues = [
-  Object.freeze({
+export const BrickPublic = {
+  Engine: {
     forward,
     backward,
     redo,
@@ -38,12 +17,20 @@ const envValues = [
     get temp() {
       return tempVariables;
     },
-  }),
-  Object.freeze(Config),
-  Object.freeze({ showPassage }),
-  Object.freeze({ get: passages.get }),
-  Object.freeze(Util),
-];
+  },
+  Config,
+  Dialog: {
+    showPassage,
+  },
+  Passages,
+  clone: Util.clone,
+  slugify: Util.slugify,
+  makeElement: Util.makeElement,
+  numberRange: Util.numberRange,
+};
+
+const envKeys = Object.keys(BrickPublic);
+const envValues = Object.values(BrickPublic);
 
 export function evalJavaScript(js: string): unknown {
   console.log(js);

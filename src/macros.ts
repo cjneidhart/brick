@@ -332,7 +332,7 @@ add("for", {
       throw new Error("@for: loop variable must be a temp variable");
     }
     const varName = varStr.substring(1);
-    const place = `Brick.temp.${varName}`;
+    const place = `Engine.temp.${varName}`;
     const iterable = evalExpression(iterableStr) as Iterable<unknown>;
     if (typeof iterable[Symbol.iterator] !== "function") {
       throw new Error("@for: Right-hand side must be an iterable value, such as an array");

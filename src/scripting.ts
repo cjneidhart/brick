@@ -46,6 +46,7 @@ const envValues = [
 ];
 
 export function evalJavaScript(js: string): unknown {
+  console.log(js);
   const fn = new Function(...envKeys, `'use strict';${js}`);
   return fn(...envValues);
 }

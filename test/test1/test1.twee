@@ -51,6 +51,8 @@ Now let's try a link: @linkTo('Passage 2') or maybe [[Passage 2]]
 
 [[Naked Variable Test]]
 
+[[Template Strings Test]]
+
 Here's a big block:
 <div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
 
@@ -202,3 +204,10 @@ You are carrying a _player.inventory[0] and a _player.inventory[1].
 // Don't put functions in variables
 @(_sayNumber = (number) => "Hello! Your number is " + number)
 _sayNumber(5 + 7)
+
+
+:: Template Strings Test
+[[Start]]
+
+@(_x = "world")
+@print(`hello ${_x}`)

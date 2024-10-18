@@ -12,6 +12,7 @@ const RE = {
     normalChars: /[^"'`[\]{}()/$_,a-zA-Z]+/y,
     stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/y,
     stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/y,
+    normalInTemplateString: /(?:[^`$\\]|\\[^]|\$(?!\{))*/y,
   },
   macroArgsStart: /\s*\(/y,
   macroBodyStart: /\s*\{/y,
@@ -428,6 +429,12 @@ export class Parser {
           }
           break;
 
+        case "`":
+          this.index++;
+          output.push(c);
+          this.parseJsTemplateString(output);
+          break;
+
         case "(":
           nesting.push(")");
           output.push(c);
@@ -497,6 +504,38 @@ export class Parser {
     }
 
     return output.join("");
+  }
+
+  parseJsTemplateString(output: string[]) {
+    while (true) {
+      const match = this.consume(RE.js.normalInTemplateString);
+      if (match) {
+        output.push(match[0]);
+      }
+      const c = this.lookahead();
+      if (!c) {
+        throw new Error("Unclosed template string");
+      }
+      switch (c) {
+        case "`":
+          output.push(c);
+          this.index++;
+          return;
+        case "$":
+          // from regex, we already know the left bracket is present
+          this.index += 2;
+          output.push("${");
+          output.push(this.parseJsExpression());
+          if (this.lookahead() !== "}") {
+            throw Error('missing "}" inside template string');
+          }
+          this.index++;
+          output.push("}");
+          break;
+        default:
+          throw Error(`Logic Error: '${c}' (U+${c.charCodeAt(0)}) was not matched by regex`);
+      }
+    }
   }
 
   makeLinkBox(fullText: string, separator: string): LinkBox | ErrorMessage {

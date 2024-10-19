@@ -154,7 +154,6 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
   if (object instanceof Array && typeof object[0] === "string") {
     if (object[0].startsWith("!brick-revive:")) {
       const tag = object[0].substring(14);
-      console.log(tag);
       const primitive = revivePrimitive(tag);
       if (primitive !== false) {
         return primitive;

@@ -33,7 +33,6 @@ const envKeys = Object.keys(BrickPublic);
 const envValues = Object.values(BrickPublic);
 
 export function evalJavaScript(js: string): unknown {
-  console.log(js);
   const fn = new Function(...envKeys, `'use strict';${js}`);
   return fn(...envValues);
 }

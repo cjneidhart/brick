@@ -94,8 +94,8 @@
   border-color: var(--bs-border-color);
   border-radius: 0.5rem;
   margin-top: 2rem;
-  max-width: 90vw;
-  max-width: 90svw;
+  max-width: min(90vw, 50rem);
+  max-width: min(90svw, 50rem);
   min-width: 30rem;
   overflow-x: scroll;
   &::backdrop {

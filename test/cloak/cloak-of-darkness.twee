@@ -13,7 +13,7 @@ Cloak of Darkness
 @($room = ""; $hasCloak = true;)
 <h1>Cloak of Darkness</h1>
 
-based on work by [[Iain Merrick->http://www.philome.la/iainmerrick/cloak-of-darkness/play]]
+based on work by <a href="http://www.philome.la/iainmerrick/cloak-of-darkness/play">Iain Merrick</a>
 
 [[Begin->Outside]]
 

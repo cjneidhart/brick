@@ -1,7 +1,7 @@
 import Config from "./config";
 import { storyVariables, tempVariables } from "./engine";
 import { get as getMacro, LoopStatus, MacroContext } from "./macros";
-import { isMacro, NodeTemplate, Parser } from "./parser";
+import { ElementTemplate, isMacro, NodeTemplate, Parser } from "./parser";
 import { Passage } from "./passages";
 import { evalExpression } from "./scripting";
 import { makeElement } from "./util";
@@ -165,19 +165,7 @@ export function render(
       // Markup rendered later is always considered outside a loop
       childContext.loopStatus = LoopStatus.OUTSIDE_LOOP;
     } else if (nt.type === "element") {
-      // Note: This could be a parse-time error, but renderer errors can be presented better.
-      if (BANNED_TAGS.includes(nt.name)) {
-        throw new Error(`<${nt.name}> elements cannot be created from markup`);
-      }
-      elt = makeElement(nt.name);
-      for (const [attrKey, attrVal] of nt.attributes) {
-        if (attrKey.startsWith("@")) {
-          throw new Error('Unsupported: attribute names starting with "@"');
-        }
-        elt.setAttribute(attrKey, attrVal);
-      }
-      render(elt, nt.content, parentContext);
-      target.append(elt);
+      target.append(renderElement(nt, parentContext));
     } else if (nt.type === "linkBox") {
       const macroData = getMacro("linkTo");
       if (!macroData) {
@@ -198,4 +186,21 @@ export function render(
       target.append(String(value));
     }
   }
+}
+
+function renderElement(template: ElementTemplate, parentContext?: MacroContext) {
+  if (BANNED_TAGS.includes(template.name)) {
+    throw new Error(`<${template.name}> elements cannot be created from markup`);
+  }
+  const element = makeElement(template.name);
+  for (const [key, value] of template.attributes) {
+    element.setAttribute(key, value);
+  }
+  for (const [key, script] of template.evalAttributes) {
+    // TODO catch errors
+    const value = String(evalExpression(script));
+    element.setAttribute(key, value);
+  }
+  render(element, template.content, parentContext);
+  return element;
 }

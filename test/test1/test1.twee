@@ -53,6 +53,8 @@ Now let's try a link: @linkTo('Passage 2') or maybe [[Passage 2]]
 
 [[Template Strings Test]]
 
+[[Dynamic Attributes Test]]
+
 Here's a big block:
 <div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
 
@@ -211,3 +213,10 @@ _sayNumber(5 + 7)
 
 @(_x = "world")
 @print(`hello ${_x}`)
+
+
+:: Dynamic Attributes Test
+[[Start]]
+
+@(_title = "Hello World")
+<span title=(_title + "!")>HOVER ME</span>

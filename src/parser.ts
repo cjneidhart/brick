@@ -3,7 +3,8 @@ const RE = {
   commentBlock: /\*(?:[^])*?\*\//y,
   commentLine: /\/.*\n?/y,
   elementName: /([-\p{ID_Continue}]+)(#[-\p{ID_Continue}]+)?((?:\.[-\p{ID_Continue}]+)*)/uy,
-  htmlAttr: /\s*([-_@\p{ID_Start}][-\p{ID_Continue}]*)="([^"]*)"/uy,
+  htmlAttr: /\s*([-_\p{ID_Start}][-\p{ID_Continue}]*)="([^"]*)"/uy,
+  htmlEvalAttr: /\s*([-_\p{ID_Start}][-\p{ID_Continue}]*)=\(/uy,
   js: {
     closingParen: /\s*\)/y,
     closingSquareBracket: /\s*\]/y,
@@ -29,6 +30,7 @@ export interface ElementTemplate {
   type: "element";
   name: string;
   attributes: Map<string, string>;
+  evalAttributes: Map<string, string>;
   content: NodeTemplate[];
 }
 
@@ -248,6 +250,7 @@ export class Parser {
     const [_, name, id, className] = longName;
 
     const attributes = new Map<string, string>();
+    const evalAttributes = new Map<string, string>();
     if (id) {
       attributes.set("id", id.slice(1));
     }
@@ -257,20 +260,40 @@ export class Parser {
 
     this.consume(RE.whitespace);
     while (!this.consume(RE.closeTag)) {
-      const match = this.consume(RE.htmlAttr);
-      if (!match) {
-        return this.error("Missing trailing `>` to close the HTML tag");
+      let match = this.consume(RE.htmlAttr);
+      if (match) {
+        const [_, key, value] = match;
+        if (attributes.has(key) || evalAttributes.has(key)) {
+          console.warn(`Ignoring duplicate attribute '${key}`);
+        } else {
+          attributes.set(key, value);
+        }
+      } else {
+        match = this.consume(RE.htmlEvalAttr);
+        if (match) {
+          const key = match[1];
+          const value = this.parseJsExpression();
+          if (value.trim() === "") {
+            throw new Error(`Empty dynamic attribute "${key}"`);
+          }
+          if (this.lookahead() !== ")") {
+            throw new Error(`No closing paren on dynamic attribute "${key}"`);
+          }
+          this.index++;
+          if (attributes.has(key) || evalAttributes.has(key)) {
+            console.warn(`Ignoring duplicate attribute '${key}`);
+          } else {
+            evalAttributes.set(key, value);
+          }
+        } else {
+          return this.error("Missing trailing `>` to close the HTML tag");
+        }
       }
-      const [_, key, value] = match;
-      if (attributes.has(key)) {
-        console.warn(`Ignoring duplicate attribute '${key}`);
-      }
-      attributes.set(key, value);
     }
 
     const content = UNCLOSED_TAGS.includes(name) ? [] : this.parse(new RegExp(`</${name}>`, "y"));
 
-    return { type: "element", name, attributes, content };
+    return { type: "element", name, attributes, evalAttributes: evalAttributes, content };
   }
 
   parseNakedVariable(type: "story" | "temp"): NakedVariable | MacroTemplate | ErrorMessage {
@@ -367,7 +390,7 @@ export class Parser {
       throw new Error("Right-hand side of a for macro must be an Iterable");
     }
 
-    if (!this.consume(/\s*\)/uy)) {
+    if (!this.consume(/\s*\)/y)) {
       throw new Error("No closing paren");
     }
 

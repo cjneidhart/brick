@@ -123,6 +123,14 @@ In addition to normal HTML, Brick adds a shorthand for setting an element's `id`
 
 When using this short syntax, the id and class must consist of only ASCII letters and numbers, hyphens, and underscores.
 
+You can include JavaScript expressions as HTML attributes by using parentheses instead of quotes:
+
+```brick
+// Create a <span> with the title attribute "Surprise!!!"
+@(_title = "Surprise")
+<span title=(_title + "!!!")>Hover over me for a surprise.</span>
+```
+
 ## Macros
 
 This is a list of built-in macros.

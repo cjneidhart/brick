@@ -3,22 +3,22 @@ const RE = {
   commentBlock: /\*(?:[^])*?\*\//y,
   commentLine: /\/.*\n?/y,
   elementName: /([-\p{ID_Continue}]+)(#[-\p{ID_Continue}]+)?((?:\.[-\p{ID_Continue}]+)*)/uy,
-  htmlAttr: /\s*([-@\p{ID_Start}][-\p{ID_Continue}]*)="([^"]*)"/uy,
+  htmlAttr: /\s*([-_@\p{ID_Start}][-\p{ID_Continue}]*)="([^"]*)"/uy,
   js: {
     closingParen: /\s*\)/y,
     closingSquareBracket: /\s*\]/y,
     field: /\.\p{ID_Start}[$\p{ID_Continue}]*/uy,
     identifier: /\p{ID_Start}[$\p{ID_Continue}]*/uy,
     normalChars: /[^"'`[\]{}()/$_,a-zA-Z]+/y,
-    stringDouble: /"(?:[^\\"]|\\(?:.|\s))*"/y,
-    stringSingle: /'(?:[^\\']|\\(?:.|\s))*'/y,
+    stringDouble: /"(?:[^\\"]|\\[^])*"/y,
+    stringSingle: /'(?:[^\\']|\\[^])*'/y,
     normalInTemplateString: /(?:[^`$\\]|\\[^]|\$(?!\{))*/y,
   },
-  macroArgsStart: /\s*\(/y,
+  macroArgsStart: / *\(/y,
   macroBodyStart: /\s*\{/y,
   macroName: /[-_=<>\p{ID_Start}][-=<>\p{ID_Continue}]*/uy,
   normalChars: /[^[\]{}\\($_?<@/]+/y,
-  singleChar: /.|\s/y,
+  singleChar: /[^]/y,
   whitespace: /\s*/y,
 };
 
@@ -245,7 +245,7 @@ export class Parser {
       );
     }
 
-    const [_fullMatch, name, id, className] = longName;
+    const [_, name, id, className] = longName;
 
     const attributes = new Map<string, string>();
     if (id) {
@@ -395,7 +395,7 @@ export class Parser {
 
   parseJsExpression(): string {
     const nesting = [];
-    const output: string[] = [];
+    const output = [];
     let match;
     outer: while (this.index < this.input.length) {
       match = this.consume(RE.js.normalChars);
@@ -403,13 +403,13 @@ export class Parser {
         output.push(match[0]);
       }
 
-      const c = this.lookahead();
       match = this.consume(RE.js.identifier);
       if (match) {
         output.push(match[0]);
         continue;
       }
 
+      const c = this.lookahead();
       switch (c) {
         case '"':
           match = this.consume(RE.js.stringDouble);

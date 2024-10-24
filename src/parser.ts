@@ -23,8 +23,26 @@ const RE = {
   whitespace: /\s*/y,
 };
 
-// These HTML elements don't allow a closing tag.
-const UNCLOSED_TAGS = ["area", "br", "embed", "hr", "img", "input", "link", "meta", "track", "wbr"];
+/** Tags which are not allowed to be descended from `<body>` */
+const BANNED_TAGS = ["base", "body", "link", "head", "html", "meta", "script", "style", "title"];
+
+/** Tags which can't have child nodes */
+const VOID_TAGS = [
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+];
 
 export interface ElementTemplate {
   type: "element";
@@ -274,7 +292,7 @@ export class Parser {
           const key = match[1];
           const value = this.parseJsExpression();
           if (value.trim() === "") {
-            throw new Error(`Empty dynamic attribute "${key}"`);
+            throw new Error(`Empty JavaScript attribute "${key}"`);
           }
           if (this.lookahead() !== ")") {
             throw new Error(`No closing paren on dynamic attribute "${key}"`);
@@ -291,9 +309,12 @@ export class Parser {
       }
     }
 
-    const content = UNCLOSED_TAGS.includes(name) ? [] : this.parse(new RegExp(`</${name}>`, "y"));
+    const content = VOID_TAGS.includes(name) ? [] : this.parse(new RegExp(`</${name}>`, "y"));
 
-    return { type: "element", name, attributes, evalAttributes: evalAttributes, content };
+    if (BANNED_TAGS.includes(name)) {
+      return this.error(`Passages cannot contain "<${name}>" elements`);
+    }
+    return { type: "element", name, attributes, evalAttributes, content };
   }
 
   parseNakedVariable(type: "story" | "temp"): NakedVariable | MacroTemplate | ErrorMessage {

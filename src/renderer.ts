@@ -6,9 +6,6 @@ import { Passage } from "./passages";
 import { evalExpression } from "./scripting";
 import { makeElement } from "./util";
 
-/** Tags which are not allowed to be descended from `<body>` */
-const BANNED_TAGS = ["base", "body", "link", "head", "html", "meta", "script", "style", "title"];
-
 const PHRASING_TAGS = [
   "abbr",
   "audio",
@@ -189,9 +186,6 @@ export function render(
 }
 
 function renderElement(template: ElementTemplate, parentContext?: MacroContext) {
-  if (BANNED_TAGS.includes(template.name)) {
-    throw new Error(`<${template.name}> elements cannot be created from markup`);
-  }
   const element = makeElement(template.name);
   for (const [key, value] of template.attributes) {
     element.setAttribute(key, value);

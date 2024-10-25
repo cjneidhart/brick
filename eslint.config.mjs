@@ -32,6 +32,6 @@ export default tseslint.config(
     },
   },
   {
-    ignores: ["dist/", "storyformats/", "test/", "build.js", "test.js"],
+    ignores: ["bundle/", "storyformats/", "test/", "build.js", "test.js"],
   },
 );

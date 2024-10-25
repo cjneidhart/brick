@@ -12,22 +12,22 @@ if (!npm_package_version) {
   throw new Error("This script must be run as `npm run build`");
 }
 
-fs.mkdirSync("dist", { recursive: true });
+fs.mkdirSync("bundle", { recursive: true });
 fs.mkdirSync("storyformats/brick", { recursive: true });
 
 await esbuild.build({
   bundle: true,
-  entryPoints: ["src/main.ts"],
+  entryPoints: ["extend-twine.js", "src/brick.css", "src/main.ts"],
   minify: !debug,
-  outfile: "dist/brick.js",
+  outdir: "bundle",
   sourcemap: debug ? "inline" : false,
 });
 
 const templateText = readTextFile("src/brick.html");
-const scriptText = readTextFile("dist/brick.js");
-const brickStyle = readTextFile("src/brick.css");
+const scriptText = readTextFile("bundle/src/main.js");
+const brickStyle = readTextFile("bundle/src/brick.css");
 const bsCss = readTextFile("node_modules/bootstrap/dist/css/bootstrap-reboot.min.css");
-const editorExtensionsJs = readTextFile("twine-editor.js");
+const editorExtensionsJs = readTextFile("bundle/extend-twine.js");
 
 const storyFormat = templateText
   .replace("/*BOOTSTRAP_STYLE*/", bsCss.replaceAll("$", "$$$$"))

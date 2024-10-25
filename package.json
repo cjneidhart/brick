@@ -20,7 +20,7 @@
     "bootstrap": "^5.3.3"
   },
   "scripts": {
-    "prebuild": "tsc -noEmit",
+    "prebuild": "tsc --noEmit",
     "build": "node build.js",
     "test": "node test.js"
   }

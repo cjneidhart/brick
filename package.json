@@ -8,20 +8,19 @@
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^9.9.0",
-    "@types/bootstrap": "^5.2.10",
     "@types/eslint__js": "^8.42.3",
+    "esbuild": "^0.24.0",
     "eslint": "^9.9.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "3.3.3",
-    "ts-loader": "^9.5.1",
-    "typescript": "^5.5.4",
-    "typescript-eslint": "^8.0.1",
-    "webpack": "^5.93.0"
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.0.1"
   },
   "dependencies": {
     "bootstrap": "^5.3.3"
   },
   "scripts": {
+    "prebuild": "tsc -noEmit",
     "build": "node build.js",
     "test": "node test.js"
   }

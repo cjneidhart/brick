@@ -12,37 +12,40 @@ if (!npm_package_version) {
   throw new Error("This script must be run as `npm run build`");
 }
 
-fs.mkdirSync("bundle", { recursive: true });
 fs.mkdirSync("storyformats/brick", { recursive: true });
 
-await Promise.all([
+const [brickJs, brickCss, editorExtensions] = await Promise.all([
   esbuild.build({
     bundle: true,
-    entryPoints: ["src/brick.css", "src/main.ts"],
+    entryPoints: ["src/main.ts"],
     minify: !debug,
-    outdir: "bundle",
     sourcemap: debug ? "inline" : false,
+    write: false,
+  }),
+  esbuild.build({
+    bundle: true,
+    entryPoints: ["src/brick.css"],
+    minify: !debug,
+    sourcemap: debug ? "inline" : false,
+    write: false,
   }),
   esbuild.build({
     bundle: false, // So it doesn't get wrapped in an IIFE
     entryPoints: ["src/extend-twine.js"],
     minify: !debug,
-    outdir: "bundle",
     sourcemap: debug ? "inline" : false,
+    write: false,
   }),
-]);
+]).map((ctx) => ctx.outputFiles[0].text);
 
-const templateText = readTextFile("src/brick.html");
-const scriptText = readTextFile("bundle/main.js");
-const brickStyle = readTextFile("bundle/brick.css");
-const bsCss = readTextFile("node_modules/bootstrap/dist/css/bootstrap-reboot.min.css");
-const editorExtensionsJs = readTextFile("bundle/extend-twine.js");
+const template = readTextFile("src/brick.html");
+const reboot = readTextFile("node_modules/bootstrap/dist/css/bootstrap-reboot.min.css");
 
-const storyFormat = templateText
-  .replace("/*BOOTSTRAP_STYLE*/", bsCss.replaceAll("$", "$$$$"))
-  .replaceAll(/#\s*sourceMappingURL=bootstrap.*map/gm, "")
-  .replace("/*BRICK_SCRIPT*/", scriptText.replaceAll("$", "$$$$"))
-  .replace("/*BRICK_STYLE*/", brickStyle.replaceAll("$", "$$$$"));
+const storyFormat = template
+  .replace("/*BOOTSTRAP_STYLE*/", reboot.replaceAll("$", "$$$$"))
+  .replace(/#\s*sourceMappingURL=bootstrap.*map/gm, "")
+  .replace("/*BRICK_SCRIPT*/", brickJs.replaceAll("$", "$$$$"))
+  .replace("/*BRICK_STYLE*/", brickCss.replaceAll("$", "$$$$"));
 const storyJson = {
   name: "Brick",
   version: npm_package_version,
@@ -53,7 +56,7 @@ const storyJson = {
     " No Harlowe experience required." +
     ' <a href="https://github.com/cjneidhart/brick">Homepage</a>',
   source: storyFormat,
-  hydrate: editorExtensionsJs.replace("(void 0).editorExtensions", "this.editorExtensions"),
+  hydrate: editorExtensions.replace("(void 0).editorExtensions", "this.editorExtensions"),
   // url: null,
   // license: null,
 };

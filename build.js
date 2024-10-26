@@ -15,17 +15,26 @@ if (!npm_package_version) {
 fs.mkdirSync("bundle", { recursive: true });
 fs.mkdirSync("storyformats/brick", { recursive: true });
 
-await esbuild.build({
-  bundle: true,
-  entryPoints: ["extend-twine.js", "src/brick.css", "src/main.ts"],
-  minify: !debug,
-  outdir: "bundle",
-  sourcemap: debug ? "inline" : false,
-});
+await Promise.all([
+  esbuild.build({
+    bundle: true,
+    entryPoints: ["src/brick.css", "src/main.ts"],
+    minify: !debug,
+    outdir: "bundle",
+    sourcemap: debug ? "inline" : false,
+  }),
+  esbuild.build({
+    bundle: false, // So it doesn't get wrapped in an IIFE
+    entryPoints: ["src/extend-twine.js"],
+    minify: !debug,
+    outdir: "bundle",
+    sourcemap: debug ? "inline" : false,
+  }),
+]);
 
 const templateText = readTextFile("src/brick.html");
-const scriptText = readTextFile("bundle/src/main.js");
-const brickStyle = readTextFile("bundle/src/brick.css");
+const scriptText = readTextFile("bundle/main.js");
+const brickStyle = readTextFile("bundle/brick.css");
 const bsCss = readTextFile("node_modules/bootstrap/dist/css/bootstrap-reboot.min.css");
 const editorExtensionsJs = readTextFile("bundle/extend-twine.js");
 
@@ -44,7 +53,7 @@ const storyJson = {
     " No Harlowe experience required." +
     ' <a href="https://github.com/cjneidhart/brick">Homepage</a>',
   source: storyFormat,
-  hydrate: editorExtensionsJs,
+  hydrate: editorExtensionsJs.replace("(void 0).editorExtensions", "this.editorExtensions"),
   // url: null,
   // license: null,
 };

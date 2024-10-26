@@ -16,13 +16,55 @@ const KEYWORDS = (
   "new null return super switch this throw true try typeof var void while " +
   "with let static yield await enum implements interface package private " +
   "protected public arguments as async eval from get of set undefined"
-)
-  .split(" ")
-  .filter((kw) => kw);
+).split(" ");
+
+const OPERATORS = [
+  "!",
+  "!=",
+  "!==",
+  "%",
+  "%=",
+  "&",
+  "&&",
+  "&=",
+  "&&=",
+  "*",
+  "**",
+  "*=",
+  "**=",
+  "+",
+  "++",
+  "+=",
+  "-",
+  "--",
+  "-=",
+  "/",
+  "/=",
+  "<",
+  "<<",
+  "<=",
+  "<<=",
+  "=",
+  "==",
+  "===",
+  ">",
+  ">>",
+  ">>>",
+  ">=",
+  ">>=",
+  ">>>=",
+  "^",
+  "^=",
+  "|",
+  "||",
+  "|=",
+  "||=",
+  "~",
+];
 
 function tokenJs(stream, state) {
   if (stream.match(/[!%&*+-<=>^|~]+/)) {
-    return "operator";
+    return OPERATORS.includes(stream.current()) ? "operator" : "error operator";
   }
 
   if (stream.match(/[$_a-zA-Z][$_a-zA-Z0-9]*/)) {
@@ -78,7 +120,7 @@ function tokenJs(stream, state) {
       }
 
     case '"':
-      if (stream.match(/(?:[^\\"]|\\(?:.|\s))*"/)) {
+      if (stream.match(/(?:[^\\"]|\\[^]])*"/)) {
         return "string";
       } else {
         stream.skipToEnd();
@@ -86,7 +128,7 @@ function tokenJs(stream, state) {
       }
 
     case "'":
-      if (stream.match(/(?:[^\\']|\\(?:.|\s))*'/)) {
+      if (stream.match(/(?:[^\\']|\\[^])*'/)) {
         return "string";
       } else {
         stream.skipToEnd();

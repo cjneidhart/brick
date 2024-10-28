@@ -14,7 +14,7 @@ if (!npm_package_version) {
 
 fs.mkdirSync("storyformats/brick", { recursive: true });
 
-const [brickJs, brickCss, editorExtensions] = await Promise.all([
+const buildContexts = await Promise.all([
   esbuild.build({
     bundle: true,
     entryPoints: ["src/main.ts"],
@@ -36,7 +36,8 @@ const [brickJs, brickCss, editorExtensions] = await Promise.all([
     sourcemap: debug ? "inline" : false,
     write: false,
   }),
-]).map((ctx) => ctx.outputFiles[0].text);
+]);
+const [brickJs, brickCss, editorExtensions] = buildContexts.map((ctx) => ctx.outputFiles[0].text);
 
 const template = readTextFile("src/brick.html");
 const reboot = readTextFile("node_modules/bootstrap/dist/css/bootstrap-reboot.min.css");

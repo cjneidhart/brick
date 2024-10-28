@@ -1,6 +1,7 @@
 import { Moment } from "./engine";
 import { storyTitle } from "./main";
 import { slugify } from "./util";
+// import { v4 as uuid } from "uuid";
 
 export interface SaveState {
   history: Moment[];
@@ -38,9 +39,9 @@ registerClass(Set, undefined, Array.from, (plain: unknown[]) => new Set(plain));
 /**
  * Register a class in the save system.
  * @param constructor The class to register.
- * @param name A unique name to refer to the class by, defaults to `constructor.name`
+ * @param name A unique name to refer to the class by. Defaults to `constructor.name`
  * @param serialize A method which converts an object of this class to a JSON-stringifiable object
- * or array. Defaults to `constructor.deserialize`.
+ * or array. Defaults to `constructor.serialize`.
  * @param deserialize A method which converts data from `serialize` back to an object of this
  * class. Defaults to `constructor.deserialize`.
  */

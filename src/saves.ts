@@ -121,8 +121,12 @@ export async function putHistory(
   return newHistory;
 }
 
-export async function removeActiveHistory() {
+export async function deleteActiveHistory() {
   return await db.delete("histories", "active");
+}
+
+export async function deleteHistory(id: number) {
+  return await db.delete("histories", id);
 }
 
 export async function clearEverything() {

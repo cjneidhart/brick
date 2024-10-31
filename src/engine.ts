@@ -174,7 +174,7 @@ function renderActive() {
 
 /** Restart the game (by clearing the active slot then reloading the page). */
 export function restart() {
-  saves.removeActiveHistory();
+  saves.deleteActiveHistory();
   window.location.reload();
 }
 

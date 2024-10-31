@@ -47,7 +47,6 @@ interface BrickSchema extends idb.DBSchema {
 let prefix: string;
 let db: idb.IDBPDatabase<BrickSchema>;
 export let slotTitles: (string | null)[];
-const builtinClasses = [Date, Map, Set, RegExp];
 const authorClasses: SerializeDefinition[] = [];
 
 export async function init(storyTitle: string, ifid: string) {
@@ -170,7 +169,7 @@ export function registerClass(
 }
 
 function reviveSaveObject(object: Record<string, unknown>): unknown {
-  for (const key in object) {
+  for (const key in Object.keys(object)) {
     const value = object[key];
     if (typeof value === "object" && value !== null) {
       object[key] = reviveSaveObject(value as Record<string, unknown>);
@@ -190,6 +189,27 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
     } else if (/^!{2,}brick-revive:/.test(object[0])) {
       object[0] = object[0].substring(1);
     }
+  } else if (object instanceof Map) {
+    const newMap = new Map<unknown, unknown>();
+    for (let [key, value] of object as Map<unknown, unknown>) {
+      if (typeof key === "object" && key) {
+        key = replaceSaveObject(key as Record<string, unknown>);
+      }
+      if (typeof value === "object" && value) {
+        value = replaceSaveObject(value as Record<string, unknown>);
+      }
+      newMap.set(key, value);
+    }
+    return newMap;
+  } else if (object instanceof Set) {
+    const newSet = new Set<unknown>();
+    for (let value of object as Set<unknown>) {
+      if (typeof value === "object" && value) {
+        value = replaceSaveObject(value as Record<string, unknown>);
+      }
+      newSet.add(value);
+    }
+    return newSet;
   }
   return object;
 }
@@ -223,10 +243,24 @@ function replaceSaveObject(object: Record<string, unknown>): object {
     }
   }
 
-  for (const builtin of builtinClasses) {
-    if (object instanceof builtin) {
-      return object;
+  if (object instanceof Map) {
+    const newMap = new Map<unknown, unknown>();
+    for (const [key, value] of object as Map<unknown, unknown>) {
+      newMap.set(replaceSaveValue(key), replaceSaveValue(value));
     }
+    return newMap;
+  }
+
+  if (object instanceof Set) {
+    const newSet = new Set<unknown>();
+    for (const value of object as Set<unknown>) {
+      newSet.add(replaceSaveValue(value));
+    }
+    return newSet;
+  }
+
+  if (object instanceof Date || object instanceof RegExp) {
+    return object;
   }
 
   for (const defn of authorClasses) {

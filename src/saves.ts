@@ -4,22 +4,26 @@ import * as idb from "idb";
 /** A single entry within the history */
 export interface Moment {
   /** The name of the active passage */
-  passageName: string;
+  readonly passageName: string;
   /** The time at which this moment was navigated to (forward/backward does not count) */
-  timestamp: number;
+  readonly timestamp: number;
   /** The turn count (starting at 1) */
-  turnCount: number;
+  readonly turnCount: number;
   /** The story variables */
-  vars: Record<string, unknown>;
+  readonly vars: Record<string, unknown>;
 }
 
 export interface History {
+  /** The ID used to look up this object in the database */
+  id?: number | "active";
   /** The index of the active moment */
-  index: number;
+  readonly index: number;
   /** The IDs of all Moments in this History */
-  momentIds: number[];
+  readonly momentIds: number[];
   /** The timestamp at which this History was saved */
-  timestamp: number;
+  readonly timestamp: number;
+  /** The title to display in the saves menu */
+  readonly title: string;
 }
 
 interface SerializeDefinition {
@@ -51,7 +55,7 @@ export async function init(storyTitle: string, ifid: string) {
   db = await idb.openDB<BrickSchema>(prefix, 1, {
     upgrade(db, _oldVersion, _newVersion, _transaction, _event) {
       db.createObjectStore("moments", { autoIncrement: true });
-      db.createObjectStore("histories", { autoIncrement: true });
+      db.createObjectStore("histories", { autoIncrement: true, keyPath: "id" });
     },
   });
 
@@ -78,15 +82,15 @@ export async function getMoment(id: number): Promise<Moment> {
   if (!moment) {
     throw new Error(`Could not load moment ${id}`);
   }
-  moment.vars = reviveSaveObject(moment.vars) as Record<string, unknown>;
-  return moment;
+  return {
+    ...moment,
+    vars: reviveSaveObject(moment.vars) as Record<string, unknown>,
+  };
 }
 
 export async function putMoment(moment: Moment): Promise<number> {
   const simpleMoment = {
-    passageName: moment.passageName,
-    timestamp: moment.timestamp,
-    turnCount: moment.turnCount,
+    ...moment,
     vars: replaceSaveObject(moment.vars) as Record<string, unknown>,
   };
   return await db.put("moments", simpleMoment);
@@ -96,9 +100,25 @@ export async function getHistory(key: number | "active"): Promise<History | unde
   return await db.get("histories", key);
 }
 
-export async function putHistory(momentIds: number[], index: number, key?: number | "active") {
-  const newHistory = { momentIds, index, timestamp: Date.now() };
-  return await db.put("histories", newHistory, key);
+/** Returns all histories, except the active one */
+export async function getAllHistories(): Promise<History[]> {
+  // every string key is greater than every number key in IDB
+  return await db.getAll("histories", IDBKeyRange.upperBound(""));
+}
+
+export async function putHistoryActive(momentIds: number[], index: number, title: string) {
+  const newHistory: History = { id: "active", momentIds, index, timestamp: Date.now(), title };
+  await db.put("histories", newHistory);
+}
+
+export async function putHistory(
+  momentIds: number[],
+  index: number,
+  title: string,
+): Promise<History> {
+  const newHistory: History = { momentIds, index, timestamp: Date.now(), title };
+  newHistory.id = await db.put("histories", newHistory);
+  return newHistory;
 }
 
 export async function removeActiveHistory() {

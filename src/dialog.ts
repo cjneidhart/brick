@@ -1,6 +1,8 @@
-// import * as engine from "./engine";
+import * as engine from "./engine";
 import { get as getPassage } from "./passages";
 import { render } from "./renderer";
+import type { History } from "./saves";
+import * as saves from "./saves";
 import { getElementById, makeElement } from "./util";
 
 let dialogElement: HTMLDialogElement;
@@ -51,57 +53,53 @@ export function showPassage(passageName: string) {
   dialogElement.showModal();
 }
 
-// export function showSavesMenu() {
-//   reset();
+export async function showSavesMenu() {
+  reset();
+  titleElt.append("Saves");
+  modalBody.append("Loading...");
+  dialogElement.showModal();
 
-//   titleElt.append("Saves");
+  const histories = await saves.getAllHistories();
+  histories.sort((a, b) => b.timestamp - a.timestamp);
+  const saveListings = await Promise.all(histories.map(makeHistoryListing));
 
-//   const tbody = makeElement("tbody", {});
-//   for (let i = 0; i < 8; i++) {
-//     const tr = makeElement("tr", {});
-//     updateSaveMenuRow(i, tr);
-//     tbody.append(tr);
-//   }
+  modalBody.innerHTML = "";
+  const saveList = makeElement("ul");
+  modalBody.append(saveList);
+  if (saveListings.length === 0) {
+    saveList.append(
+      makeElement("li", { class: "brick-saves-empty" }, makeElement("em", {}, "No saves found")),
+    );
+  } else {
+    saveList.append(...saveListings);
+  }
 
-//   const table = makeElement("table", { class: "table table-striped border" }, tbody);
-//   modalBody.append(table);
+  const newSaveButton = makeElement("button", {}, "Save");
+  newSaveButton.addEventListener("click", async () => {
+    saveList.querySelector(".brick-saves-empty")?.remove();
+    const history = await engine.saveToSlot();
+    saveList.prepend(makeHistoryListing(history));
+  });
+  modalBody.append(newSaveButton);
+}
 
-//   dialogElement.classList.add("brick-saves");
-
-//   dialogElement.showModal();
-// }
-
-// function updateSaveMenuRow(slotNumber: number, row: HTMLTableRowElement) {
-//   const slotTitle = slotTitles[slotNumber];
-//   const saveLoadButton = makeElement("button", { type: "button", class: "brick-sidebar-btn" });
-//   const deleteButton = makeElement(
-//     "button",
-//     { type: "button", class: "brick-sidebar-btn" },
-//     "Delete",
-//   );
-//   row.innerHTML = "";
-//   row.append(makeElement("th", { scope: "row" }, String(slotNumber + 1)));
-//   row.append(makeElement("td", {}, saveLoadButton));
-//   if (typeof slotTitle === "string") {
-//     row.append(makeElement("td", {}, slotTitle));
-//     saveLoadButton.innerText = "Load";
-//     saveLoadButton.addEventListener("click", () => {
-//       engine.loadFromSlot(slotNumber);
-//       updateSaveMenuRow(slotNumber, row);
-//     });
-//     deleteButton.addEventListener("click", () => {
-//       clearSlot(slotNumber);
-//       updateSaveMenuRow(slotNumber, row);
-//     });
-//   } else {
-//     deleteButton.disabled = true;
-//     const em = makeElement("em", {}, "Empty");
-//     row.append(makeElement("td", { class: "brick-text-secondary" }, em));
-//     saveLoadButton.innerText = "Save";
-//     saveLoadButton.addEventListener("click", () => {
-//       engine.saveToSlot(slotNumber);
-//       updateSaveMenuRow(slotNumber, row);
-//     });
-//   }
-//   row.append(makeElement("td", {}, deleteButton));
-// }
+function makeHistoryListing(history: History): HTMLLIElement {
+  const time = new Date(history.timestamp).toLocaleString();
+  const { id } = history;
+  if (!id) {
+    throw new Error("Tried to create a save menu entry for an unsaved History");
+  }
+  const button = makeElement("button", {}, "Load");
+  button.addEventListener("click", async () => {
+    dialogElement.close();
+    if (!engine.loadFromSlot(id)) {
+      throw new Error(`Could not load history #${id}`);
+    }
+  });
+  return makeElement(
+    "li",
+    {},
+    makeElement("div", {}, history.title, makeElement("br"), makeElement("small", {}, time)),
+    button,
+  );
+}

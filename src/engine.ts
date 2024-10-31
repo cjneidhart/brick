@@ -2,7 +2,7 @@ import config from "./config";
 import type { Passage } from "./passages";
 import * as passages from "./passages";
 import { render } from "./renderer";
-import type { Moment } from "./saves";
+import type { Moment, History } from "./saves";
 import * as saves from "./saves";
 import { clone, getElementById, makeElement } from "./util";
 
@@ -19,26 +19,31 @@ export let tempVariables: Record<string, unknown>;
 export async function init() {
   mainElement = getElementById("brick-main");
   mainElement.innerHTML = "";
-  const activeHistory = await saves.getHistory("active");
-  if (activeHistory) {
-    historyIds = activeHistory.momentIds;
-    historyMoments = Array(historyIds.length);
-    historyMoments.fill(undefined);
-    index = activeHistory.index;
-  } else {
+  // TODO prevent passage change before resumeOrStart() is called.
+  historyIds = [];
+  historyMoments = [];
+  index = -1;
+  turnCount = 0;
+  passageName = "";
+  storyVariables = {};
+  tempVariables = {};
+}
+
+export async function resumeOrStart() {
+  if (!(await loadFromSlot("active"))) {
     const moment: Moment = {
       passageName: passages.start().name,
       timestamp: Date.now(),
       turnCount: 1,
-      vars: {},
+      vars: storyVariables,
     };
     historyMoments = [moment];
     historyIds = [await saves.putMoment(moment)];
     index = 0;
-    saves.putHistory(historyIds, index, "active"); // Intentionally not awaited
+    saveHistoryActive();
+    await loadCurrentMoment();
+    renderActive();
   }
-  await loadCurrentMoment();
-  renderActive();
 }
 
 /** Fetch the current moment from IDB if necessary, then load its variables */
@@ -66,7 +71,7 @@ export async function backward(): Promise<boolean> {
     }
     index--;
     await loadCurrentMoment();
-    saves.putHistory(historyIds, index, "active"); // Intentionally not awaited
+    saveHistoryActive();
     renderActive();
     return true;
   }
@@ -79,7 +84,7 @@ export async function forward(): Promise<boolean> {
   } else {
     index++;
     await loadCurrentMoment();
-    saves.putHistory(historyIds, index, "active"); // Intentionally not awaited
+    saveHistoryActive();
     renderActive();
     return true;
   }
@@ -102,8 +107,35 @@ export async function navigate(passage: string | Passage) {
   historyMoments.push(newMoment);
   historyIds.push(await saves.putMoment(newMoment));
   index++;
-  saves.putHistory(historyIds, index, "active"); // Intentionally not awaited
+  saveHistoryActive();
   renderActive();
+}
+
+export async function saveToSlot(): Promise<History> {
+  return await saves.putHistory(historyIds, index, historyTitle());
+}
+
+export async function loadFromSlot(slot: number | "active"): Promise<boolean> {
+  const maybeHistory = await saves.getHistory(slot);
+  if (!maybeHistory) {
+    return false;
+  } else {
+    historyIds = maybeHistory.momentIds;
+    historyMoments = Array(historyIds.length);
+    historyMoments.fill(undefined);
+    index = maybeHistory.index;
+  }
+  await loadCurrentMoment();
+  renderActive();
+  return true;
+}
+
+function historyTitle() {
+  return `${passageName} | Turn ${turnCount}`;
+}
+
+function saveHistoryActive() {
+  return saves.putHistoryActive(historyIds, index, historyTitle());
 }
 
 /** Render the active moment. */

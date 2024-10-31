@@ -56,17 +56,19 @@ function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) 
 
 addClicker("brick-history-backward", engine.backward);
 addClicker("brick-history-forward", engine.forward);
-// addClicker("brick-saves", dialog.showSavesMenu);
+addClicker("brick-saves", dialog.showSavesMenu);
 addClicker("brick-restart", engine.restart);
 
 async function init() {
+  dialog.init();
+  await initSaves(storyTitle, ifid);
+  await engine.init();
+
   for (const script of scripts) {
     evalJavaScript(script.textContent || "");
   }
 
-  dialog.init();
-  await initSaves(storyTitle, ifid);
-  await engine.init();
+  await engine.resumeOrStart();
 }
 
 init();

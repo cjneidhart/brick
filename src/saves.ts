@@ -1,11 +1,25 @@
-import { Moment } from "./engine";
-import { storyTitle } from "./main";
 import { slugify } from "./util";
-// import { v4 as uuid } from "uuid";
+import * as idb from "idb";
 
-export interface SaveState {
-  history: Moment[];
+/** A single entry within the history */
+export interface Moment {
+  /** The name of the active passage */
+  passageName: string;
+  /** The time at which this moment was navigated to (forward/backward does not count) */
+  timestamp: number;
+  /** The turn count (starting at 1) */
+  turnCount: number;
+  /** The story variables */
+  vars: Record<string, unknown>;
+}
+
+export interface History {
+  /** The index of the active moment */
   index: number;
+  /** The IDs of all Moments in this History */
+  momentIds: number[];
+  /** The timestamp at which this History was saved */
+  timestamp: number;
 }
 
 interface SerializeDefinition {
@@ -15,26 +29,85 @@ interface SerializeDefinition {
   deserialize: Function;
 }
 
+interface BrickSchema extends idb.DBSchema {
+  histories: {
+    key: number | "active";
+    value: History;
+  };
+  moments: {
+    key: number;
+    value: Moment;
+  };
+}
+
 let prefix: string;
-let sm: Storage;
+let db: idb.IDBPDatabase<BrickSchema>;
 export let slotTitles: (string | null)[];
+const saveableClasses: SerializeDefinition[] = [];
 
-const specialClasses: SerializeDefinition[] = [];
+export async function init(storyTitle: string, ifid: string) {
+  prefix = `brick.${slugify(storyTitle)}.${ifid}`;
 
-registerClass(
-  Date,
-  undefined,
-  (date: Date) => date.toJSON(),
-  (value: string) => new Date(value),
-);
-registerClass(Map, undefined, Array.from, (plain: [unknown, unknown][]) => new Map(plain));
-registerClass(
-  RegExp,
-  undefined,
-  (value: RegExp) => [value.source, value.flags],
-  (plain: [string, string]) => new RegExp(...plain),
-);
-registerClass(Set, undefined, Array.from, (plain: unknown[]) => new Set(plain));
+  db = await idb.openDB<BrickSchema>(prefix, 1, {
+    upgrade(db, _oldVersion, _newVersion, _transaction, _event) {
+      db.createObjectStore("moments", { autoIncrement: true });
+      db.createObjectStore("histories", { autoIncrement: true });
+    },
+  });
+
+  registerBuiltinClasses();
+}
+
+function registerBuiltinClasses() {
+  registerClass(
+    Date,
+    (date: Date) => date.toJSON(),
+    (value: string) => new Date(value),
+  );
+  registerClass(Map, Array.from, (plain: [unknown, unknown][]) => new Map(plain));
+  registerClass(
+    RegExp,
+    (value: RegExp) => [value.source, value.flags],
+    (plain: [string, string]) => new RegExp(...plain),
+  );
+  registerClass(Set, Array.from, (plain: unknown[]) => new Set(plain));
+}
+
+export async function getMoment(id: number): Promise<Moment> {
+  const moment = await db.get("moments", id);
+  if (!moment) {
+    throw new Error(`Could not load moment ${id}`);
+  }
+  moment.vars = reviveSaveObject(moment.vars) as Record<string, unknown>;
+  return moment;
+}
+
+export async function putMoment(moment: Moment): Promise<number> {
+  const simpleMoment = {
+    passageName: moment.passageName,
+    timestamp: moment.timestamp,
+    turnCount: moment.turnCount,
+    vars: replaceSaveObject(moment.vars) as Record<string, unknown>,
+  };
+  return await db.put("moments", simpleMoment);
+}
+
+export async function getHistory(key: number | "active"): Promise<History | undefined> {
+  return await db.get("histories", key);
+}
+
+export async function putHistory(momentIds: number[], index: number, key?: number | "active") {
+  const newHistory = { momentIds, index, timestamp: Date.now() };
+  return await db.put("histories", newHistory, key);
+}
+
+export async function removeActiveHistory() {
+  return await db.delete("histories", "active");
+}
+
+export async function clearEverything() {
+  await Promise.all([db.clear("histories"), db.clear("moments")]);
+}
 
 /**
  * Register a class in the save system.
@@ -47,87 +120,45 @@ registerClass(Set, undefined, Array.from, (plain: unknown[]) => new Set(plain));
  */
 export function registerClass(
   constructor: unknown,
-  name?: unknown,
   serialize?: unknown,
   deserialize?: unknown,
+  name?: string,
 ) {
   if (typeof constructor !== "function") {
-    throw new Error("addSerializer: `constructor` must be a function");
+    throw new Error("registerClass: `constructor` must be a function");
+  }
+  if (constructor === Array) {
+    throw new Error('"Array" cannot be a registered class');
   }
   if (name === undefined) {
     name = constructor.name;
   }
   if (typeof name !== "string") {
-    throw new Error("addSerializer: `name` must be undefined or a string");
+    throw new Error("registerClass: `name` must be undefined or a string");
   }
   if (serialize === undefined) {
     const c = constructor as unknown as Record<string, unknown>;
     serialize = c.serialize;
   }
   if (typeof serialize !== "function") {
-    throw new Error("addSerializer: `serialize` must be undefined or a string");
+    throw new Error("registerClass: `serialize` must be undefined or a string");
   }
   if (deserialize === undefined) {
     const c = constructor as unknown as Record<string, unknown>;
     deserialize = c.deserialize;
   }
   if (typeof deserialize !== "function") {
-    throw new Error("addSerializer: `deserialize` must be undefined or a string");
+    throw new Error("registerClass: `deserialize` must be undefined or a string");
   }
-  if (specialClasses.some((specialClass) => specialClass.name === name) || name === "undefined") {
-    throw new Error(`addSerializer: "${name}" has already been registered`);
+  if (saveableClasses.some((specialClass) => specialClass.name === name) || name === "undefined") {
+    throw new Error(`registerClass: "${name}" has already been registered`);
   }
-  specialClasses.push({
+  saveableClasses.push({
     constructor,
     name,
     serialize,
     deserialize,
   });
-}
-
-export function init() {
-  // TODO: add IFID
-  prefix = `brick.${slugify(storyTitle)}`;
-  sm = window.localStorage;
-  slotTitles = JSON.parse(sm.getItem(prefix + ".slotTitles") || "[]");
-  if (slotTitles.length < 8) {
-    slotTitles.length = 8;
-    slotTitles.fill(null);
-  }
-}
-
-export function clearActive() {
-  sm.removeItem(prefix + ".active");
-}
-
-export function saveActive(state: SaveState) {
-  sm.setItem(prefix + ".active", JSON.stringify(state, saveReplacer));
-}
-
-export function loadActive(): SaveState | undefined {
-  return load(prefix + ".active");
-}
-
-export function saveToSlot(slot: number, state: SaveState) {
-  sm.setItem(prefix + ".slot-" + String(slot), JSON.stringify(state, saveReplacer));
-  const title = state.history[state.index].passageName;
-  slotTitles[slot] = title;
-  sm.setItem(prefix + ".slotTitles", JSON.stringify(slotTitles));
-}
-
-export function loadFromSlot(slot: number): SaveState | undefined {
-  return load(prefix + ".slot-" + String(slot));
-}
-
-export function clearSlot(slot: number) {
-  sm.removeItem(prefix + ".slot-" + String(slot));
-  slotTitles[slot] = null;
-  sm.setItem(prefix + ".slotTitles", JSON.stringify(slotTitles));
-}
-
-function load(key: string): SaveState | undefined {
-  const json = sm.getItem(key);
-  return json ? (reviveSaveObject(JSON.parse(json)) as SaveState) : undefined;
 }
 
 function revivePrimitive(tag: string) {
@@ -162,7 +193,7 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
       if (object.length !== 2) {
         throw new Error("malformed save data");
       }
-      const defn = specialClasses.find((defn) => defn.name === tag);
+      const defn = saveableClasses.find((defn) => defn.name === tag);
       if (!defn) {
         throw new Error("malformed save data");
       }
@@ -174,7 +205,7 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
   return object;
 }
 
-function saveReplacer(_key: string, value: unknown) {
+function replaceSaveValue(value: unknown): unknown {
   switch (typeof value) {
     case "boolean":
     case "string":
@@ -186,7 +217,7 @@ function saveReplacer(_key: string, value: unknown) {
     case "undefined":
       return ["!brick-revive:undefined"];
     case "number":
-      if (isNaN(value)) {
+      if (value !== value) {
         return ["!brick-revive:nan"];
       } else if (value === Infinity) {
         return ["!brick-revive:infinity"];
@@ -199,23 +230,35 @@ function saveReplacer(_key: string, value: unknown) {
       if (value === null) {
         return null;
       }
-      if (Array.isArray(value)) {
-        if (typeof value[0] === "string" && /^!+brick-revive:/.test(value[0])) {
-          return ["!" + value[0], ...value.slice(1)];
-        } else {
-          return value;
-        }
-      }
-      for (const defn of specialClasses) {
-        if (value instanceof defn.constructor) {
-          return [`!brick-revive:${defn.name}`, defn.serialize(value)];
-        }
-      }
-      const proto = Object.getPrototypeOf(value);
-      if (proto !== null && proto !== Object.prototype) {
-        throw new Error("Can't serialize an object with an unknown prototype");
-      }
-      return value;
+      return replaceSaveObject(value as Record<string, unknown>);
     }
   }
+}
+
+function replaceSaveObject(object: Record<string, unknown>): object {
+  if (Array.isArray(object)) {
+    if (typeof object[0] === "string" && /^!+brick-revive:/.test(object[0])) {
+      return ["!" + object[0], ...object.slice(1)];
+    } else {
+      return object;
+    }
+  }
+
+  for (const defn of saveableClasses) {
+    if (object instanceof defn.constructor) {
+      return [`!brick-revive:${defn.name}`, replaceSaveValue(defn.serialize(object))];
+    }
+  }
+
+  const proto = Object.getPrototypeOf(object);
+  if (proto !== null && proto !== Object.prototype) {
+    throw new Error("Can't serialize an object with an unknown prototype");
+  }
+
+  const newObj: Record<string, unknown> = {};
+  for (const key in object) {
+    newObj[key] = replaceSaveValue(object[key]);
+  }
+
+  return newObj;
 }

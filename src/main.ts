@@ -38,32 +38,16 @@ passages.init(storyData);
 const styles = storyData.querySelectorAll<HTMLStyleElement>('style[type="text/twine-css"]');
 const scripts = storyData.querySelectorAll('script[type="text/twine-javascript"]');
 
-export const storyTitle =
+const storyTitle =
   storyData.getAttribute("name") ||
   (() => {
     throw new Error("Story has no title");
   })();
+const ifid = storyData.getAttribute("ifid") || "00000000-0000-4000-A000-000000000000";
 
 for (const stylesheet of styles) {
   const styleElt = makeElement("style", {}, stylesheet.innerText);
   document.head.appendChild(styleElt);
-}
-
-dialog.init();
-engine.init();
-initSaves();
-
-for (const script of scripts) {
-  evalJavaScript(script.textContent || "");
-}
-
-const startPassage = passages.get("Start");
-if (!startPassage) {
-  throw new Error("No starting passage found");
-}
-
-if (!engine.loadFromActive()) {
-  engine.navigate(passages.start());
 }
 
 function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) => unknown) {
@@ -74,3 +58,17 @@ addClicker("brick-history-backward", engine.backward);
 addClicker("brick-history-forward", engine.forward);
 addClicker("brick-saves", dialog.showSavesMenu);
 addClicker("brick-restart", engine.restart);
+
+async function init() {
+  dialog.init();
+  await initSaves(storyTitle, ifid);
+  await engine.init();
+
+  for (const script of scripts) {
+    evalJavaScript(script.textContent || "");
+  }
+
+  await engine.resumeOrStart();
+}
+
+init();

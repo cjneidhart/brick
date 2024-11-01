@@ -161,3 +161,35 @@
     padding: 0.125rem;
   }
 }
+
+.brick-saves-menu {
+  ul {
+    border: 1px solid currentColor;
+    list-style: none;
+    padding: 0;
+  }
+
+  li:not(:first-child) {
+    border-top: 1px solid currentColor;
+  }
+
+  li {
+    display: flex;
+    flex-direction: row;
+    padding: 0.25rem;
+  }
+
+  li > div {
+    flex-grow: 1;
+  }
+}
+
+.brick-saves-empty {
+  color: var(--bs-secondary);
+}
+
+.brick-saves-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}

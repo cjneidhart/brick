@@ -27,6 +27,9 @@ const buildContexts = await Promise.all([
     entryPoints: ["src/brick.css"],
     minify: !debug,
     sourcemap: debug ? "inline" : false,
+    // The exact versions here do not matter,
+    // we just need something old enough so esbuild removes CSS nesting.
+    target: ["firefox54", "chrome51", "safari10"],
     write: false,
   }),
   esbuild.build({

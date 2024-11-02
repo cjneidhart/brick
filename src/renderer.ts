@@ -1,5 +1,6 @@
 import Config from "./config";
 import { storyVariables, tempVariables } from "./engine";
+import { BrickError } from "./error";
 import { get as getMacro, LoopStatus, MacroContext } from "./macros";
 import { ElementTemplate, isMacro, NodeTemplate, Parser } from "./parser";
 import { Passage } from "./passages";
@@ -77,33 +78,31 @@ function _isPhrasingNode(node: string | Element): boolean {
   }
 }
 
+/** Return a `<span>` describing the error, and log the error to the console */
+function renderError(error: BrickError): HTMLSpanElement {
+  console.error(error);
+  return makeElement("span", { class: "brick-error" }, String(error));
+}
+
 /** Render the given Brick markup and append it to an element. */
 export function render(
   target: Element | DocumentFragment,
-  input: string | NodeTemplate[] | Passage,
+  input: NodeTemplate[] | Passage,
   parentContext?: MacroContext,
-) {
-  let inputNodes;
-  if (typeof input === "string") {
-    const parser = new Parser(input);
-    inputNodes = parser.parse();
-  } else if (input instanceof Passage) {
-    if (Config.preProcessText) {
-      const text = Config.preProcessText(input);
-      if (typeof text !== "string") {
-        throw new TypeError(`Config.preProcessText returned a ${typeof text}, expected a string`);
-      }
-      return render(target, text);
-    } else {
-      return render(target, input.content);
+): boolean {
+  let noErrors = true;
+  if (input instanceof Passage) {
+    const text = Config.preProcessText ? Config.preProcessText(input) : input.content;
+    if (typeof text !== "string") {
+      throw new TypeError(`Config.preProcessText returned a ${typeof text}, expected a string`);
     }
-  } else {
-    inputNodes = input;
+    const parser = new Parser(text, input.name);
+    return render(target, parser.parse(), parentContext);
   }
 
   // let pBuffer: (string | Element)[] = [];
-  for (let i = 0; i < inputNodes.length; i++) {
-    const nt = inputNodes[i];
+  for (let i = 0; i < input.length; i++) {
+    const nt = input[i];
     let elt: Element | string;
     if (typeof nt === "string") {
       elt = nt;
@@ -127,8 +126,8 @@ export function render(
       let params: unknown[];
       if (macroData.trailingMacros) {
         const templates = [nt];
-        for (let j = i + 1; j < inputNodes.length; j++) {
-          const nextNode = inputNodes[j];
+        for (let j = i + 1; j < input.length; j++) {
+          const nextNode = input[j];
           if (isMacro(nextNode) && macroData.trailingMacros.includes(nextNode.name)) {
             templates.push(nextNode);
             i = j;
@@ -139,11 +138,23 @@ export function render(
           }
         }
 
-        childContext = new MacroContext(nt.name, parentContext, templates);
+        childContext = new MacroContext(
+          nt.name,
+          nt.passageName,
+          nt.lineNumber,
+          parentContext,
+          templates,
+        );
         params = [];
       } else {
         params = macroData.skipArgs ? nt.args : nt.args.map((arg) => evalExpression(arg));
-        childContext = new MacroContext(nt.name, parentContext, nt.content);
+        childContext = new MacroContext(
+          nt.name,
+          nt.passageName,
+          nt.lineNumber,
+          parentContext,
+          nt.content,
+        );
       }
 
       // TODO: catch errors here
@@ -157,7 +168,7 @@ export function render(
           throw new Error(`Can't ${badName} from outside a loop`);
         }
         parentContext.loopStatus = childContext.loopStatus;
-        return;
+        return noErrors;
       }
 
       // Markup rendered later is always considered outside a loop
@@ -172,18 +183,21 @@ export function render(
       if (!nt.text) {
         throw new Error("The text of a [[link box]] cannot be empty");
       }
-      const childContext = new MacroContext("linkTo");
+      const childContext = new MacroContext("linkTo", nt.passageName, nt.lineNumber);
       target.append(macroData.handler.call(childContext, nt.link, nt.text));
     } else if (nt.type === "error") {
-      const br = makeElement("br");
-      const loc = makeElement("code", {}, nt.locationSample);
-      const span = makeElement("span", { class: "brick-error" }, `ERROR: ${nt.message}`, br, loc);
-      target.append(span);
+      noErrors = false;
+      // const br = makeElement("br");
+      // const loc = makeElement("code", {}, nt.locationSample);
+      // const span = makeElement("span", { class: "brick-error" }, `ERROR: ${nt.message}`, br, loc);
+      target.append(renderError(new BrickError(nt.message, nt.passageName, nt.lineNumber)));
     } else {
       const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
       target.append(String(value));
     }
   }
+
+  return noErrors;
 }
 
 function renderElement(template: ElementTemplate, parentContext?: MacroContext) {

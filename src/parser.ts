@@ -1,3 +1,5 @@
+import { countSubstrings } from "./util";
+
 const RE = {
   closeTag: />/y,
   commentBlock: /\*(?:[^])*?\*\//y,
@@ -44,7 +46,12 @@ const VOID_TAGS = [
   "wbr",
 ];
 
-export interface ElementTemplate {
+interface NodeTemplateBase {
+  passageName: string;
+  lineNumber: number;
+}
+
+export interface ElementTemplate extends NodeTemplateBase {
   type: "element";
   name: string;
   attributes: Map<string, string>;
@@ -53,28 +60,28 @@ export interface ElementTemplate {
 }
 
 // Represents a not-yet-invoked macro
-export interface MacroTemplate {
+export interface MacroTemplate extends NodeTemplateBase {
   type: "macro";
   name: string;
   args: string[];
   content?: NodeTemplate[];
 }
 
-export interface NakedVariable {
+export interface NakedVariable extends NodeTemplateBase {
   type: "story" | "temp";
   /** The name of the variable being accessed. */
   name: string;
 }
 
 /** A wiki-style [[Link]] */
-export interface LinkBox {
+export interface LinkBox extends NodeTemplateBase {
   type: "linkBox";
   link: string;
   text: string;
 }
 
 /** A parse error that should be displayed */
-export interface ErrorMessage {
+export interface ErrorMessage extends NodeTemplateBase {
   type: "error";
   /** A description of the error */
   message: string;
@@ -97,25 +104,24 @@ export function isMacro(nt: NodeTemplate): nt is MacroTemplate {
 export class Parser {
   input: string;
   index: number;
+  passageName: string;
+  lineNumber: number;
 
-  constructor(source: string) {
+  constructor(source: string, passageName: string, lineNumber?: number) {
     this.input = source;
     this.index = 0;
+    this.passageName = passageName;
+    this.lineNumber = lineNumber || 1;
   }
 
   consume(pattern: RegExp): RegExpExecArray | null {
-    // if (typeof pattern === "string") {
-    //   if (this.input.substring(this.index).startsWith(pattern)) {
-    //     this.index += pattern.length;
-    //     return [this.input.substring(this.index, pattern.length + this.index)];
-    //   } else {
-    //     return null;
-    //   }
-    // } else {
-    // }
     pattern.lastIndex = this.index;
     const match = pattern.exec(this.input);
     if (match) {
+      // NOTE: if we need to improve parser performance, we could remove this call to
+      // countSubstrings and instead store the index on each template, then use the index to later
+      // find the line number as-needed.
+      this.lineNumber += countSubstrings(match[0], "\n");
       this.index = pattern.lastIndex;
     }
     return match;
@@ -138,7 +144,13 @@ export class Parser {
   }
 
   error(message: string): ErrorMessage {
-    return { type: "error", message, locationSample: this.locationSample() };
+    return {
+      type: "error",
+      passageName: this.passageName,
+      lineNumber: this.lineNumber,
+      message,
+      locationSample: this.locationSample(),
+    };
   }
 
   parse(closer?: RegExp): NodeTemplate[] {
@@ -165,14 +177,9 @@ export class Parser {
       const c = this.consume(RE.singleChar)?.[0];
       switch (c) {
         case "\\": {
-          const c2 = this.lookahead();
-          if (!c2) {
-            // Assume they meant to place an escaped newline, that got trimmed.
-            output.push("\n");
-          } else {
-            output.push(c2);
-          }
-          this.index++;
+          const c2 = this.consume(RE.singleChar);
+          // Assume they meant to place an escaped newline, that got trimmed.
+          output.push(c2?.[0] || "\n");
           break;
         }
 
@@ -226,7 +233,13 @@ export class Parser {
             if (separatorCount > 1) {
               output.push(this.error("Link boxes can only have one of '->', '<-', or '|'"));
             } else if (separatorCount === 0) {
-              output.push({ type: "linkBox", link: linkBoxFull, text: linkBoxFull });
+              output.push({
+                type: "linkBox",
+                passageName: this.passageName,
+                lineNumber: this.lineNumber,
+                link: linkBoxFull,
+                text: linkBoxFull,
+              });
             } else {
               const separator = hasRightArrow ? "->" : hasLeftArrow ? "<-" : "|";
               output.push(this.makeLinkBox(linkBoxFull, separator));
@@ -314,7 +327,15 @@ export class Parser {
     if (BANNED_TAGS.includes(name)) {
       return this.error(`Passages cannot contain "<${name}>" elements`);
     }
-    return { type: "element", name, attributes, evalAttributes, content };
+    return {
+      type: "element",
+      passageName: this.passageName,
+      lineNumber: this.lineNumber,
+      name,
+      attributes,
+      evalAttributes,
+      content,
+    };
   }
 
   parseNakedVariable(type: "story" | "temp"): NakedVariable | MacroTemplate | ErrorMessage {
@@ -353,7 +374,12 @@ export class Parser {
 
     if (this.index === suffixStart) {
       // simple: just a plain variable
-      return { type, name: baseVarName };
+      return {
+        type,
+        passageName: this.passageName,
+        lineNumber: this.lineNumber,
+        name: baseVarName,
+      };
     } else {
       // more complicated: substitute with @print
       const prefix = type === "story" ? "Engine.vars." : "Engine.temp.";
@@ -361,6 +387,8 @@ export class Parser {
         type: "macro",
         name: "print",
         args: [prefix + this.input.substring(startIdx, this.index)],
+        passageName: this.passageName,
+        lineNumber: this.lineNumber,
       };
     }
   }
@@ -395,6 +423,8 @@ export class Parser {
       name: macroName,
       args: args || [],
       content,
+      passageName: this.passageName,
+      lineNumber: this.lineNumber,
     };
   }
 
@@ -589,9 +619,21 @@ export class Parser {
       return this.error(msg);
     }
     if (separator === "<-") {
-      return { type: "linkBox", link: split[0], text: split[1] };
+      return {
+        type: "linkBox",
+        passageName: this.passageName,
+        lineNumber: this.lineNumber,
+        link: split[0],
+        text: split[1],
+      };
     } else {
-      return { type: "linkBox", link: split[1], text: split[0] };
+      return {
+        type: "linkBox",
+        passageName: this.passageName,
+        lineNumber: this.lineNumber,
+        link: split[1],
+        text: split[0],
+      };
     }
   }
 }

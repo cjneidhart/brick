@@ -1,6 +1,6 @@
 import config from "./config";
 import { navigate, tempVariables } from "./engine";
-import { isMacro, MacroTemplate, NodeTemplate } from "./parser";
+import { isMacro, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { get as getPassage, Passage } from "./passages";
 import { render } from "./renderer";
 import { evalAssign, evalExpression, evalJavaScript } from "./scripting";
@@ -31,11 +31,23 @@ export class MacroContext {
   parent?: MacroContext;
   /** Any captured variables this macro must be aware of */
   captures?: CapturedVar[];
+  /** The name of the passage containing this macro */
+  passageName: string;
+  /** The line number on which this macro is called */
+  lineNumber: number;
 
-  constructor(name: string, parent?: MacroContext, content?: NodeTemplate[]) {
+  constructor(
+    name: string,
+    passageName: string,
+    lineNumber: number,
+    parent?: MacroContext,
+    content?: NodeTemplate[],
+  ) {
     this.name = name;
     this.loopStatus = parent?.loopStatus || LoopStatus.OUTSIDE_LOOP;
     this.content = content;
+    this.passageName = passageName;
+    this.lineNumber = lineNumber;
     if (parent?.captures) {
       this.captures = parent.captures;
     }
@@ -46,7 +58,7 @@ export class MacroContext {
    * No-op if the macro is after a `@break` or `@continue`.
    * `input` defaults to the macro's content field.
    */
-  render(target: Element | DocumentFragment, input?: string | NodeTemplate[] | Passage) {
+  render(target: Element | DocumentFragment, input?: NodeTemplate[] | Passage) {
     input ||= this.content || [];
     switch (this.loopStatus) {
       case LoopStatus.OUTSIDE_LOOP:
@@ -187,7 +199,8 @@ add("render", {
     }
     const frag = document.createDocumentFragment();
     // TODO prevent infinite recursion
-    this.render(frag, String(args[0]));
+    const parser = new Parser(String(args[0]), this.passageName, this.lineNumber);
+    this.render(frag, parser.parse());
     return frag;
   },
 });

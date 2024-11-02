@@ -19,6 +19,21 @@ export function slugify(input: string): string {
     .replace(/-+/g, "-");
 }
 
+/** Count how many times `substring` occurs in `source` */
+export function countSubstrings(source: string, substring: string): number {
+  let index = -1;
+  let total = 0;
+  while (true) {
+    index = source.indexOf(substring, index + 1);
+    if (index === -1) {
+      break;
+    } else {
+      total++;
+    }
+  }
+  return total;
+}
+
 /** Perform a deep clone of a given object */
 export function clone<T>(original: T): T {
   // TODO: circular reference detection

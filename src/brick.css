@@ -21,7 +21,7 @@
   height: 100dvh;
   border-right: 1px solid var(--bs-border-color);
   max-width: 24rem;
-  overflow-block: scroll;
+  overflow-block: auto;
   padding: 0.5rem;
   position: sticky;
   top: 0;
@@ -97,7 +97,7 @@
   max-width: min(90vw, 50rem);
   max-width: min(90svw, 50rem);
   min-width: 30rem;
-  overflow-x: scroll;
+  overflow-x: auto;
   &::backdrop {
     backdrop-filter: brightness(50%) blur(0.25rem);
   }

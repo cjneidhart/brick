@@ -146,8 +146,9 @@ export function render(
         childContext = new MacroContext(nt.name, parentContext, nt.content);
       }
 
-      const node = macroData.handler.apply(childContext, params);
-      target.append(node);
+      // TODO: catch errors here
+      const macroOutput = macroData.handler.apply(childContext, params);
+      target.append(macroOutput);
 
       const childLoopStatus = childContext.loopStatus;
       if (childLoopStatus === LoopStatus.BREAKING || childLoopStatus === LoopStatus.CONTINUING) {

@@ -95,7 +95,7 @@ export class MacroContext {
 interface Macro {
   skipArgs?: boolean;
   trailingMacros?: string[];
-  handler: (this: MacroContext, ...args: unknown[]) => Node;
+  handler: (this: MacroContext, ...args: unknown[]) => Node | string;
 }
 
 const macros = new Map<string, Macro>();
@@ -171,7 +171,7 @@ add("print", {
     if (this.content) {
       throw new Error(`@${this.name}: no body allowed`);
     }
-    return new Text(String(args[0]));
+    return String(args[0]);
   },
 });
 

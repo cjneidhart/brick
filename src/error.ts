@@ -15,7 +15,19 @@ export class BrickError extends Error {
 export class MacroError extends BrickError {
   cause: unknown;
   constructor(context: MacroContext, cause: unknown) {
-    super(`Error while executing @${context.name}`, context.passageName, context.lineNumber);
+    try {
+      super(
+        `Error while executing @${context.name}: ${cause instanceof Error ? cause.message : cause}`,
+        context.passageName,
+        context.lineNumber,
+      );
+    } catch {
+      super(
+        `Error while executing @${context.name}: (error could not be converted to string)`,
+        context.passageName,
+        context.lineNumber,
+      );
+    }
     this.cause = cause;
   }
 }

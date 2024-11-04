@@ -108,6 +108,10 @@ export async function deleteActiveHistory() {
   return await db.delete("histories", "active");
 }
 
+export async function deleteNonActiveHistories() {
+  return await db.delete("histories", IDBKeyRange.upperBound(""));
+}
+
 export async function deleteHistory(id: number) {
   return await db.delete("histories", id);
 }

@@ -108,8 +108,17 @@ function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) 
 }
 
 function renderDeleteButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) {
-  const deleteAllButton = makeElement("button", {}, "Delete All");
-  deleteAllButton.addEventListener("click", () => alert("Not supported yet"));
+  const deleteAllButton = makeElement("button", { disabled: "" }, "Delete All");
+  deleteAllButton.addEventListener("click", async function () {
+    this.disabled = true;
+    await saves.deleteNonActiveHistories();
+    saveList.innerHTML = "";
+    saveList.append(makeElement("li", {}, makeElement("em", {}, "No saves found")));
+    renderSaveButtons(saveList, buttons);
+  });
+  setTimeout(() => {
+    deleteAllButton.disabled = false;
+  }, 3000);
 
   const cancelButton = makeElement("button", {}, "Cancel");
   cancelButton.addEventListener("click", () => {

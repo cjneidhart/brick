@@ -55,6 +55,8 @@ Now let's try a link: @linkTo('Passage 2') or maybe [[Passage 2]]
 
 [[Dynamic Attributes Test]]
 
+[[RegExp Literal Test]]
+
 Here's a big block:
 <div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
 
@@ -220,3 +222,11 @@ _sayNumber(5 + 7)
 
 @(_title = "Hello World")
 <span title=(_title + "!")>HOVER ME</span>
+
+
+:: RegExp Literal Test
+[[Start]]
+
+@-(/ok/.exec("big ok match"))
+
+@-(6.6 / 3.3 === 2 ? "ok" : "fail")

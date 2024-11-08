@@ -8,11 +8,14 @@ const RE = {
   htmlAttr: /\s*([-_\p{ID_Start}][-\p{ID_Continue}]*)="([^"]*)"/uy,
   htmlEvalAttr: /\s*([-_\p{ID_Start}][-\p{ID_Continue}]*)=\(/uy,
   js: {
+    binaryOperator: /[%&*<=>^|]+/y,
     closingParen: /\s*\)/y,
     closingSquareBracket: /\s*\]/y,
     field: /\.\p{ID_Start}[$\p{ID_Continue}]*/uy,
     identifier: /\p{ID_Start}[$\p{ID_Continue}]*/uy,
-    normalChars: /[^"'`[\]{}()/$_,a-zA-Z]+/y,
+    number: /[0-9]+/y,
+    operator: /[!%&*+-<=>^|~]+/y,
+    regexp: /(?:[^\\[/]|\\[^]|\[(?:[^\\\]]|\\[^])*\])*\/(?:$|\p{ID_Continue})*/uy,
     stringDouble: /"(?:[^\\"]|\\[^])*"/y,
     stringSingle: /'(?:[^\\']|\\[^])*'/y,
     normalInTemplateString: /(?:[^`$\\]|\\[^]|\$(?!\{))*/y,
@@ -470,9 +473,16 @@ export class Parser {
   parseJsExpression(): string {
     const nesting = [];
     const output = [];
+    let regexpAllowed = true;
     let match;
+    let lastIndex = 0;
     outer: while (this.index < this.input.length) {
-      match = this.consume(RE.js.normalChars);
+      if (this.index === lastIndex) {
+        throw new Error(`Infinite loop at index ${lastIndex} (${this.input[this.index]})`);
+      } else {
+        lastIndex = this.index;
+      }
+      match = this.consume(RE.whitespace);
       if (match) {
         output.push(match[0]);
       }
@@ -480,6 +490,25 @@ export class Parser {
       match = this.consume(RE.js.identifier);
       if (match) {
         output.push(match[0]);
+        regexpAllowed = false;
+        continue;
+      }
+
+      // This doesn't fully lex a JS number, but the parts in between match the
+      // "identifier" regex above and are handled the same
+      match = this.consume(RE.js.number);
+      if (match) {
+        output.push(match[0]);
+        regexpAllowed = false;
+        continue;
+      }
+
+      // This only checks for simple cases of binary operators,
+      // operators containing "!", "+", "-" or "~" are checked later.
+      match = this.consume(RE.js.binaryOperator);
+      if (match) {
+        output.push(match[0]);
+        regexpAllowed = true;
         continue;
       }
 
@@ -489,6 +518,7 @@ export class Parser {
           match = this.consume(RE.js.stringDouble);
           if (match) {
             output.push(match[0]);
+            regexpAllowed = false;
           } else {
             throw new Error("Unclosed double-quoted string");
           }
@@ -498,6 +528,7 @@ export class Parser {
           match = this.consume(RE.js.stringSingle);
           if (match) {
             output.push(match[0]);
+            regexpAllowed = false;
           } else {
             throw new Error("Unclosed single-quoted string");
           }
@@ -507,24 +538,28 @@ export class Parser {
           this.index++;
           output.push(c);
           this.parseJsTemplateString(output);
+          regexpAllowed = false;
           break;
 
         case "(":
           nesting.push(")");
           output.push(c);
           this.index++;
+          regexpAllowed = true;
           break;
 
         case "[":
           nesting.push("]");
           output.push(c);
           this.index++;
+          regexpAllowed = true;
           break;
 
         case "{":
           nesting.push("}");
           output.push(c);
           this.index++;
+          regexpAllowed = false;
           break;
 
         case "$":
@@ -532,6 +567,7 @@ export class Parser {
           match = this.consume(RE.js.identifier);
           if (match) {
             output.push("Engine.vars.", match[0]);
+            regexpAllowed = false;
           } else {
             throw new Error("Illegal identifier");
           }
@@ -542,6 +578,7 @@ export class Parser {
           match = this.consume(RE.js.identifier);
           if (match) {
             output.push("Engine.temp.", match[0]);
+            regexpAllowed = false;
           } else {
             throw new Error("Illegal identifier");
           }
@@ -552,9 +589,86 @@ export class Parser {
             // in a sub-expression, just continue
             this.index++;
             output.push(c);
+            regexpAllowed = true;
           } else {
             // at outer level, end the expression
             break outer;
+          }
+          break;
+
+        case "#":
+        case ":":
+        case ";":
+        case "?":
+        case ".":
+          // for the above, either regexes are allowed or "/" is an error
+          regexpAllowed = true;
+          output.push(c);
+          this.index++;
+          break;
+
+        case "!":
+          this.index++;
+          if (this.lookahead() === "=") {
+            this.index++;
+            if (this.lookahead() === "=") {
+              this.index++;
+              output.push("!==");
+            } else {
+              output.push("!=");
+            }
+            regexpAllowed = true;
+          } else {
+            output.push(c);
+            regexpAllowed = false;
+          }
+          break;
+
+        case "+":
+        case "-":
+          {
+            output.push(c);
+            this.index++;
+            const lookahead = this.lookahead();
+            if (lookahead === c) {
+              output.push(lookahead);
+              this.index++;
+              regexpAllowed = false;
+            } else if (lookahead === "=") {
+              this.index++;
+              regexpAllowed = true;
+              output.push("=");
+            } else {
+              regexpAllowed = true;
+            }
+          }
+          break;
+
+        case "~":
+          output.push(c);
+          this.index++;
+          regexpAllowed = true;
+          break;
+
+        case "/":
+          this.index++;
+          if (this.consume(RE.commentLine)) {
+            output.push("\n");
+          } else if ((match = this.consume(RE.commentBlock))) {
+            if (match[0].includes("\n")) {
+              output.push("\n");
+            }
+          } else if (regexpAllowed) {
+            output.push(c);
+            match = this.consume(RE.js.regexp);
+            if (!match) {
+              throw new Error("Invalid RegExp literal");
+            }
+            output.push(match[0]);
+            regexpAllowed = false;
+          } else {
+            output.push(c);
+            regexpAllowed = true;
           }
           break;
 

@@ -179,7 +179,7 @@ export function restart() {
 }
 
 export function redo() {
-  for (const elt of document.querySelectorAll(".brick-macro-do")) {
+  for (const elt of document.querySelectorAll(".brick-macro-redoable")) {
     elt.dispatchEvent(new CustomEvent("brick-redo"));
   }
 }

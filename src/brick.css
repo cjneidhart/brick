@@ -1,6 +1,6 @@
 #brick-viewport {
   display: flex;
-  flex-direction: inline;
+  flex-direction: column;
 
   > * {
     flex: 1;
@@ -17,14 +17,10 @@
 }
 
 #ui-bar {
-  height: 100vh;
-  height: 100dvh;
-  border-right: 1px solid var(--bs-border-color);
-  max-width: 24rem;
+  border-bottom: 1px solid var(--bs-border-color);
   overflow-block: auto;
   padding: 0.5rem;
-  position: sticky;
-  top: 0;
+  width: 100%;
 }
 
 .brick-sidebar-btn {
@@ -72,12 +68,10 @@
 
 #brick-main {
   max-width: 60rem;
-  margin-inline: auto;
-  /* padding-top: 1rem; */
 }
 
 .brick-passage {
-  padding-top: 1rem;
+  padding: 1rem;
 }
 
 .brick-passage:not(:last-child) {
@@ -88,15 +82,42 @@
 
 .brick-active-passage {
   margin-bottom: 5rem;
+  min-height: 100vh;
+}
+
+@media (min-width: 60rem) {
+  #brick-viewport {
+    flex-direction: row;
+  }
+
+  #ui-bar {
+    border-bottom: 0;
+    border-right: 1px solid var(--bs-border-color);
+    height: 100vh;
+    height: 100dvh;
+    max-width: 24rem;
+    position: sticky;
+    top: 0;
+    width: auto;
+  }
+
+  #brick-main {
+    margin-inline: auto;
+  }
+
+  .brick-active-passage {
+    min-height: unset;
+  }
 }
 
 #brick-dialog {
   border-color: var(--bs-border-color);
   border-radius: 0.5rem;
   margin-top: 2rem;
-  max-width: min(90vw, 50rem);
-  max-width: min(90svw, 50rem);
-  min-width: 30rem;
+  max-width: min(95vw, 50rem);
+  max-width: min(95svw, 50rem);
+  min-width: min(95vw, 30rem);
+  min-width: min(95svw, 30rem);
   overflow-x: auto;
   &::backdrop {
     backdrop-filter: brightness(50%) blur(0.25rem);

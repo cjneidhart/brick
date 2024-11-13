@@ -36,7 +36,7 @@ window.Brick = BrickPublic;
 const storyData = document.getElementsByTagName("tw-storydata")[0];
 passages.init(storyData);
 const styles = storyData.querySelectorAll<HTMLStyleElement>('style[type="text/twine-css"]');
-const scripts = storyData.querySelectorAll('script[type="text/twine-javascript"]');
+const scripts = storyData.querySelectorAll<HTMLElement>('script[type="text/twine-javascript"]');
 
 const storyTitle =
   storyData.getAttribute("name") ||
@@ -65,7 +65,7 @@ async function init() {
   await engine.init();
 
   for (const script of scripts) {
-    evalJavaScript(script.textContent || "");
+    evalJavaScript(script.innerText);
   }
 
   await engine.resumeOrStart();

@@ -7,37 +7,36 @@ function readTextFile(path) {
 }
 
 const debug = !!env.BRICK_DEBUG;
-const { npm_package_version } = env;
-if (!npm_package_version) {
+const version = env.npm_package_version;
+if (!version) {
   throw new Error("This script must be run as `npm run build`");
 }
 
 fs.mkdirSync("storyformats/brick", { recursive: true });
 
+const baseContext = {
+  minify: !debug,
+  sourcemap: debug ? "inline" : false,
+  // These are the oldest versions which support Unicode character classes
+  // (\p{...} or \P{...}) in regular expressions.
+  target: ["firefox78", "chrome64", "safari12"],
+  write: false,
+};
 const buildContexts = await Promise.all([
   esbuild.build({
+    ...baseContext,
     bundle: true,
     entryPoints: ["src/main.ts"],
-    minify: !debug,
-    sourcemap: debug ? "inline" : false,
-    write: false,
   }),
   esbuild.build({
+    ...baseContext,
     bundle: true,
     entryPoints: ["src/brick.css"],
-    minify: !debug,
-    sourcemap: debug ? "inline" : false,
-    // The exact versions here do not matter,
-    // we just need something old enough so esbuild removes CSS nesting.
-    target: ["firefox111", "chrome111", "safari16"],
-    write: false,
   }),
   esbuild.build({
+    ...baseContext,
     bundle: false, // So it doesn't get wrapped in an IIFE
     entryPoints: ["src/extend-twine.js"],
-    minify: !debug,
-    sourcemap: debug ? "inline" : false,
-    write: false,
   }),
 ]);
 const [brickJs, brickCss, editorExtensions] = buildContexts.map((ctx) => ctx.outputFiles[0].text);
@@ -52,7 +51,7 @@ const storyFormat = template
   .replace("/*BRICK_STYLE*/", brickCss.replaceAll("$", "$$$$"));
 const storyJson = {
   name: "Brick",
-  version: npm_package_version,
+  version,
   author: "OrangeChris",
   image: "icon.svg",
   description:

@@ -15,6 +15,7 @@ if (!version) {
 fs.mkdirSync("storyformats/brick", { recursive: true });
 
 const baseContext = {
+  bundle: true,
   minify: !debug,
   sourcemap: debug ? "inline" : false,
   // These are the oldest versions which support Unicode character classes
@@ -25,12 +26,10 @@ const baseContext = {
 const buildContexts = await Promise.all([
   esbuild.build({
     ...baseContext,
-    bundle: true,
     entryPoints: ["src/main.ts"],
   }),
   esbuild.build({
     ...baseContext,
-    bundle: true,
     entryPoints: ["src/brick.css"],
   }),
   esbuild.build({

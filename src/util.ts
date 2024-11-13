@@ -147,7 +147,7 @@ export function* numberRange(
   startOrStop: number,
   stop?: number,
   step = 1,
-): IterableIterator<number> {
+): Generator<number, void, void> {
   let nextValue: number;
   if (typeof stop === "undefined") {
     nextValue = 0;

@@ -62,12 +62,41 @@ const OPERATORS = [
   "~",
 ];
 
+const RE_NUMBER_ERROR = /^[0-9.a-fA-F]+n?/;
+// "I wish for a declarative method to express a lexical grammar"
+// the programmer said, and the monkey's paw curled.
+const RE_NUMBER_LEADING_ZERO =
+  /^(?:[bB](?:_?[01])+n?|[oO](?:_?[0-7])+n?|[xX](?:_?[0-9a-fA-F])+n?|n|(?:\.(?:_?[0-9])*)?(?:[eE](?:_?[0-9])+)?)/;
+const RE_POSTNUMBER_ERROR = /^[0-9\p{ID_Start}]/u;
+
+function tokenJsNumber(stream, firstChar) {
+  if (firstChar === "0") {
+    if (stream.match(RE_NUMBER_LEADING_ZERO)) {
+      return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
+    } else if (stream.eol() || stream.peek().match(/^[^0-9\p{ID_Start}]/u)) {
+      return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
+    }
+  } else if (firstChar === ".") {
+    if (stream.match(/^(?:_?[0-9])+(?:[eE](?:_?[0-9])+)?/)) {
+      return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
+    }
+  } else {
+    if (stream.match(/^(?:(?:_?[0-9])*(?:\.(?:_?[0-9])*)?(?:[eE](?:_?[0-9])+)?|(?:_?[0-9])*n)/)) {
+      return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
+    }
+  }
+
+  // Attempt to consume as many characters as possible, to make the error obvious
+  stream.match(RE_NUMBER_ERROR);
+  return "error number";
+}
+
 function tokenJs(stream, state) {
-  if (stream.match(/[!%&*+-<=>^|~]+/)) {
+  if (stream.match(/^[!%&*+\-<=>^|~]+/)) {
     return OPERATORS.includes(stream.current()) ? "operator" : "error operator";
   }
 
-  if (stream.match(/[$_a-zA-Z][$_a-zA-Z0-9]*/)) {
+  if (stream.match(/^[$_a-zA-Z][$_a-zA-Z0-9]*/)) {
     if (["$", "_"].includes(stream.current()[0])) {
       return "variable-3";
     } else if (KEYWORDS.includes(stream.current())) {
@@ -78,6 +107,11 @@ function tokenJs(stream, state) {
   }
 
   const c = stream.next();
+
+  if ((c >= "0" && c <= "9") || c === ".") {
+    return tokenJsNumber(stream, c);
+  }
+
   switch (c) {
     case "/":
       if (stream.peek() === "/") {
@@ -120,7 +154,7 @@ function tokenJs(stream, state) {
       }
 
     case '"':
-      if (stream.match(/(?:[^\\"]|\\[^]])*"/)) {
+      if (stream.match(/^(?:[^\\"]|\\[^]])*"/)) {
         return "string";
       } else {
         stream.skipToEnd();
@@ -128,7 +162,7 @@ function tokenJs(stream, state) {
       }
 
     case "'":
-      if (stream.match(/(?:[^\\']|\\[^])*'/)) {
+      if (stream.match(/^(?:[^\\']|\\[^])*'/)) {
         return "string";
       } else {
         stream.skipToEnd();
@@ -143,7 +177,7 @@ function tokenJs(stream, state) {
 
 function token(stream, state) {
   if (state.blockComment) {
-    if (stream.match(/[^]*?\*\//)) {
+    if (stream.match(/^[^]*?\*\//)) {
       state.blockComment = false;
     } else {
       stream.skipToEnd();
@@ -167,8 +201,8 @@ function token(stream, state) {
   switch (c) {
     case "$":
     case "_":
-      if (stream.match(/[$_a-zA-Z]/)) {
-        stream.match(/[$_a-zA-Z0-9]*/);
+      if (stream.match(/^[$_a-zA-Z]/)) {
+        stream.match(/^[$_a-zA-Z0-9]*/);
         return "variable-3";
       } else {
         return "error";
@@ -187,11 +221,11 @@ function token(stream, state) {
       }
 
     case "@":
-      if (stream.match(/[a-zA-Z]*\s*\(/)) {
+      if (stream.match(/^[a-zA-Z]*\s*\(/)) {
         state.jsNesting = [")"];
         state.js = true;
         return "variable-2";
-      } else if (stream.match(/[a-zA-Z]*\s*\{/)) {
+      } else if (stream.match(/^[a-zA-Z]*\s*\{/)) {
         stream.backUp(1);
         state.expectMacroBody = true;
         return "variable-2";
@@ -215,7 +249,7 @@ function token(stream, state) {
       }
 
     default:
-      stream.match(/[^$_/@{}\\]*/);
+      stream.match(/^[^$_/@{}\\]*/);
       return null;
   }
 }

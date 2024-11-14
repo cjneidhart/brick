@@ -1,6 +1,6 @@
 import Config from "./config";
 import { storyVariables, tempVariables } from "./engine";
-import { BrickError } from "./error";
+import { BrickError, DynamicAttributeError } from "./error";
 import { get as getMacro, LoopStatus, MacroContext } from "./macros";
 import { ElementTemplate, isMacro, NodeTemplate, Parser } from "./parser";
 import { Passage } from "./passages";
@@ -174,7 +174,7 @@ export function render(
       // Markup rendered later is always considered outside a loop
       childContext.loopStatus = LoopStatus.OUTSIDE_LOOP;
     } else if (nt.type === "element") {
-      target.append(renderElement(nt, parentContext));
+      noErrors = renderElement(nt, target, parentContext) || noErrors;
     } else if (nt.type === "linkBox") {
       const macroData = getMacro("linkTo");
       if (!macroData) {
@@ -200,16 +200,26 @@ export function render(
   return noErrors;
 }
 
-function renderElement(template: ElementTemplate, parentContext?: MacroContext) {
+function renderElement(
+  template: ElementTemplate,
+  target: ParentNode,
+  parentContext?: MacroContext,
+): boolean {
   const element = makeElement(template.name);
   for (const [key, value] of template.attributes) {
     element.setAttribute(key, value);
   }
   for (const [key, script] of template.evalAttributes) {
     // TODO catch errors
-    const value = String(evalExpression(script));
-    element.setAttribute(key, value);
+    try {
+      const value = String(evalExpression(script));
+      element.setAttribute(key, value);
+    } catch (error) {
+      target.append(renderError(new DynamicAttributeError(error, key, template)));
+      return false;
+    }
   }
   render(element, template.content, parentContext);
-  return element;
+  target.append(element);
+  return true;
 }

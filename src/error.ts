@@ -1,4 +1,5 @@
 import { MacroContext } from "./macros";
+import { ElementTemplate } from "./parser";
 
 export class BrickError extends Error {
   /** The name of the passage the error occurred in */
@@ -15,19 +16,27 @@ export class BrickError extends Error {
 export class MacroError extends BrickError {
   cause: unknown;
   constructor(context: MacroContext, cause: unknown) {
+    let message;
     try {
-      super(
-        `Error while executing @${context.name}: ${cause instanceof Error ? cause.message : cause}`,
-        context.passageName,
-        context.lineNumber,
-      );
+      message = `Error while executing @${context.name}: ${cause instanceof Error ? cause.message : cause}`;
     } catch {
-      super(
-        `Error while executing @${context.name}: (error could not be converted to string)`,
-        context.passageName,
-        context.lineNumber,
-      );
+      message = `Error while executing @${context.name}: (error could not be converted to string)`;
     }
+    super(message, context.passageName, context.lineNumber);
+    this.cause = cause;
+  }
+}
+
+export class DynamicAttributeError extends BrickError {
+  cause: unknown;
+  constructor(cause: unknown, attribute: string, template: ElementTemplate) {
+    let message;
+    try {
+      message = `while evaluating the attribute "${attribute}": ${cause instanceof Error ? cause.message : cause}`;
+    } catch {
+      message = `while evaluating the attribute "${attribute}": (error could not be converted to string)`;
+    }
+    super(message, template.passageName, template.lineNumber);
     this.cause = cause;
   }
 }

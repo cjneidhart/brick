@@ -46,7 +46,7 @@ const storyTitle =
 const ifid = storyData.getAttribute("ifid") || "00000000-0000-4000-A000-000000000000";
 
 for (const stylesheet of styles) {
-  const styleElt = makeElement("style", {}, stylesheet.innerText);
+  const styleElt = makeElement("style", { class: "brick-author-style" }, stylesheet.innerText);
   document.head.appendChild(styleElt);
 }
 

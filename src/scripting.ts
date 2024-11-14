@@ -24,9 +24,10 @@ export const BrickPublic = {
   },
   Passages,
   clone: Util.clone,
-  slugify: Util.slugify,
+  enumerate: Util.enumerate,
   makeElement: Util.makeElement,
   numberRange: Util.numberRange,
+  slugify: Util.slugify,
 };
 
 const envKeys = Object.keys(BrickPublic);

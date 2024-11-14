@@ -168,3 +168,18 @@ export function* numberRange(
     }
   }
 }
+
+/**
+ * Return an iterator that yields 2-element arrays, where the first element is
+ * a count and the second element is yielded by `iterable`.
+ */
+export function* enumerate<T>(
+  iterable: Iterable<T>,
+  start = 0,
+): Generator<[number, T], void, void> {
+  let i = start;
+  for (const value of iterable) {
+    yield [i, value];
+    i++;
+  }
+}

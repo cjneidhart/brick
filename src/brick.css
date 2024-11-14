@@ -17,23 +17,26 @@
 }
 
 #ui-bar {
+  background-color: var(--bs-secondary-bg);
   border-bottom: 1px solid var(--bs-border-color);
   overflow-block: auto;
   padding: 0.5rem;
   width: 100%;
 }
 
-.brick-sidebar-btn {
-  background: none;
-  border: 1px solid var(--bs-border-color);
+.brick-ui-btn {
+  background-color: hsl(210, 30%, 30%);
+  border: 1px solid var(--bs-secondary);
   padding-block: 0.25rem;
   transition:
-    color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out,
     background-color 0.15s ease-in-out;
-  &:hover:enabled {
-    color: var(--bs-emphasis-color);
-    background-color: var(--bs-secondary-bg);
+
+  &:hover:enabled,
+  &:focus {
+    background-color: hsl(210, 30%, 35%);
   }
+
   &:disabled {
     color: var(--bs-secondary);
   }

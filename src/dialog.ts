@@ -80,7 +80,7 @@ export async function showSavesMenu() {
 }
 
 function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) {
-  const deleteButton = makeElement("button", {}, "Delete");
+  const deleteButton = makeElement("button", { class: "brick-ui-btn" }, "Delete");
   deleteButton.addEventListener("click", () => {
     for (const button of saveList.querySelectorAll("button")) {
       button.removeEventListener("click", historyLoadHandler);
@@ -90,13 +90,13 @@ function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) 
     renderDeleteButtons(saveList, buttons);
   });
 
-  const exportButton = makeElement("button", {}, "Export");
+  const exportButton = makeElement("button", { class: "brick-ui-btn" }, "Export");
   exportButton.addEventListener("click", () => alert("Not supported yet"));
 
-  const importButton = makeElement("button", {}, "Import");
+  const importButton = makeElement("button", { class: "brick-ui-btn" }, "Import");
   importButton.addEventListener("click", () => alert("Not supported yet"));
 
-  const newSaveButton = makeElement("button", {}, "Save");
+  const newSaveButton = makeElement("button", { class: "brick-ui-btn" }, "Save");
   newSaveButton.addEventListener("click", async () => {
     const history = await engine.saveToSlot();
     saveList.querySelector(".brick-saves-empty")?.remove();
@@ -108,7 +108,11 @@ function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) 
 }
 
 function renderDeleteButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) {
-  const deleteAllButton = makeElement("button", { disabled: "" }, "Delete All");
+  const deleteAllButton = makeElement(
+    "button",
+    { class: "brick-ui-btn", disabled: "" },
+    "Delete All",
+  );
   deleteAllButton.addEventListener("click", async function () {
     this.disabled = true;
     await saves.deleteNonActiveHistories();
@@ -120,7 +124,7 @@ function renderDeleteButtons(saveList: HTMLUListElement, buttons: HTMLDivElement
     deleteAllButton.disabled = false;
   }, 3000);
 
-  const cancelButton = makeElement("button", {}, "Cancel");
+  const cancelButton = makeElement("button", { class: "brick-ui-btn" }, "Cancel");
   cancelButton.addEventListener("click", () => {
     for (const button of saveList.querySelectorAll("button")) {
       button.removeEventListener("click", historyDeleteHandler);
@@ -140,7 +144,11 @@ function makeHistoryListing(history: History): HTMLLIElement {
   if (!id) {
     throw new Error("Tried to create a save menu entry for an unsaved History");
   }
-  const button = makeElement("button", { "data-brick-history-id": String(id) }, "Load");
+  const button = makeElement(
+    "button",
+    { class: "brick-ui-btn", "data-brick-history-id": String(id) },
+    "Load",
+  );
   button.addEventListener("click", historyLoadHandler);
   return makeElement(
     "li",

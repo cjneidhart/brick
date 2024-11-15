@@ -1,8 +1,7 @@
 import config from "./config";
 import { navigate, tempVariables } from "./engine";
 import { isMacro, MacroTemplate, NodeTemplate, Parser } from "./parser";
-import { get as getPassage, Passage } from "./passages";
-import { render } from "./renderer";
+import { render, renderPassage } from "./renderer";
 import { evalAssign, evalExpression, evalJavaScript } from "./scripting";
 import { makeElement, uniqueId } from "./util";
 
@@ -58,17 +57,15 @@ export class MacroContext {
    * No-op if the macro is after a `@break` or `@continue`.
    * `input` defaults to the macro's content field.
    */
-  render(target: Element | DocumentFragment, input?: NodeTemplate[] | Passage) {
+  render(target: Element | DocumentFragment, input?: NodeTemplate[]): boolean {
     input ||= this.content || [];
     switch (this.loopStatus) {
       case LoopStatus.OUTSIDE_LOOP:
       case LoopStatus.IN_LOOP:
-        render(target, input, this);
-        break;
+        return render(target, input, this);
       case LoopStatus.BREAKING:
       case LoopStatus.CONTINUING:
-        // pass;
-        break;
+        return true;
       default:
         throw new Error(`unknown loopStatus: "${this.loopStatus}"`);
     }
@@ -142,12 +139,13 @@ export function remove(name: string): boolean {
 
 add("include", {
   handler(...args: unknown[]) {
-    const [psgName, elementName] = args;
-
     if (args.length < 1 || args.length > 2) {
       throw new Error("@include must be called with 1 argument");
     }
-    if (typeof psgName !== "string") {
+
+    const [passageName, elementName] = args;
+
+    if (typeof passageName !== "string") {
       throw new Error("@include: first arg (passage name) must be a string");
     }
     if (typeof elementName !== "undefined" && typeof elementName !== "string") {
@@ -156,14 +154,12 @@ add("include", {
 
     const actualEltName = elementName || "div";
 
-    const passage = getPassage(psgName);
-    if (!passage) {
-      throw new Error(`Passage not found: "${psgName}"`);
+    const elt = makeElement(actualEltName);
+    if (this.loopStatus === LoopStatus.IN_LOOP || this.loopStatus === LoopStatus.OUTSIDE_LOOP) {
+      renderPassage(elt, passageName);
     }
-    const div = makeElement(actualEltName);
-    this.render(div, passage);
 
-    return div;
+    return elt;
   },
 });
 
@@ -300,10 +296,10 @@ add("while", {
         );
       }
       iterations++;
-      this.render(frag, content);
+      const noErrors = this.render(frag, content);
       // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
       this.loopStatus = this.loopStatus as LoopStatus;
-      if (this.loopStatus === LoopStatus.BREAKING) {
+      if (!noErrors || this.loopStatus === LoopStatus.BREAKING) {
         this.loopStatus = LoopStatus.IN_LOOP;
         break;
       } else if (this.loopStatus === LoopStatus.CONTINUING) {
@@ -365,10 +361,10 @@ add("for", {
       iterations++;
       evalAssign(place, loopVal);
       this.captures = [...actualCaptures, { name: varName, value: loopVal }];
-      this.render(frag, content);
+      const noErrors = this.render(frag, content);
       // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
       this.loopStatus = this.loopStatus as LoopStatus;
-      if (this.loopStatus === LoopStatus.BREAKING) {
+      if (!noErrors || this.loopStatus === LoopStatus.BREAKING) {
         this.loopStatus = LoopStatus.IN_LOOP;
         break;
       } else if (this.loopStatus === LoopStatus.CONTINUING) {

@@ -1,6 +1,5 @@
 import * as engine from "./engine";
-import { get as getPassage } from "./passages";
-import { render } from "./renderer";
+import { renderPassage } from "./renderer";
 import type { History } from "./saves";
 import * as saves from "./saves";
 import { getElementById, makeElement } from "./util";
@@ -39,15 +38,10 @@ export function reset() {
 }
 
 export function showPassage(passageName: string) {
-  const passage = getPassage(passageName);
-  if (!passage) {
-    throw new Error(`Passage not found: ${passageName}`);
-  }
-
   reset();
 
   titleElt.append(passageName);
-  render(modalBody, passage);
+  renderPassage(modalBody, passageName);
 
   dialogElement.showModal();
 }

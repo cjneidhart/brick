@@ -1,7 +1,7 @@
 import config from "./config";
-import type { Passage } from "./passages";
+import { Passage } from "./passages";
 import * as passages from "./passages";
-import { render } from "./renderer";
+import { renderPassage } from "./renderer";
 import type { Moment, History } from "./saves";
 import * as saves from "./saves";
 import { clone, getElementById, makeElement } from "./util";
@@ -140,11 +140,6 @@ function saveHistoryActive() {
 
 /** Render the active moment. */
 function renderActive() {
-  const psg = passages.get(passageName);
-  if (!psg) {
-    throw new Error(`Couldn't find passage "${passageName}"`);
-  }
-
   tempVariables = {};
 
   if (config.stream) {
@@ -162,11 +157,22 @@ function renderActive() {
   const article = makeElement("article", {
     class: "brick-passage brick-active-passage brick-transparent",
   });
-  const header = passages.get("StoryHeader");
-  const footer = passages.get("StoryFooter");
-  if (header) render(article, header);
-  render(article, psg);
-  if (footer) render(article, footer);
+  renderPassage(article, passageName);
+
+  const storyHeader = passages.get("StoryHeader");
+  const storyFooter = passages.get("StoryFooter");
+
+  if (storyHeader) {
+    const header = makeElement("header");
+    renderPassage(header, storyHeader);
+    article.prepend(header);
+  }
+  if (storyFooter) {
+    const footer = makeElement("footer");
+    renderPassage(footer, storyFooter);
+    article.append(footer);
+  }
+
   mainElement.append(article);
   article.scrollIntoView();
   setTimeout(() => article.classList.remove("brick-transparent"), 40);

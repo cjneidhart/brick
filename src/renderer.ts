@@ -3,7 +3,7 @@ import { storyVariables, tempVariables } from "./engine";
 import { BrickError, DynamicAttributeError } from "./error";
 import { get as getMacro, LoopStatus, MacroContext } from "./macros";
 import { ElementTemplate, isMacro, NodeTemplate, Parser } from "./parser";
-import { Passage } from "./passages";
+import { Passage, get as getPassage } from "./passages";
 import { evalExpression } from "./scripting";
 import { makeElement } from "./util";
 
@@ -84,9 +84,31 @@ function renderError(error: BrickError): HTMLSpanElement {
   return makeElement("span", { class: "brick-error" }, String(error));
 }
 
+export function renderPassage(target: HTMLElement, passage: string | Passage): boolean {
+  if (typeof passage === "string") {
+    const psg = getPassage(passage);
+    if (psg) {
+      return renderPassage(target, psg);
+    } else {
+      target.innerHTML = "";
+      target.append(
+        makeElement("span", { class: "brick-error" }, `No passage named "${passage}" found`),
+      );
+      return false;
+    }
+  }
+
+  target.innerHTML = "";
+  target.classList.add(`psg-${passage.slug}`);
+  target.dataset.name = passage.name;
+  target.dataset.tags = passage.tags.join(" ");
+
+  return render(target, passage);
+}
+
 /** Render the given Brick markup and append it to an element. */
 export function render(
-  target: Element | DocumentFragment,
+  target: ParentNode,
   input: NodeTemplate[] | Passage,
   parentContext?: MacroContext,
 ): boolean {
@@ -210,7 +232,6 @@ function renderElement(
     element.setAttribute(key, value);
   }
   for (const [key, script] of template.evalAttributes) {
-    // TODO catch errors
     try {
       const value = String(evalExpression(script));
       element.setAttribute(key, value);
@@ -219,7 +240,7 @@ function renderElement(
       return false;
     }
   }
-  render(element, template.content, parentContext);
+  const noErrors = render(element, template.content, parentContext);
   target.append(element);
-  return true;
+  return noErrors;
 }

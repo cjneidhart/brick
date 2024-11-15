@@ -177,3 +177,18 @@ async function historyDeleteHandler(this: HTMLButtonElement) {
     );
   }
 }
+
+export function showRestartPrompt() {
+  reset();
+  titleElt.innerText = "Restart";
+  modalBody.append(makeElement("p", {}, "Are you sure you would like to restart?"));
+  const restartButton = makeElement("button", { class: "brick-ui-btn" }, "Restart");
+  restartButton.addEventListener("click", engine.restart);
+
+  const closeButton = makeElement("button", { class: "brick-ui-btn" }, "Cancel");
+  closeButton.addEventListener("click", () => dialogElement.close());
+
+  modalBody.append(restartButton, closeButton);
+
+  dialogElement.showModal();
+}

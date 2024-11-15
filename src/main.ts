@@ -57,7 +57,7 @@ function addClicker(id: string, handler: (this: HTMLElement, event: MouseEvent) 
 addClicker("brick-history-backward", engine.backward);
 addClicker("brick-history-forward", engine.forward);
 addClicker("brick-saves", dialog.showSavesMenu);
-addClicker("brick-restart", engine.restart);
+addClicker("brick-restart", dialog.showRestartPrompt);
 
 async function init() {
   dialog.init();

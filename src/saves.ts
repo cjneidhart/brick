@@ -58,6 +58,39 @@ export async function init(storyTitle: string, ifid: string) {
       db.createObjectStore("histories", { autoIncrement: true, keyPath: "id" });
     },
   });
+
+  await cullUnusedMoments();
+}
+
+/**
+ * If storage is too high, delete any moments in IDB that
+ * aren't referenced by any history.
+ */
+async function cullUnusedMoments(): Promise<void> {
+  const transaction = db.transaction(db.objectStoreNames, "readwrite");
+  const momentStore = transaction.objectStore("moments");
+  const momentCount = await momentStore.count();
+  // TODO investigate better quotas, like maybe `navigator.storage.estimate()`
+  if (momentCount > 1000) {
+    const histories = await transaction.objectStore("histories").getAll();
+    const momentsToKeep = new Set<number>();
+    for (const history of histories) {
+      for (const id of history.momentIds) {
+        momentsToKeep.add(id);
+      }
+    }
+
+    let cursor = await momentStore.openCursor();
+    const deletePromises = [];
+    while (cursor) {
+      if (!momentsToKeep.has(cursor.key)) {
+        deletePromises.push(cursor.delete());
+      }
+      cursor = await cursor.continue();
+    }
+    await Promise.all(deletePromises);
+  }
+  await transaction.done;
 }
 
 export async function getMoment(id: number): Promise<Moment> {

@@ -6,10 +6,11 @@ export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   ...tseslint.configs.strict,
-  ...tseslint.configs.stylistic,
   eslintConfigPrettier,
   {
     rules: {
+      // We are using TypeScript, there is no need for implicit conversion
+      "eqeqeq": "error",
       // Allow unused variables, so long as they are prefixed with `_`
       "@typescript-eslint/no-unused-vars": [
         "error",

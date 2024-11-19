@@ -28,7 +28,7 @@ export class Passage {
   }
 
   get content() {
-    return this.#element.textContent || "";
+    return this.#element.textContent;
   }
 }
 

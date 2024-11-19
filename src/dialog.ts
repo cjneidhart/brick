@@ -79,7 +79,7 @@ function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) 
     for (const button of saveList.querySelectorAll("button")) {
       button.removeEventListener("click", historyLoadHandler);
       button.addEventListener("click", historyDeleteHandler);
-      button.innerText = "Delete";
+      button.textContent = "Delete";
     }
     renderDeleteButtons(saveList, buttons);
   });
@@ -123,7 +123,7 @@ function renderDeleteButtons(saveList: HTMLUListElement, buttons: HTMLDivElement
     for (const button of saveList.querySelectorAll("button")) {
       button.removeEventListener("click", historyDeleteHandler);
       button.addEventListener("click", historyLoadHandler);
-      button.innerText = "Load";
+      button.textContent = "Load";
     }
     renderSaveButtons(saveList, buttons);
   });
@@ -180,7 +180,7 @@ async function historyDeleteHandler(this: HTMLButtonElement) {
 
 export function showRestartPrompt() {
   reset();
-  titleElt.innerText = "Restart";
+  titleElt.textContent = "Restart";
   modalBody.append(makeElement("p", {}, "Are you sure you would like to restart?"));
   const restartButton = makeElement("button", { class: "brick-ui-btn" }, "Restart");
   restartButton.addEventListener("click", engine.restart);

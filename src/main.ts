@@ -30,6 +30,11 @@ declare global {
   interface Window {
     Brick: typeof BrickPublic;
   }
+
+  // textContent is only `null` for `document`, for all Elements it is always a string.
+  interface Element {
+    textContent: string;
+  }
 }
 window.Brick = BrickPublic;
 
@@ -46,7 +51,7 @@ const storyTitle =
 const ifid = storyData.getAttribute("ifid") || "00000000-0000-4000-A000-000000000000";
 
 for (const stylesheet of styles) {
-  const styleElt = makeElement("style", { class: "brick-author-style" }, stylesheet.innerText);
+  const styleElt = makeElement("style", { class: "brick-author-style" }, stylesheet.textContent);
   document.head.appendChild(styleElt);
 }
 
@@ -65,7 +70,7 @@ async function init() {
   await engine.init();
 
   for (const script of scripts) {
-    evalJavaScript(script.innerText);
+    evalJavaScript(script.textContent);
   }
 
   await engine.resumeOrStart();

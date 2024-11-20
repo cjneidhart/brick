@@ -120,6 +120,10 @@ Here's a checkbox:
 
 @checkBox($ham, "Would you like Ham?")
 
+Text box:
+
+@textBox($horse, "Name your horse")
+
 @linkTo("Start", 'return')
 
 

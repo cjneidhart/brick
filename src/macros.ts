@@ -419,6 +419,39 @@ add("checkBox", {
   },
 });
 
+add("textBox", {
+  skipArgs: true,
+  handler(...args) {
+    if (args.length !== 2) {
+      throw new Error("requires 2 arguments");
+    }
+    if (!args.every((arg) => typeof arg === "string")) {
+      throw new Error("both arguments must be strings");
+    }
+
+    const [place, labelExpr] = args;
+    const labelText = evalExpression(labelExpr);
+    if (typeof labelText !== "string" && !(labelText instanceof Node)) {
+      throw new Error("label must be a string or Node");
+    }
+
+    const initValue = String(evalExpression(place) || "");
+
+    const input = makeElement("input", {
+      id: uniqueId(),
+      type: "text",
+      value: initValue,
+    });
+    input.addEventListener("keyup", () => evalAssign(place, input.value));
+
+    const labelElt = makeElement("label", { for: input.id }, labelText);
+
+    const div = makeElement("div", {}, input, " ", labelElt);
+
+    return div;
+  },
+});
+
 add("switch", {
   handler(...args) {
     if (args.length !== 1) {

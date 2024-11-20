@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "es2018",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,

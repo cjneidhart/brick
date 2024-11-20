@@ -326,3 +326,50 @@ You have @redoable { $money } credits in your wallet.
   Engine.redo();
 })
 ```
+
+### `@checkBox(variable, label)`
+
+`@checkBox` creates a basic checkbox which the user can toggle between `true` and `false`.
+
+```brick
+@checkBox($coat, "Put your coat on before leaving")
+```
+
+### `@textBox(variable, label)`
+
+`@textBox` creates a single-line text field the user can enter text in.
+
+```brick
+@textBox($name, "Enter your name")
+```
+
+## Config
+
+Some features of Brick can be customized via the `Config` object
+
+### `Config.maxLoopIterations`: `number` (default: `1000`)
+
+`@while` and `@for` include safeguards to prevent infinite loops.
+If a loop runs more than this many times, it will be cancelled and an error message will be displayed.
+You can set this to `Infinity` to disable it.
+
+### `Config.preProcessText`: `undefined` or `function (passage) -> string`
+
+This function allows you to alter the text of passages immediately before they are rendered.
+It receives one argument, a `Passage` object, and must return a string.
+That string will be used in place of the passage's actual contents.
+
+```brick
+// This example will convert every capitalization variant of "chris" to "Chris"
+Config.preProcessText = function (passage) {
+  return passage.contents.replace(/\bchris\b/ig, "Chris");
+};
+```
+
+### `Config.stream`: `boolean` (default: `false`)
+
+_Warning: `Config.stream` is very experimental. A change this large has the potential to introduce a wide variety of bugs, and this feature has not been thoroughly tested._
+
+This setting enables "Streaming" mode, also called "Stretch Text" or "Endless Page".
+Instead of new passages replacing the current passage, new passages are added to the screen below the old passages.
+Any interactive elements on old passages are disabled.

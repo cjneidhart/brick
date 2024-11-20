@@ -3,7 +3,7 @@ const config: {
   preProcessText?: Function;
   stream: boolean;
 } = {
-  maxLoopIterations: 10_000,
+  maxLoopIterations: 1000,
   preProcessText: undefined,
   stream: false,
 };

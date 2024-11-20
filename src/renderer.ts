@@ -1,7 +1,7 @@
 import Config from "./config";
 import { storyVariables, tempVariables } from "./engine";
 import { BrickError, DynamicAttributeError } from "./error";
-import { get as getMacro, LoopStatus, MacroContext } from "./macros";
+import { BreakSignal, get as getMacro, MacroContext } from "./macros";
 import { ElementTemplate, isMacro, NodeTemplate, Parser } from "./parser";
 import { Passage, get as getPassage } from "./passages";
 import { evalExpression } from "./scripting";
@@ -106,8 +106,17 @@ export function renderPassage(target: HTMLElement, passage: string | Passage): b
   return render(target, passage);
 }
 
-/** Render the given Brick markup and append it to an element. */
 export function render(
+  target: ParentNode,
+  input: NodeTemplate[] | Passage,
+  parentContext?: MacroContext,
+): boolean {
+  // TODO infinite recursion safeguard
+  return renderRaw(target, input, parentContext);
+}
+
+/** Render the given Brick markup and append it to an element. */
+function renderRaw(
   target: ParentNode,
   input: NodeTemplate[] | Passage,
   parentContext?: MacroContext,
@@ -182,19 +191,6 @@ export function render(
       // TODO: catch errors here
       const macroOutput = macroData.handler.apply(childContext, params);
       target.append(macroOutput);
-
-      const childLoopStatus = childContext.loopStatus;
-      if (childLoopStatus === LoopStatus.BREAKING || childLoopStatus === LoopStatus.CONTINUING) {
-        if (!parentContext || parentContext.loopStatus === LoopStatus.OUTSIDE_LOOP) {
-          const badName = childContext.loopStatus === LoopStatus.BREAKING ? "@break" : "@continue";
-          throw new Error(`Can't ${badName} from outside a loop`);
-        }
-        parentContext.loopStatus = childContext.loopStatus;
-        return noErrors;
-      }
-
-      // Markup rendered later is always considered outside a loop
-      childContext.loopStatus = LoopStatus.OUTSIDE_LOOP;
     } else if (nt.type === "element") {
       noErrors = renderElement(nt, target, parentContext) || noErrors;
     } else if (nt.type === "linkBox") {
@@ -236,6 +232,9 @@ function renderElement(
       const value = String(evalExpression(script));
       element.setAttribute(key, value);
     } catch (error) {
+      if (error instanceof BreakSignal) {
+        throw error;
+      }
       target.append(renderError(new DynamicAttributeError(error, key, template)));
       return false;
     }

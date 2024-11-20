@@ -10,7 +10,7 @@ export default tseslint.config(
   {
     rules: {
       // We are using TypeScript, there is no need for implicit conversion
-      "eqeqeq": "error",
+      eqeqeq: "error",
       // Allow unused variables, so long as they are prefixed with `_`
       "@typescript-eslint/no-unused-vars": [
         "error",

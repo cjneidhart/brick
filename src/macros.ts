@@ -17,6 +17,24 @@ interface CapturedVar {
   value: unknown;
 }
 
+export class BreakSignal {
+  context: MacroContext;
+  type: "break" | "continue";
+
+  constructor(context: MacroContext) {
+    if (context.name !== "break" && context.name !== "continue") {
+      throw new Error('BreakError requires a "break" or "continue" context');
+    }
+
+    this.context = context;
+    this.type = context.name;
+  }
+
+  toString() {
+    return `Signal from @${this.type} in "${this.context.passageName}" line ${this.context.lineNumber}`;
+  }
+}
+
 /** Each time a macro is called, it receives a MacroContext as its `this`. */
 export class MacroContext {
   /** The "body" (additional markup in "{}") this macro was invoked with,
@@ -24,8 +42,6 @@ export class MacroContext {
   content?: NodeTemplate[];
   /** The name this macro was called by */
   name: string;
-  /** Whether this macro is in a for/while loop */
-  loopStatus: LoopStatus;
   /** The nearest ancestor macro's context */
   parent?: MacroContext;
   /** Any captured variables this macro must be aware of */
@@ -43,31 +59,12 @@ export class MacroContext {
     content?: NodeTemplate[],
   ) {
     this.name = name;
-    this.loopStatus = parent?.loopStatus || LoopStatus.OUTSIDE_LOOP;
+    // this.loopStatus = parent?.loopStatus || LoopStatus.OUTSIDE_LOOP;
     this.content = content;
     this.passageName = passageName;
     this.lineNumber = lineNumber;
     if (parent?.captures) {
       this.captures = parent.captures;
-    }
-  }
-
-  /**
-   * Render `input` into `target`.
-   * No-op if the macro is after a `@break` or `@continue`.
-   * `input` defaults to the macro's content field.
-   */
-  render(target: Element | DocumentFragment, input?: NodeTemplate[]): boolean {
-    input ||= this.content || [];
-    switch (this.loopStatus) {
-      case LoopStatus.OUTSIDE_LOOP:
-      case LoopStatus.IN_LOOP:
-        return render(target, input, this);
-      case LoopStatus.BREAKING:
-      case LoopStatus.CONTINUING:
-        return true;
-      default:
-        throw new Error(`unknown loopStatus: "${this.loopStatus}"`);
     }
   }
 
@@ -155,9 +152,8 @@ add("include", {
     const actualEltName = elementName || "div";
 
     const elt = makeElement(actualEltName);
-    if (this.loopStatus === LoopStatus.IN_LOOP || this.loopStatus === LoopStatus.OUTSIDE_LOOP) {
-      renderPassage(elt, passageName);
-    }
+    // TODO should break/continue work through include boundaries?
+    renderPassage(elt, passageName);
 
     return elt;
   },
@@ -196,7 +192,7 @@ add("render", {
     const frag = document.createDocumentFragment();
     // TODO prevent infinite recursion
     const parser = new Parser(String(args[0]), this.passageName, this.lineNumber);
-    this.render(frag, parser.parse());
+    render(frag, parser.parse());
     return frag;
   },
 });
@@ -267,7 +263,7 @@ add("linkReplace", {
     button.addEventListener("click", () => {
       const span = makeElement("span", { class: "brick-linkReplace brick-transparent" });
       if (this.content) {
-        this.render(span);
+        render(span, this.content, this);
       }
       button.replaceWith(span);
       setTimeout(() => span.classList.remove("brick-transparent"), 40);
@@ -287,24 +283,29 @@ add("while", {
     const conditionStr = (args as string[]).join(",");
     const frag = document.createDocumentFragment();
     const { content } = this;
-    this.loopStatus = LoopStatus.IN_LOOP;
     let iterations = 1;
     while (evalExpression(conditionStr)) {
       if (iterations > config.maxLoopIterations) {
         throw new Error(
-          `@for: Too many iterations (Config.maxLoopIterations = ${config.maxLoopIterations})`,
+          `@while: Too many iterations (Config.maxLoopIterations = ${config.maxLoopIterations})`,
         );
       }
       iterations++;
-      const noErrors = this.render(frag, content);
-      // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
-      this.loopStatus = this.loopStatus as LoopStatus;
-      if (!noErrors || this.loopStatus === LoopStatus.BREAKING) {
-        this.loopStatus = LoopStatus.IN_LOOP;
-        break;
-      } else if (this.loopStatus === LoopStatus.CONTINUING) {
-        this.loopStatus = LoopStatus.IN_LOOP;
-        continue;
+      try {
+        const noErrors = content ? render(frag, content, this) : true;
+        if (!noErrors) {
+          break;
+        }
+      } catch (error) {
+        if (error instanceof BreakSignal) {
+          if (error.type === "break") {
+            break;
+          } else {
+            continue;
+          }
+        } else {
+          throw error;
+        }
       }
     }
 
@@ -314,29 +315,27 @@ add("while", {
 
 add("break", {
   handler() {
-    this.loopStatus = LoopStatus.BREAKING;
-    return document.createDocumentFragment();
+    throw new BreakSignal(this);
   },
 });
 
 add("continue", {
   handler() {
-    this.loopStatus = LoopStatus.CONTINUING;
-    return document.createDocumentFragment();
+    throw new BreakSignal(this);
   },
 });
 
 add("for", {
   skipArgs: true,
   handler(...args) {
-    if (args.some((x) => typeof x !== "string")) {
+    if (!args.every((x) => typeof x === "string")) {
       throw new Error("@for: received a non-string arg");
     }
     if (args.length !== 2) {
       throw new Error("@for: requires exactly 2 arguments");
     }
 
-    const [varStr, iterableStr] = args as string[];
+    const [varStr, iterableStr] = args;
     if (!varStr.startsWith("_")) {
       throw new Error("@for: loop variable must be a temp variable");
     }
@@ -349,8 +348,7 @@ add("for", {
 
     const frag = document.createDocumentFragment();
     const { content } = this;
-    this.loopStatus = LoopStatus.IN_LOOP;
-    const actualCaptures = this.captures || [];
+    const priorCaptures = this.captures || [];
     let iterations = 1;
     for (const loopVal of iterable) {
       if (iterations > config.maxLoopIterations) {
@@ -360,18 +358,25 @@ add("for", {
       }
       iterations++;
       evalAssign(place, loopVal);
-      this.captures = [...actualCaptures, { name: varName, value: loopVal }];
-      const noErrors = this.render(frag, content);
-      // HACK - loosen the type of `this.loopStatus` so tsc doesn't complain
-      this.loopStatus = this.loopStatus as LoopStatus;
-      if (!noErrors || this.loopStatus === LoopStatus.BREAKING) {
-        this.loopStatus = LoopStatus.IN_LOOP;
-        break;
-      } else if (this.loopStatus === LoopStatus.CONTINUING) {
-        this.loopStatus = LoopStatus.IN_LOOP;
+      this.captures = [...priorCaptures, { name: varName, value: loopVal }];
+      try {
+        const noErrors = content ? render(frag, content, this) : true;
+        if (!noErrors) {
+          break;
+        }
+      } catch (error) {
+        if (error instanceof BreakSignal) {
+          if (error.type === "break") {
+            break;
+          } else {
+            continue;
+          }
+        } else {
+          throw error;
+        }
       }
     }
-    this.captures = actualCaptures;
+    this.captures = priorCaptures;
 
     return frag;
   },
@@ -454,13 +459,17 @@ add("switch", {
     const output = document.createDocumentFragment();
     for (const child of children) {
       if (child.name === "default") {
-        this.render(output, child.content);
+        if (child.content) {
+          render(output, child.content, this);
+        }
         return output;
       }
       for (const arg of child.args) {
         const other = evalExpression(arg);
         if (value === other) {
-          this.render(output, child.content);
+          if (child.content) {
+            render(output, child.content, this);
+          }
           return output;
         }
       }
@@ -483,7 +492,9 @@ add("if", {
       }
       if (template.name === "else" || evalExpression(template.args.join(","))) {
         const output = document.createDocumentFragment();
-        this.render(output, template.content);
+        if (template.content) {
+          render(output, template.content, this);
+        }
         return output;
       }
     }
@@ -500,23 +511,28 @@ add("redoable", {
       throw new Error("@redoable: must be called with a body");
     }
     const span = makeElement("span", { class: "brick-macro-redoable" });
-    // Catch a bad break/continue on first render
-    this.loopStatus = LoopStatus.OUTSIDE_LOOP;
     try {
-      this.render(span);
+      if (this.content) {
+        render(span, this.content, this);
+      }
     } catch (error) {
+      if (error instanceof BreakSignal) {
+        throw "TODO";
+      }
       if (error instanceof Error) {
         const re = /^Can't (@break|@continue) from outside a loop$/;
         const match = re.exec(error.message);
         if (match) {
-          error.message = `Can't ${match[1]} from within a @do macro`;
+          error.message = `Can't ${match[1]} from within a @${this.name} macro`;
         }
       }
       throw error;
     }
     span.addEventListener("brick-redo", () => {
       span.innerHTML = "";
-      this.render(span);
+      if (this.content) {
+        render(span, this.content, this);
+      }
     });
 
     return span;

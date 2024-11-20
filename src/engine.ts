@@ -46,6 +46,12 @@ export async function resumeOrStart() {
   }
 }
 
+export async function loadHistory(slot: "active" | number): Promise<boolean> {
+
+
+  return true;
+}
+
 /** Fetch the current moment from IDB if necessary, then load its variables */
 export async function loadCurrentMoment() {
   let moment = historyMoments[index];
@@ -126,6 +132,7 @@ export async function loadFromSlot(slot: number | "active"): Promise<boolean> {
     index = maybeHistory.index;
   }
   await loadCurrentMoment();
+  mainElement.innerHTML = "";
   renderActive();
   return true;
 }

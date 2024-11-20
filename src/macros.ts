@@ -175,6 +175,10 @@ add("print", {
     if (this.content) {
       throw new Error(`@${this.name}: no body allowed`);
     }
+
+    if (Array.isArray(args[0]) && args[0].toString === Array.prototype.toString) {
+      return `[${args[0].join(", ")}]`;
+    }
     return String(args[0]);
   },
 });

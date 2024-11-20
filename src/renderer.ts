@@ -211,7 +211,11 @@ function renderRaw(
       target.append(renderError(new BrickError(nt.message, nt.passageName, nt.lineNumber)));
     } else {
       const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
-      target.append(String(value));
+      if (Array.isArray(value) && value.toString === Array.prototype.toString) {
+        target.append(`[${value.join(", ")}]`);
+      } else {
+        target.append(String(value));
+      }
     }
   }
 

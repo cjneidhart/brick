@@ -48,21 +48,22 @@ const storyFormat = template
   .replace(/#\s*sourceMappingURL=bootstrap.*map/gm, "")
   .replace("/*BRICK_SCRIPT*/", brickJs.replaceAll("$", "$$$$"))
   .replace("/*BRICK_STYLE*/", brickCss.replaceAll("$", "$$$$"));
+
 const storyJson = {
   name: "Brick",
   version,
-  author: "OrangeChris",
+  author: "Chris Neidhart",
   image: "icon.svg",
   description:
-    "A fully featured, highly customizable story format with numerous programming features and a rich passage editor." +
-    " No Harlowe experience required." +
-    ' <a href="https://github.com/cjneidhart/brick">Homepage</a>',
+    "A modern story format with a JavaScript-like syntax, " +
+    "and a focus on performance and simplicity.<br><br>" +
+    '<a href="https://github.com/cjneidhart/brick">Homepage</a>',
   source: storyFormat,
   hydrate: editorExtensions.replace("(void 0).editorExtensions", "this.editorExtensions"),
-  // url: null,
-  // license: null,
+  url: "https://github.com/cjneidhart/brick",
+  license: "GPL-3.0",
 };
-const outString = `window.storyFormat(${JSON.stringify(storyJson)});`;
 
+const outString = `window.storyFormat(${JSON.stringify(storyJson)});`;
 fs.writeFileSync("storyformats/brick/format.js", outString);
 fs.copyFileSync("icon.svg", "storyformats/brick/icon.svg");

@@ -226,7 +226,8 @@ export class Parser {
             this.index++;
             const m = this.consume(/((?:[^\\\]]|\\.)*)\]\]/y);
             if (!m) {
-              throw new Error("Unmatched `[[`");
+              output.push(this.error("Unmatched `[[`"));
+              break;
             }
             const linkBoxFull = m[1];
             const hasRightArrow = linkBoxFull.includes("->");
@@ -252,11 +253,6 @@ export class Parser {
           }
           break;
 
-        case "]":
-        case "?":
-        case ">":
-          throw new Error(`Cannot yet handle unescaped '${c}' (U+${c.charCodeAt(0)})`);
-
         case undefined:
           // end of input
           break outer;
@@ -267,7 +263,7 @@ export class Parser {
     }
 
     if (closer && !this.consume(closer)) {
-      throw new Error(`Failed to match regex "${closer.source}"`);
+      output.push(this.error(`Failed to match regex "${closer.source}"`));
     }
 
     return output;
@@ -307,11 +303,14 @@ export class Parser {
         if (match) {
           const key = match[1];
           const value = this.parseJsExpression();
+          if (typeof value === "object") {
+            return value;
+          }
           if (value.trim() === "") {
-            throw new Error(`Empty JavaScript attribute "${key}"`);
+            return this.error(`Empty JavaScript attribute "${key}"`);
           }
           if (this.lookahead() !== ")") {
-            throw new Error(`No closing paren on dynamic attribute "${key}"`);
+            return this.error(`No closing paren on dynamic attribute "${key}"`);
           }
           this.index++;
           if (attributes.has(key) || evalAttributes.has(key)) {
@@ -412,7 +411,11 @@ export class Parser {
 
     let args: string[] | null = null;
     if (this.consume(RE.macroArgsStart)) {
-      args = macroName === "for" ? this.parseForArgs() : this.parseJsArgs(")");
+      const argsResult = macroName === "for" ? this.parseForArgs() : this.parseJsArgs(")");
+      if ("type" in argsResult) {
+        return argsResult;
+      }
+      args = argsResult;
     }
 
     const hasContent = this.consume(RE.macroBodyStart);
@@ -431,30 +434,36 @@ export class Parser {
     };
   }
 
-  parseForArgs(): string[] {
+  parseForArgs(): string[] | ErrorMessage {
     // TODO refine this
     const match = this.consume(/\s*([^]*?)\s+of\b/y);
     if (!match) {
-      throw new Error("Could not find 'of' in @for macro");
+      return this.error("Syntax: @for(_VAR of EXPRESSION)");
     }
 
     const loopVar = match[1];
     const loopCond = this.parseJsExpression();
+    if (typeof loopCond === "object") {
+      return loopCond;
+    }
     if (loopCond.trim() === "") {
-      throw new Error("Right-hand side of a for macro must be an Iterable");
+      return this.error("Syntax: @for(_VAR of EXPRESSION)");
     }
 
     if (!this.consume(/\s*\)/y)) {
-      throw new Error("No closing paren");
+      return this.error("@for: missing closing ')'");
     }
 
     return [loopVar, loopCond];
   }
 
-  parseJsArgs(closer: "]" | ")"): string[] {
-    const args = [];
-    let arg;
+  parseJsArgs(closer: "]" | ")"): string[] | ErrorMessage {
+    const args: string[] = [];
+    let arg: string | ErrorMessage;
     while ((arg = this.parseJsExpression())) {
+      if (typeof arg === "object") {
+        return arg;
+      }
       args.push(arg);
       if (!this.consume(/\s*,/uy)) {
         break;
@@ -463,14 +472,14 @@ export class Parser {
 
     this.consume(RE.whitespace);
     if (this.lookahead() !== closer) {
-      throw new Error(`Missing a closing \`${closer}\``);
+      return this.error(`Missing a closing \`${closer}\``);
     }
     this.index++;
 
     return args;
   }
 
-  parseJsExpression(): string {
+  parseJsExpression(): string | ErrorMessage {
     const nesting = [];
     const output = [];
     let regexpAllowed = true;
@@ -520,7 +529,7 @@ export class Parser {
             output.push(match[0]);
             regexpAllowed = false;
           } else {
-            throw new Error("Unclosed double-quoted string");
+            return this.error("Unclosed double-quoted string");
           }
           break;
 
@@ -530,7 +539,7 @@ export class Parser {
             output.push(match[0]);
             regexpAllowed = false;
           } else {
-            throw new Error("Unclosed single-quoted string");
+            return this.error("Unclosed single-quoted string");
           }
           break;
 
@@ -569,7 +578,7 @@ export class Parser {
             output.push("Engine.vars.", match[0]);
             regexpAllowed = false;
           } else {
-            throw new Error("Illegal identifier");
+            return this.error("Illegal identifier");
           }
           break;
 
@@ -580,7 +589,7 @@ export class Parser {
             output.push("Engine.temp.", match[0]);
             regexpAllowed = false;
           } else {
-            throw new Error("Illegal identifier");
+            return this.error("Illegal identifier");
           }
           break;
 
@@ -662,7 +671,7 @@ export class Parser {
             output.push(c);
             match = this.consume(RE.js.regexp);
             if (!match) {
-              throw new Error("Invalid RegExp literal");
+              return this.error("Invalid RegExp literal");
             }
             output.push(match[0]);
             regexpAllowed = false;
@@ -681,20 +690,20 @@ export class Parser {
           }
 
           if (![")", "]", "}"].includes(c || "")) {
-            throw new Error(`Can't handle unescaped ${c} yet`);
+            return this.error(`Can't handle unescaped ${c} yet`);
           }
           break outer;
       }
     }
 
     if (nesting.length > 0) {
-      throw new Error(`Expected a "${nesting.pop()}"`);
+      return this.error(`Expected a "${nesting.pop()}"`);
     }
 
     return output.join("");
   }
 
-  parseJsTemplateString(output: string[]) {
+  parseJsTemplateString(output: string[]): undefined | ErrorMessage {
     while (true) {
       const match = this.consume(RE.js.normalInTemplateString);
       if (match) {
@@ -702,26 +711,33 @@ export class Parser {
       }
       const c = this.lookahead();
       if (!c) {
-        throw new Error("Unclosed template string");
+        return this.error("Unclosed template string");
       }
       switch (c) {
         case "`":
           output.push(c);
           this.index++;
           return;
-        case "$":
+
+        case "$": {
           // from regex, we already know the left bracket is present
           this.index += 2;
           output.push("${");
-          output.push(this.parseJsExpression());
+          const expr = this.parseJsExpression();
+          if (typeof expr === "object") {
+            return expr;
+          }
+          output.push(expr);
           if (this.lookahead() !== "}") {
-            throw new Error('missing "}" inside template string');
+            return this.error('missing "}" inside template string');
           }
           this.index++;
           output.push("}");
           break;
+        }
+
         default:
-          throw new Error(`Logic Error: '${c}' (U+${c.charCodeAt(0)}) was not matched by regex`);
+          return this.error(`Logic Error: '${c}' (U+${c.charCodeAt(0)}) was not matched by regex`);
       }
     }
   }

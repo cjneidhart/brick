@@ -175,7 +175,14 @@ function renderRaw(
     } else if (nt.type === "macro") {
       const macroData = getMacro(nt.name);
       if (!macroData) {
-        throw new Error(`Macro not found: "${nt.name}"`);
+        const error = new BrickError(
+          `Macro not found: "${nt.name}"`,
+          nt.passageName,
+          nt.lineNumber,
+        );
+        target.append(renderError(error));
+        noErrors = false;
+        continue;
       }
 
       let childContext: MacroContext;

@@ -106,13 +106,38 @@ export function renderPassage(target: HTMLElement, passage: string | Passage): b
   return render(target, passage);
 }
 
+let recursionCount = 1000;
+let recursionRecoveryMode = false;
+
 export function render(
   target: ParentNode,
   input: NodeTemplate[] | Passage,
   parentContext?: MacroContext,
 ): boolean {
-  // TODO infinite recursion safeguard
-  return renderRaw(target, input, parentContext);
+  if (recursionRecoveryMode) {
+    return false;
+  }
+  if (recursionCount <= 0) {
+    // passage and line# probably aren't much help here, but we'll provide them anyway
+    const passageName =
+      parentContext?.passageName || (input instanceof Passage && input.name) || "unknown";
+    const lineNumber = parentContext?.lineNumber || 0;
+    const error = new BrickError("Infinite recursion detected", passageName, lineNumber);
+    target.append(renderError(error));
+    recursionRecoveryMode = true;
+    return false;
+  }
+  let returnValue = false;
+  try {
+    recursionCount--;
+    returnValue = renderRaw(target, input, parentContext);
+  } finally {
+    recursionCount++;
+    if (recursionCount >= 1000) {
+      recursionRecoveryMode = false;
+    }
+  }
+  return returnValue;
 }
 
 /** Render the given Brick markup and append it to an element. */

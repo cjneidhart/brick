@@ -13,6 +13,7 @@ Test 1
 @(_food = "Banana")
 @(_menu = [_food, "orange", "bread"])
 Hello, $name. The food today is _food.
+@($money = 5_000_000) You have \$$money.toLocaleString() in your bank account.
 
 Lorem ipsun is a trad/* BLOCK
 

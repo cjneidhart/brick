@@ -13,7 +13,7 @@ const RE = {
     closingSquareBracket: /\s*\]/y,
     field: /\.\p{ID_Start}[$\p{ID_Continue}]*/uy,
     identifier: /\p{ID_Start}[$\p{ID_Continue}]*/uy,
-    number: /[0-9]+/y,
+    number: /[0-9][0-9_]*/y,
     operator: /[!%&*+-<=>^|~]+/y,
     regexp: /(?:[^\\[/]|\\[^]|\[(?:[^\\\]]|\\[^])*\])*\/(?:$|\p{ID_Continue})*/uy,
     stringDouble: /"(?:[^\\"]|\\[^])*"/y,

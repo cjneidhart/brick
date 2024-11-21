@@ -1,6 +1,6 @@
 import Config from "./config";
 import { storyVariables, tempVariables } from "./engine";
-import { BrickError, DynamicAttributeError } from "./error";
+import { BrickError, DynamicAttributeError, MacroError } from "./error";
 import { BreakSignal, get as getMacro, MacroContext } from "./macros";
 import { ElementTemplate, isMacro, NodeTemplate, Parser } from "./parser";
 import { Passage, get as getPassage } from "./passages";
@@ -188,9 +188,17 @@ function renderRaw(
         );
       }
 
-      // TODO: catch errors here
-      const macroOutput = macroData.handler.apply(childContext, params);
-      target.append(macroOutput);
+      try {
+        const macroOutput = macroData.handler.apply(childContext, params);
+        target.append(macroOutput);
+      } catch (error: unknown) {
+        if (error instanceof BreakSignal) {
+          throw error;
+        }
+
+        const wrapped = error instanceof MacroError ? error : new MacroError(childContext, error);
+        target.append(renderError(wrapped));
+      }
     } else if (nt.type === "element") {
       noErrors = renderElement(nt, target, parentContext) || noErrors;
     } else if (nt.type === "linkBox") {

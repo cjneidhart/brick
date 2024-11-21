@@ -1,5 +1,6 @@
 import config from "./config";
 import { navigate, tempVariables } from "./engine";
+import { MacroError } from "./error";
 import { isMacro, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { render, renderPassage } from "./renderer";
 import { evalAssign, evalExpression, evalJavaScript } from "./scripting";
@@ -137,16 +138,16 @@ export function remove(name: string): boolean {
 add("include", {
   handler(...args: unknown[]) {
     if (args.length < 1 || args.length > 2) {
-      throw new Error("@include must be called with 1 argument");
+      throw new Error("must be called with 1 argument");
     }
 
     const [passageName, elementName] = args;
 
     if (typeof passageName !== "string") {
-      throw new Error("@include: first arg (passage name) must be a string");
+      throw new Error("first arg (passage name) must be a string");
     }
     if (typeof elementName !== "undefined" && typeof elementName !== "string") {
-      throw new Error("@include: second arg (element type) must be a string or undefined");
+      throw new Error("second arg (element type) must be a string or undefined");
     }
 
     const actualEltName = elementName || "div";
@@ -170,10 +171,10 @@ add("", {
 add("print", {
   handler(...args) {
     if (args.length !== 1) {
-      throw new Error(`@${this.name}: requires 1 argument (got ${args.length})`);
+      throw new Error(`requires 1 argument (got ${args.length})`);
     }
     if (this.content) {
-      throw new Error(`@${this.name}: no body allowed`);
+      throw new Error(`no body allowed`);
     }
 
     if (Array.isArray(args[0]) && args[0].toString === Array.prototype.toString) {
@@ -188,10 +189,10 @@ alias("print", "-");
 add("render", {
   handler(...args) {
     if (args.length !== 1) {
-      throw new Error(`@${this.name}: requires 1 argument (got ${args.length})`);
+      throw new Error(`requires 1 argument (got ${args.length})`);
     }
     if (this.content) {
-      throw new Error(`@${this.name}: no body allowed`);
+      throw new Error(`no body allowed`);
     }
     const frag = document.createDocumentFragment();
     // TODO prevent infinite recursion
@@ -206,15 +207,15 @@ alias("render", "=");
 add("link", {
   handler(...args) {
     if (args.length !== 2) {
-      throw new Error("@link: requires 2 arguments");
+      throw new Error("requires 2 arguments");
     }
 
     const [linkText, onClick] = args;
     if (typeof linkText !== "string") {
-      throw new Error("@link: first arg (label) was not a string");
+      throw new Error("first arg (label) was not a string");
     }
     if (typeof onClick !== "function") {
-      throw new Error("@link: second arg (handler) was not a function");
+      throw new Error("second arg (handler) was not a function");
     }
 
     const button = makeElement("button", { class: "brick-link", type: "button" }, linkText);
@@ -231,7 +232,7 @@ add("linkTo", {
   handler(...args) {
     let psgName, linkText;
     if (args.length < 1 || args.length > 2) {
-      throw new Error("@linkTo requires 1 or 2 arguments");
+      throw new Error("requires 1 or 2 arguments");
     } else if (args.length === 1) {
       psgName = linkText = args[0];
     } else {
@@ -239,9 +240,9 @@ add("linkTo", {
       linkText = args[1];
     }
     if (typeof psgName !== "string") {
-      throw new Error("@linkTo: first arg (passage name) must be a string");
+      throw new Error("first arg (passage name) must be a string");
     } else if (typeof linkText !== "string") {
-      throw new Error("@linkTo: second arg (link text) must be a string");
+      throw new Error("second arg (link text) must be a string");
     }
 
     // const className = getPassage(psgName) ? "btn-outline-primary" : "btn-outline-danger";
@@ -255,11 +256,11 @@ add("linkTo", {
 add("linkReplace", {
   handler(...args) {
     if (args.length !== 1) {
-      throw new Error("@linkReplace: requires exactly 1 argument");
+      throw new Error("requires exactly 1 argument");
     }
     const [linkText] = args;
     if (typeof linkText !== "string") {
-      throw new Error("@linkReplace: first arg (link text) must be a string");
+      throw new Error("first arg (link text) must be a string");
     }
 
     const button = makeElement("button", { class: "brick-link", type: "button" }, linkText);
@@ -281,7 +282,7 @@ add("while", {
   skipArgs: true,
   handler(...args) {
     if (args.some((x) => typeof x !== "string")) {
-      throw new Error("@while: received a non-string arg");
+      throw new Error("received a non-string arg");
     }
 
     const conditionStr = (args as string[]).join(",");
@@ -291,7 +292,7 @@ add("while", {
     while (evalExpression(conditionStr)) {
       if (iterations > config.maxLoopIterations) {
         throw new Error(
-          `@while: Too many iterations (Config.maxLoopIterations = ${config.maxLoopIterations})`,
+          `Too many iterations (Config.maxLoopIterations = ${config.maxLoopIterations})`,
         );
       }
       iterations++;
@@ -333,21 +334,21 @@ add("for", {
   skipArgs: true,
   handler(...args) {
     if (!args.every((x) => typeof x === "string")) {
-      throw new Error("@for: received a non-string arg");
+      throw new Error("received a non-string arg");
     }
     if (args.length !== 2) {
-      throw new Error("@for: requires exactly 2 arguments");
+      throw new Error("requires exactly 2 arguments");
     }
 
     const [varStr, iterableStr] = args;
     if (!varStr.startsWith("_")) {
-      throw new Error("@for: loop variable must be a temp variable");
+      throw new Error("loop variable must be a temp variable");
     }
     const varName = varStr.substring(1);
     const place = `Engine.temp.${varName}`;
     const iterable = evalExpression(iterableStr) as Iterable<unknown>;
     if (typeof iterable[Symbol.iterator] !== "function") {
-      throw new Error("@for: Right-hand side must be an iterable value, such as an array");
+      throw new Error("Right-hand side must be an iterable value, such as an array");
     }
 
     const frag = document.createDocumentFragment();
@@ -357,7 +358,7 @@ add("for", {
     for (const loopVal of iterable) {
       if (iterations > config.maxLoopIterations) {
         throw new Error(
-          `@for: Too many iterations (Config.maxLoopIterations = ${config.maxLoopIterations})`,
+          `Too many iterations (Config.maxLoopIterations = ${config.maxLoopIterations})`,
         );
       }
       iterations++;
@@ -390,16 +391,16 @@ add("checkBox", {
   skipArgs: true,
   handler(...args) {
     if (args.length !== 2) {
-      throw new Error("@checkBox: requires 2 arguments");
+      throw new Error("requires 2 arguments");
     }
     if (args.some((arg) => typeof arg !== "string")) {
-      throw new Error("@checkBox: both arguments must be strings");
+      throw new Error("both arguments must be strings");
     }
 
     const [place, labelExpr] = args as string[];
     const labelText = evalExpression(labelExpr);
     if (typeof labelText !== "string" && !(labelText instanceof Node)) {
-      throw new Error("@checkBox: label must be a string or Node");
+      throw new Error("label must be a string or Node");
     }
 
     const initValue = evalExpression(place);
@@ -455,10 +456,10 @@ add("textBox", {
 add("switch", {
   handler(...args) {
     if (args.length !== 1) {
-      throw new Error("@switch: requires 1 arg");
+      throw new Error("requires 1 arg");
     }
     if (!this.content) {
-      throw new Error("@switch: requires a body");
+      throw new Error("requires a body");
     }
 
     const [value] = args;
@@ -467,13 +468,13 @@ add("switch", {
     for (const node of this.content) {
       if (typeof node === "string") {
         if (node.trim()) {
-          throw new Error("@switch: all children must be @case macros");
+          throw new Error("all children must be @case macros");
         }
         // pass: skip over text nodes that are all whitespace
       } else if (node.type === "macro") {
         children.push(node);
       } else {
-        throw new Error("@switch: all children must be @case macros");
+        throw new Error("all children must be @case macros");
       }
     }
 
@@ -481,15 +482,15 @@ add("switch", {
       const child = children[i];
       if (child.name === "default") {
         if (i !== children.length - 1) {
-          throw new Error("@switch: @default must be the last macro");
+          throw new Error("@default must be the last macro");
         }
         if (child.args.length > 0) {
-          throw new Error("@switch: @default cannot receive any arguments");
+          throw new Error("@default cannot receive any arguments");
         }
       } else if (child.name !== "case") {
-        throw new Error("@switch: all children must be @case macros");
+        throw new Error("all children must be @case macros");
       } else if (child.args.length === 0) {
-        throw new Error("@switch: @case macro requires at least one argument");
+        throw new Error("@case macro requires at least one argument");
       }
     }
 
@@ -520,12 +521,12 @@ add("if", {
   trailingMacros: ["elseif", "else"],
   handler() {
     if (!this.content) {
-      throw new Error("@if: no child templates");
+      throw new Error("no child templates");
     }
 
     for (const template of this.content) {
       if (!isMacro(template)) {
-        throw new Error("@if: child was not a MacroTemplate");
+        throw new Error("child was not a MacroTemplate");
       }
       if (template.name === "else" || evalExpression(template.args.join(","))) {
         const output = document.createDocumentFragment();
@@ -545,7 +546,7 @@ add("redoable", {
   handler() {
     const { content } = this;
     if (!content) {
-      throw new Error("@redoable: must be called with a body");
+      throw new Error("must be called with a body");
     }
     const span = makeElement("span", { class: "brick-macro-redoable" });
     try {
@@ -554,15 +555,10 @@ add("redoable", {
       }
     } catch (error) {
       if (error instanceof BreakSignal) {
-        throw "TODO";
+        // Use the BreakSignal's context instead of this redoable's context
+        throw new MacroError(error.context, `Can't @${error.type} from inside @${this.name}`);
       }
-      if (error instanceof Error) {
-        const re = /^Can't (@break|@continue) from outside a loop$/;
-        const match = re.exec(error.message);
-        if (match) {
-          error.message = `Can't ${match[1]} from within a @${this.name} macro`;
-        }
-      }
+
       throw error;
     }
     span.addEventListener("brick-redo", () => {

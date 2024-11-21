@@ -18,9 +18,9 @@ export class MacroError extends BrickError {
   constructor(context: MacroContext, cause: unknown) {
     let message;
     try {
-      message = `Error while executing @${context.name}: ${cause instanceof Error ? cause.message : cause}`;
+      message = `@${context.name}: ${cause instanceof Error ? cause.message : cause}`;
     } catch {
-      message = `Error while executing @${context.name}: (error could not be converted to string)`;
+      message = `@${context.name}: (error could not be converted to string)`;
     }
     super(message, context.passageName, context.lineNumber);
     this.cause = cause;

@@ -715,13 +715,13 @@ export class Parser {
           output.push("${");
           output.push(this.parseJsExpression());
           if (this.lookahead() !== "}") {
-            throw Error('missing "}" inside template string');
+            throw new Error('missing "}" inside template string');
           }
           this.index++;
           output.push("}");
           break;
         default:
-          throw Error(`Logic Error: '${c}' (U+${c.charCodeAt(0)}) was not matched by regex`);
+          throw new Error(`Logic Error: '${c}' (U+${c.charCodeAt(0)}) was not matched by regex`);
       }
     }
   }

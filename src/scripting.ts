@@ -4,9 +4,13 @@ import { backward, forward, redo, storyVariables, tempVariables } from "./engine
 import * as Passages from "./passages";
 import * as Util from "./util";
 
+/** This is defined in `build.js` */
+declare const BRICK_VERSION: string;
+
 /** The public API available to authors */
 // TODO: type-checking
 export const BrickPublic = {
+  BRICK_VERSION,
   Engine: {
     forward,
     backward,

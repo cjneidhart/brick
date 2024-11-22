@@ -16,6 +16,7 @@ fs.mkdirSync("storyformats/brick", { recursive: true });
 
 const baseContext = {
   bundle: true,
+  define: { BRICK_VERSION: `"${version}"` },
   minify: !debug,
   sourcemap: debug ? "inline" : false,
   // These are the oldest versions which support Unicode character classes

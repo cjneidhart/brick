@@ -33,18 +33,17 @@ Now we're including a passage:
 
 @include("Passage \"3\"")
 
-Now let's try a link: @linkTo('Passage 2') or maybe [[Passage 2]]
+Now let's try a link: @link('Passage 2', 'Passage 2') or maybe [[Passage 2]]
 
-@linkTo("Loop Test", "Test out some loops")
+@link("Test out some loops", "Loop Test")
 
-// @linkTo("Input Macros", "Test input macros")
 [[Test input macros|Input Macros]]
 
 [[Test modal dialogs->Modal Test]]
 
 [[Switch Test<-Test out @switch macros]]
 
-@linkTo("Do/Redo Test")
+@link("Do/Redo Test", "Do/Redo Test")
 
 [[Error Test]]
 
@@ -66,7 +65,7 @@ Here's a big block:
 You have navigated to Passage 2.
 
 @linkReplace("Click here to reveal the way back") {
-  @linkTo("Start", "Go Back")
+  @link("Go Back", "Start")
 }
 
 
@@ -112,7 +111,7 @@ Actual:
   _j
 }
 
-@linkTo("Start", 'return')
+@link("return", "Start")
 
 
 :: Input Macros
@@ -125,14 +124,14 @@ Text box:
 
 @textBox($horse, "Name your horse")
 
-@linkTo("Start", 'return')
+@link("return", "Start")
 
 
 :: Modal Test
 
 @linkReplace("Show a modal") {
   @(Dialog.showPassage("Sample Modal"))
-  @linkTo("Start", "return")
+  @link("return", "Start")
 }
 
 
@@ -169,7 +168,7 @@ Test 3: @if(!window.Math) {
   CORRECT
 }
 
-@linkTo("Start", "return")
+@link("return", "Start")
 
 
 :: Do/Redo Test
@@ -181,11 +180,11 @@ Counter: @redoable { _counter }
   Engine.redo();
 })
 
-@linkTo("Start", "return")
+@link("return", "Start")
 
 
 :: Error Test
-@linkTo("Start")
+@link("Start", "Start")
 
 Here's an error: [[Passage|Maybe->Maybe Not]]
 
@@ -208,7 +207,9 @@ Here's a list:
 Your name is $player.name and your strength is $player.strength
 
 @(_player = $player, $player.inventory = ["sword", "hammer"])
-You are carrying a _player.inventory[0] and a _player.inventory[1].
+You are carrying a _player.inventory[0] and a _player.inventory[
+  Number("001")
+].
 
 // Don't put functions in variables
 @(_sayNumber = (number) => "Hello! Your number is " + number)

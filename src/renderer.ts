@@ -234,15 +234,15 @@ function renderRaw(
     } else if (nt.type === "element") {
       noErrors = renderElement(nt, target, parentContext) || noErrors;
     } else if (nt.type === "linkBox") {
-      const macroData = getMacro("linkTo");
+      const macroData = getMacro("link");
       if (!macroData) {
-        throw new Error("Can't find @linkTo macro for wiki-style [[link]]");
+        throw new Error("Can't find @link macro for wiki-style [[link]]");
       }
       if (!nt.text) {
         throw new Error("The text of a [[link box]] cannot be empty");
       }
-      const childContext = new MacroContext("linkTo", nt.passageName, nt.lineNumber);
-      target.append(macroData.handler.call(childContext, nt.link, nt.text));
+      const childContext = new MacroContext("link", nt.passageName, nt.lineNumber);
+      target.append(macroData.handler.call(childContext, nt.text, nt.link));
     } else if (nt.type === "error") {
       noErrors = false;
       // const br = makeElement("br");

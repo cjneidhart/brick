@@ -190,6 +190,35 @@ You encounter a scary @render(C.red("ogre")).
 You encounter a scary <span class="red">ogre</span>.
 ```
 
+### `@link(label, [destinationPassage], [onClick])`
+
+This creates a hyperlink the user can interact with.
+When the link is clicked, two things will happen:
+
+1. If `onClick` was given, it will be called.
+   It will receive one argument, the
+   [MouseEvent](https://developer.mozilla.org/en-US/docs/Web/API/MouseEvent)
+   that the button just received.
+2. If `destinationPassage` was given, it must be a passage name.
+   Brick will navigate to that passage, creating a new moment in history.
+
+```brick
+// These are both equivalent
+[[Visit the Pond->Pond]]
+@link("Visit the Pond", "Pond")
+
+// This link will subtract 5 from $money, then call Engine.redo()
+@link("Buy a coffee", () => {
+  $money -= 5;
+  Engine.redo();
+})
+
+// This link will subtract 5 from $money, then go to the "Street" passage
+@link("Buy a coffee and leave", "Street", () => {
+  $money -= 5;
+})
+```
+
 ### `@if(condition)`, `@elseif(condition)`, and `@else`
 
 These macros are the most basic tool for conditional logic.

@@ -12,7 +12,7 @@ Test 2
 This is the start passage.
 It has some <code>Brick markup</code>.
 
-Next: @linkTo('Passage 2')
+Next: @link('Passage 2', 'Passage 2')
 
 
 :: Passage 2
@@ -28,4 +28,4 @@ Next: @linkTo('Passage 2')
     Math is not real\?
   }
 </p>
-<p>@linkTo('Start', 'Return to Start')</p>
+<p>@link('Return to Start', 'Start')</p>

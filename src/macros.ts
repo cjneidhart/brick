@@ -206,48 +206,62 @@ alias("render", "=");
 
 add("link", {
   handler(...args) {
-    if (args.length !== 2) {
-      throw new Error("requires 2 arguments");
+    if (args.length < 1 || args.length > 3) {
+      throw new Error("requires 1, 2 or 3 arguments");
     }
 
-    const [linkText, onClick] = args;
-    if (typeof linkText !== "string") {
-      throw new Error("first arg (label) was not a string");
+    if (typeof args[0] !== "string") {
+      throw new Error("first argument (link text) must be a string");
     }
-    if (typeof onClick !== "function") {
-      throw new Error("second arg (handler) was not a function");
+    const linkText = args[0];
+
+    let psgName: string | undefined, onClick: Function | undefined;
+    if (args.length === 2) {
+      if (typeof args[1] === "string") {
+        psgName = args[1];
+        onClick = undefined;
+      } else if (typeof args[1] === "function") {
+        psgName = undefined;
+        onClick = args[1];
+      } else {
+        throw new Error("second argument must be a string or function");
+      }
+    } else if (args.length === 3) {
+      // special error for swapped argument order
+      if (typeof args[1] === "function" && typeof args[2] === "string") {
+        throw new Error("second argument must be a string and third argument must be a function");
+      }
+      if (typeof args[1] !== "string") {
+        throw new Error("second argument must be a string");
+      }
+      if (typeof args[2] !== "function") {
+        throw new Error("third argument must be a function");
+      }
+      psgName = args[1];
+      onClick = args[2];
+    } else {
+      console.warn(`@link received only 1 argument. This link will do nothing when clicked.`);
+      psgName = undefined;
+      onClick = undefined;
     }
 
     const button = makeElement("button", { class: "brick-link", type: "button" }, linkText);
+    if (psgName) {
+      button.dataset.linkDestination = psgName;
+    }
     button.addEventListener(
       "click",
-      this.createCallback((event) => onClick.call(this, event)),
+      this.createCallback(function (this: HTMLButtonElement, mouseEvent) {
+        if (onClick) {
+          // TODO errors thrown here will be propagated to window's error handler.
+          // Would it be better to render them inline?
+          onClick.call(this, mouseEvent);
+        }
+        if (button.dataset.linkDestination) {
+          navigate(button.dataset.linkDestination);
+        }
+      }),
     );
-
-    return button;
-  },
-});
-
-add("linkTo", {
-  handler(...args) {
-    let psgName, linkText;
-    if (args.length < 1 || args.length > 2) {
-      throw new Error("requires 1 or 2 arguments");
-    } else if (args.length === 1) {
-      psgName = linkText = args[0];
-    } else {
-      psgName = args[0];
-      linkText = args[1];
-    }
-    if (typeof psgName !== "string") {
-      throw new Error("first arg (passage name) must be a string");
-    } else if (typeof linkText !== "string") {
-      throw new Error("second arg (link text) must be a string");
-    }
-
-    // const className = getPassage(psgName) ? "btn-outline-primary" : "btn-outline-danger";
-    const button = makeElement("button", { class: "brick-link", type: "button" }, linkText);
-    button.addEventListener("click", () => navigate(psgName));
 
     return button;
   },

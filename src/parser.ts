@@ -23,7 +23,7 @@ const RE = {
   macroArgsStart: / *\(/y,
   macroBodyStart: /\s*\{/y,
   macroName: /[-_=<>\p{ID_Start}][-=<>\p{ID_Continue}]*/uy,
-  normalChars: /[^[\\$_?<@/]+/y,
+  normalChars: /[^[\\$_?<@/}]+/y,
   singleChar: /[^]/y,
   whitespace: /\s*/y,
 };
@@ -251,6 +251,10 @@ export class Parser {
           } else {
             output.push("[");
           }
+          break;
+
+        case "}":
+          output.push("}");
           break;
 
         case undefined:

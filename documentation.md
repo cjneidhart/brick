@@ -1,7 +1,7 @@
 # Brick - a modern Story Format
 
-Brick is a new story format for Twine and Tweego stories.
-It aims to be highly extensible, but also fully featured out of the box.
+Brick is a new story format for Twee stories.
+Its main priorities are being easy to use, and highly performant.
 
 ## Markup
 

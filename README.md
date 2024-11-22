@@ -1,10 +1,11 @@
 # Brick
 
 This is a WIP Story Format for Twine/Tweego.
+Its priorities are being easy to use, and highly performant.
+Compared to existing formats, Brick draws most of its inspiration from [SugarCube](https://www.motoslave.net/sugarcube/2/),
+but with a syntax that resembles JavaScript instead of HTML.
 
-This format is intended to be a midpoint between [Snowman](https://videlais.github.io/snowman/) and [SugarCube](https://www.motoslave.net/sugarcube/2/).
-Like SugarCube, this format will be “full featured” and “highly customizable”, but it will have more JavaScript-like syntax.
-Where SugarCube macros are styled like HTML elements, Brick macros are styled like JavaScript function calls.
+For a full reference of Brick's syntax, macros, and API, consult the [documentation](https://github.com/cjneidhart/brick/documentation.md).
 
 ## Example
 

@@ -1,6 +1,6 @@
 {
   "name": "brick",
-  "version": "0.1",
+  "version": "0.1.0",
   "description": "A modern story format for Twine/Tweego",
   "author": "Chris Neidhart",
   "private": true,
@@ -13,6 +13,7 @@
     "eslint": "^9.14.0",
     "eslint-config-prettier": "^9.1.0",
     "prettier": "^3.3.3",
+    "semver": "^7.6.3",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.14.0"
   },

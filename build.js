@@ -1,22 +1,33 @@
 import fs from "node:fs";
 import { env } from "node:process";
 import esbuild from "esbuild";
+import { parse as semverParse } from "semver";
 
 function readTextFile(path) {
   return fs.readFileSync(path, { encoding: "utf-8" });
 }
 
 const debug = !!env.BRICK_DEBUG;
-const version = env.npm_package_version;
-if (!version) {
+const versionString = env.npm_package_version;
+if (!versionString) {
   throw new Error("This script must be run as `npm run build`");
 }
+let version = semverParse(versionString);
+if (!version) {
+  throw new Error(`Could not parse version "${versionString}"`);
+}
+version = {
+  major: version.major,
+  minor: version.minor,
+  patch: version.patch,
+  version: version.version,
+};
 
 fs.mkdirSync("storyformats/brick", { recursive: true });
 
 const baseContext = {
   bundle: true,
-  define: { BRICK_VERSION: `"${version}"` },
+  define: { BRICK_VERSION: JSON.stringify(version) },
   minify: !debug,
   sourcemap: debug ? "inline" : false,
   // These are the oldest versions which support Unicode character classes
@@ -52,7 +63,7 @@ const storyFormat = template
 
 const storyJson = {
   name: "Brick",
-  version,
+  version: versionString,
   author: "Chris Neidhart",
   image: "icon.svg",
   description:

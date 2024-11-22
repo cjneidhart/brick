@@ -5,7 +5,7 @@ import * as Passages from "./passages";
 import * as Util from "./util";
 
 /** This is defined in `build.js` */
-declare const BRICK_VERSION: string;
+declare const BRICK_VERSION: Record<string, unknown>;
 
 /** The public API available to authors */
 // TODO: type-checking
@@ -32,6 +32,9 @@ export const BrickPublic = {
   makeElement: Util.makeElement,
   numberRange: Util.numberRange,
   slugify: Util.slugify,
+};
+BrickPublic.BRICK_VERSION.toString = function () {
+  return this.version as string;
 };
 
 const envKeys = Object.keys(BrickPublic);

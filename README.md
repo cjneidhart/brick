@@ -48,27 +48,29 @@ For a full reference of Brick's syntax, macros, and API, consult the [documentat
 
 ## Usage
 
+### Twine 2
+
+To use this story format in Twine 2, from within Twine click on **Twine** at the top, then **Story Formats**, then **+ Add**.
+In the text box, paste in `https://github.com/cjneidhart/brick/releases/download/v0.2.0/format.js`.
+Twine should say "Brick 0.2.0 will be added".
+Click the green **+ Add** button to confirm.
+"Brick 0.2.0" should be in the list of story formats now.
+
+Next, create a new story.
+Then, at the top go to **Story** then **(i) Details** to open a details box in the bottom right.
+In the details box, select "Brick 0.2.0" from the dropdown.
+
+Congrats! You're now using Brick.
+
+### Tweego
+
+You can download Brick's `format.js` from the "Releases" page on the right.
+Consult [Tweego's documentation](https://www.motoslave.net/tweego/docs/#getting-started-story-formats) on where it looks for story formats.
+Make sure your `StoryData` passage has `"format": "Brick"` (case-sensitive) and `"format-version": "0"`.
+
+## Building manually
+
 [NodeJS](https://nodejs.org/en) is necessary to build this project.
 First, run `npm install` (this only needs to be done after initially downloading or updating Brick).
 Then, run `npm run build`.
 This will create a `format.js` file in the directory `storyformats/brick/`.
-
-### Tweego
-
-Consult [Tweego's documentation](https://www.motoslave.net/tweego/docs/#getting-started-story-formats) on where it looks for story formats.
-Make sure your `StoryData` passage has `"format": "Brick"` (case-sensitive) and `"format-version": "0"`.
-
-### Twine 2 (Desktop)
-
-From the list of story formats, select **Story Format** -> **+ Add** at the top.
-In the text box, paste the absolute path of the `format.js` file, prepended with `file:`. So for example, on my machine, the full text has to be `file:/home/chris/brick/storyformats/brick/format.js`.
-I've found Twine to be very clunky when it comes to adding new formats;
-I recommend pasting in the whole path at once, rather than typing any part of it into Twine.
-
-### Twine 2 (Browser)
-
-Not yet supported. This will be supported soon, once I start publishing releases.
-
-### Twine 1
-
-This is unlikely to ever be supported.

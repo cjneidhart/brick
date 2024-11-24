@@ -1,5 +1,3 @@
-"use strict";
-
 function startState() {
   return {
     blockComment: false,
@@ -108,7 +106,7 @@ function tokenJs(stream, state) {
 
   const c = stream.next();
 
-  if ((c >= "0" && c <= "9") || c === ".") {
+  if ((c >= "0" && c <= "9") || (c === "." && stream.peek() >= "0" && stream.peek() <= "9")) {
     return tokenJsNumber(stream, c);
   }
 

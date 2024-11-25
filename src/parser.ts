@@ -23,9 +23,11 @@ const RE = {
   macroArgsStart: / *\(/y,
   macroBodyStart: /\s*\{/y,
   macroName: /[-_=<>\p{ID_Start}][-=<>\p{ID_Continue}]*/uy,
+  maybeElementClose: /\/[-\p{ID_Continue}]+(?: *>)?/uy,
   normalChars: /[^[\\$_?<@/}]+/y,
   singleChar: /[^]/y,
   whitespace: /\s*/y,
+  wikiLink: /((?:[^\\\]]|\\.)*)\]\]/y,
 };
 
 /** Tags which are not allowed to be descended from `<body>` */
@@ -224,7 +226,7 @@ export class Parser {
         case "[":
           if (this.lookahead() === "[") {
             this.index++;
-            const m = this.consume(/((?:[^\\\]]|\\.)*)\]\]/y);
+            const m = this.consume(RE.wikiLink);
             if (!m) {
               output.push(this.error("Unmatched `[[`"));
               break;
@@ -276,12 +278,18 @@ export class Parser {
   parseElement(): ElementTemplate | ErrorMessage {
     const longName = this.consume(RE.elementName);
     if (!longName) {
+      const closeTag = this.consume(RE.maybeElementClose);
+      if (closeTag) {
+        return this.error(`Unexpected closing tag "${closeTag[0]}"`);
+      }
+
       return this.error(
-        "Element names can contain only hyphens, underscores, and ASCII letters and numbers",
+        "Element names can contain only hyphens, underscores, and ASCII letters and numbers. " +
+          'The "<" character must be escaped with a "\\" backslash if not used as an HTML element.',
       );
     }
 
-    const [_, name, id, className] = longName;
+    const [, name, id, className] = longName;
 
     const attributes = new Map<string, string>();
     const evalAttributes = new Map<string, string>();

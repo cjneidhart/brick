@@ -372,6 +372,35 @@ You have @redoable { $money } credits in your wallet.
 @textBox($name, "Enter your name")
 ```
 
+### `@later([delay])`
+
+`@later` renders its content after a delay.
+This is useful if you want content to appear after a delay, or if you want to manipulate the passage after it has been rendered.
+`@later` takes one optional argument: the number of milliseconds to wait.
+By default, this is `40`, which is generally long enough for the browser to finish drawing the passage.
+Note that even if you pass a delay of `0`, `@later` will still be rendered _after_ the rest of the passage.
+
+**Accessibility Note**: Everyone reads at different speeds.
+Do not use `@later` to hide content after a delay.
+
+<!-- TODO add note about letting users skip delays -->
+
+```brick
+// Simple example: render some content after a delay.
+// All of these sentences will appear in the same paragraph.
+You freeze in place.
+@later(1000) {
+  Slowly, you turn around.
+  // This @later's timer won't start until after the outer @later has rendered
+  @later(1000) {
+    The hollow eyes of a skeleton stare straight back at you.
+  }
+}
+
+// More complicated example: DOM manipulation
+// TODO
+```
+
 ## Config
 
 Some features of Brick can be customized via the `Config` object

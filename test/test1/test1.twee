@@ -57,6 +57,8 @@ Now let's try a link: @link('Passage 2', 'Passage 2') or maybe [[Passage 2]]
 
 [[RegExp Literal Test]]
 
+[[Later Test]]
+
 Here's a big block:
 <div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
 
@@ -236,3 +238,18 @@ _sayNumber(5 + 7)
 @-(/ok/.exec("big ok match"))
 
 @-(6.6 / 3.3 === 2 ? "ok" : "fail")
+
+
+:: Later Test
+[[Start]]
+
+<span#replace-me-first>This text should be replaced immediately.</span>
+
+<span#replace-me-second>This text should be replaced after two seconds.</span>
+
+@later {
+  @(document.getElementById("replace-me-first").textContent = "OK!")
+}
+@later(2000) {
+  @(document.getElementById("replace-me-second").textContent = "Excellent!")
+}

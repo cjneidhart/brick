@@ -43,8 +43,8 @@ window.Brick = BrickPublic;
 
 const storyData = document.getElementsByTagName("tw-storydata")[0];
 passages.init(storyData);
-const styles = storyData.querySelectorAll<HTMLStyleElement>('style[type="text/twine-css"]');
-const scripts = storyData.querySelectorAll<HTMLElement>('script[type="text/twine-javascript"]');
+const styles = storyData.querySelectorAll('style[type="text/twine-css"]');
+const scripts = storyData.querySelectorAll('script[type="text/twine-javascript"]');
 
 const storyTitle =
   storyData.getAttribute("name") ||

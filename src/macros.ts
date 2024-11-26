@@ -585,3 +585,37 @@ add("redoable", {
     return span;
   },
 });
+
+add("later", {
+  handler(...args) {
+    // TODO allow delay to be a string, e.g "2s" or "300ms"
+    // TODO add option to specify container element type
+    if (args.length !== 0 && args.length !== 1) {
+      throw new Error("does not take any args");
+    }
+    let delay = 40;
+    if (args.length === 1) {
+      if (typeof args[0] !== "number") {
+        throw new Error("first argument must be a number");
+      }
+      delay = args[0];
+    }
+    const { content } = this;
+    if (!content) {
+      throw new Error("requires a body");
+    }
+
+    const span = makeElement("span", { class: "brick-macro-later", hidden: "" });
+
+    setTimeout(
+      this.createCallback(() => {
+        const frag = document.createDocumentFragment();
+        render(frag, content);
+        span.replaceWith(frag);
+      }),
+      delay,
+    );
+
+    return span;
+  },
+});

@@ -1,5 +1,3 @@
-"use strict";
-
 function startState() {
   return {
     blockComment: false,
@@ -69,20 +67,24 @@ const RE_NUMBER_LEADING_ZERO =
   /^(?:[bB](?:_?[01])+n?|[oO](?:_?[0-7])+n?|[xX](?:_?[0-9a-fA-F])+n?|n|(?:\.(?:_?[0-9])*)?(?:[eE](?:_?[0-9])+)?)/;
 const RE_POSTNUMBER_ERROR = /^[0-9\p{ID_Start}]/u;
 
+function postNumberCheck(stream) {
+  return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
+}
+
 function tokenJsNumber(stream, firstChar) {
   if (firstChar === "0") {
     if (stream.match(RE_NUMBER_LEADING_ZERO)) {
-      return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
+      return postNumberCheck(stream);
     } else if (stream.eol() || stream.peek().match(/^[^0-9\p{ID_Start}]/u)) {
-      return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
+      return postNumberCheck(stream);
     }
   } else if (firstChar === ".") {
     if (stream.match(/^(?:_?[0-9])+(?:[eE](?:_?[0-9])+)?/)) {
-      return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
+      return postNumberCheck(stream);
     }
   } else {
     if (stream.match(/^(?:(?:_?[0-9])*(?:\.(?:_?[0-9])*)?(?:[eE](?:_?[0-9])+)?|(?:_?[0-9])*n)/)) {
-      return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
+      return postNumberCheck(stream);
     }
   }
 
@@ -108,7 +110,7 @@ function tokenJs(stream, state) {
 
   const c = stream.next();
 
-  if ((c >= "0" && c <= "9") || c === ".") {
+  if ((c >= "0" && c <= "9") || (c === "." && stream.peek() >= "0" && stream.peek() <= "9")) {
     return tokenJsNumber(stream, c);
   }
 

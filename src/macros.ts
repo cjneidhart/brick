@@ -6,13 +6,6 @@ import { render, renderPassage } from "./renderer";
 import { evalAssign, evalExpression, evalJavaScript } from "./scripting";
 import { makeElement, uniqueId } from "./util";
 
-export enum LoopStatus {
-  OUTSIDE_LOOP = 1,
-  IN_LOOP,
-  BREAKING,
-  CONTINUING,
-}
-
 interface CapturedVar {
   name: string;
   value: unknown;

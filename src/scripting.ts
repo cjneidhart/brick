@@ -2,7 +2,7 @@ import Config from "./config";
 import { showPassage } from "./dialog";
 import { backward, forward, redo, storyVariables, tempVariables } from "./engine";
 import * as Passages from "./passages";
-import * as Util from "./util";
+import * as util from "./util";
 
 /** This is defined in `build.js` */
 declare const BRICK_VERSION: Record<string, unknown>;
@@ -27,11 +27,32 @@ export const BrickPublic = {
     showPassage,
   },
   Passages,
-  clone: Util.clone,
-  enumerate: Util.enumerate,
-  makeElement: Util.makeElement,
-  numberRange: Util.numberRange,
-  slugify: Util.slugify,
+  clone: util.clone,
+  either(values: unknown): unknown {
+    if (arguments.length !== 1) {
+      throw new Error("either(): exactly one argument required");
+    }
+    if (typeof values !== "object" || values === null) {
+      throw new Error("either(): first argument was not an array");
+    }
+    if (!("length" in values) || typeof values.length !== "number") {
+      throw new Error("either(): first argument was not an array");
+    }
+    return util.either(values as ArrayLike<unknown>);
+  },
+  enumerate: util.enumerate,
+  makeElement: util.makeElement,
+  numberRange: util.numberRange,
+  randomInt(max: unknown): number {
+    if (arguments.length !== 1) {
+      throw new Error("randomInt: exactly 1 argument required");
+    }
+    if (typeof max !== "number") {
+      throw new Error("randomInt: argument must be a number");
+    }
+    return util.randomInt(max);
+  },
+  slugify: util.slugify,
 };
 BrickPublic.BRICK_VERSION.toString = function () {
   return this.version as string;

@@ -94,6 +94,13 @@ export function clone<T>(original: T): T {
   }
 }
 
+export function either<T>(values: ArrayLike<T>): T {
+  if (values.length < 1) {
+    throw new Error("either: array is empty");
+  }
+  return values[randomInt(values.length)];
+}
+
 /** Similar to `document.getElementById`, but throws an error if the element wasn't found. */
 export function getElementById(elementId: string): HTMLElement {
   const elt = document.getElementById(elementId);
@@ -101,6 +108,10 @@ export function getElementById(elementId: string): HTMLElement {
     throw new Error(`No element with id "${elementId}" found`);
   }
   return elt;
+}
+
+export function randomInt(max: number): number {
+  return Math.floor(Math.random() * max);
 }
 
 let idCounter = 0;

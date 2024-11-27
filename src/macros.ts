@@ -619,3 +619,46 @@ add("later", {
     return span;
   },
 });
+
+add("replace", {
+  handler(...args) {
+    if (args.length !== 1) {
+      throw new Error("requires exactly one argument");
+    }
+    if (typeof args[0] !== "string") {
+      throw new Error("first argument must be a string");
+    }
+
+    const target = document.querySelector(args[0]);
+    if (!target) {
+      throw new Error(`The selector '${args[0]}' did not match any elements`);
+    }
+
+    const frag = document.createDocumentFragment();
+    if (this.content) {
+      render(frag, this.content, this);
+    } else if (this.name !== "replace") {
+      throw new Error('no content provided. Use "{}" to provide content.');
+    }
+
+    switch (this.name) {
+      case "append":
+        target.append(frag);
+        break;
+      case "prepend":
+        target.prepend(frag);
+        break;
+      case "replace":
+        target.innerHTML = "";
+        target.append(frag);
+        break;
+      default:
+        throw new Error("Unknown name. Call this macro only with @append, @prepend, or @replace");
+    }
+
+    return "";
+  },
+});
+
+alias("replace", "append");
+alias("replace", "prepend");

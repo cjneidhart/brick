@@ -59,6 +59,8 @@ Now let's try a link: @link('Passage 2', 'Passage 2') or maybe [[Passage 2]]
 
 [[Later Test]]
 
+[[Append Test]]
+
 Here's a big block:
 <div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
 
@@ -243,7 +245,7 @@ _sayNumber(5 + 7)
 :: Later Test
 [[Start]]
 
-<span#replace-me-first>This text should be replaced immediately.</span>
+<span#replace-me-first.foo>This text should be replaced immediately.</span>
 
 <span#replace-me-second>This text should be replaced after two seconds.</span>
 
@@ -252,4 +254,17 @@ _sayNumber(5 + 7)
 }
 @later(2000) {
   @(document.getElementById("replace-me-second").textContent = "Excellent!")
+}
+
+
+:: Append Test
+[[Start]]
+
+The following paragraph should be "1 2 3":
+<p#testParagraph>ERROR</p>
+
+@later {
+  @replace("#testParagraph") { 2 }
+  @prepend("#testParagraph") { 1 }
+  @append("#testParagraph") { 3 }
 }

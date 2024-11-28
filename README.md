@@ -51,14 +51,14 @@ For a full reference of Brick's syntax, macros, and API, consult the [documentat
 ### Twine 2
 
 To use this story format in Twine 2, from within Twine click on **Twine** at the top, then **Story Formats**, then **+ Add**.
-In the text box, paste in `https://cjneidhart.github.io/brick/v0.2.0/format.js`.
-Twine should say "Brick 0.2.0 will be added".
+In the text box, paste in `https://cjneidhart.github.io/brick/v0.2.1/format.js`.
+Twine should say "Brick 0.2.1 will be added".
 Click the green **+ Add** button to confirm.
-"Brick 0.2.0" should be in the list of story formats now.
+"Brick 0.2.1" should be in the list of story formats now.
 
 Next, create a new story.
 Then, at the top go to **Story** then **(i) Details** to open a details box in the bottom right.
-In the details box, select "Brick 0.2.0" from the dropdown.
+In the details box, select "Brick 0.2.1" from the dropdown.
 
 Congrats! You're now using Brick.
 

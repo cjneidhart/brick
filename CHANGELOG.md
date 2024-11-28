@@ -9,11 +9,12 @@ All changes are backwards-incompatible since it has not reached `1.0.0`.
 
 - The `@later` macro for performing operations after a delay.
 - The `@append`, `@prepend`, and `@replace` macros for DOM manipulation.
+- The `@punt` macro, to preserve a temporary variable between passages.
 - The utility functions `either` and `randomInt`.
 
 ### Fixed
 
-- Fix bug in Twine highlighter involving the JavaScript dot operator.
+- Fix a bug in Twine highlighter involving the JavaScript dot operator.
 
 ## [0.2.0] - 2024-11-22
 

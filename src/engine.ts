@@ -12,6 +12,7 @@ let historyMoments: (Moment | undefined)[];
 let index: number;
 let turnCount: number;
 let passageName: string;
+let punted: string[];
 export let storyVariables: Record<string, unknown>;
 export let tempVariables: Record<string, unknown>;
 
@@ -27,6 +28,7 @@ export async function init() {
   passageName = "";
   storyVariables = {};
   tempVariables = {};
+  punted = [];
 }
 
 export async function resumeOrStart() {
@@ -98,6 +100,10 @@ export async function navigate(passage: string | Passage) {
   historyIds.length = index + 1;
   historyMoments.length = index + 1;
 
+  if (punted.length > 0) {
+    storyVariables["-brick-punted"] = punted.map((varName) => [varName, tempVariables[varName]]);
+  }
+
   const newMoment = {
     passageName,
     timestamp: Date.now(),
@@ -142,6 +148,17 @@ function saveHistoryActive() {
 /** Render the active moment. */
 function renderActive() {
   tempVariables = {};
+  punted = [];
+  if (storyVariables["-brick-punted"] instanceof Array) {
+    for (const [key, val] of storyVariables["-brick-punted"]) {
+      if (typeof key !== "string") {
+        console.warn("non-string key in $-brick-punted");
+      } else {
+        tempVariables[key] = val;
+      }
+    }
+  }
+  delete storyVariables["-brick-punted"];
 
   if (config.stream) {
     for (const elt of mainElement.querySelectorAll(":enabled")) {
@@ -189,4 +206,11 @@ export function redo() {
   for (const elt of document.querySelectorAll(".brick-macro-redoable")) {
     elt.dispatchEvent(new CustomEvent("brick-redo"));
   }
+}
+
+export function punt(varName: string) {
+  if (punted.includes(varName)) {
+    console.warn(`_${varName} was already punted`);
+  }
+  punted.push(varName);
 }

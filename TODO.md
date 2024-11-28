@@ -8,6 +8,7 @@ If you find a bug or have a feature you'd like to see, feel free to make an Issu
 Even if it's already listed in this file, creating an Issue helps me decide what to prioritize.
 
 ## Known Issues
+
 - The JS parser displays unhelpful errors when it finds a sigil-ed variable in an unallowed position.
   Examples: `{ $foo: 4 }`, `{ __proto__: null }`, `$myObject._length = 4`.
 - The Twine highlighter does not support RegExp literals.

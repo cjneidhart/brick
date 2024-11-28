@@ -401,6 +401,35 @@ You freeze in place.
 // TODO
 ```
 
+### `@punt(variable)`
+
+Sometimes, you want to pass data from one passage to another.
+But, that data is only meaningful during the brief transition between passages.
+You could use a story variable to hold that data,
+but then you have to double-check you're not already using that variable,
+and remember to `delete` it afterwards.
+
+Alternatively, you can _punt_ a temporary variable.
+Punting a temporary variable prevents it from being forgotten the next time you change passages. If necessary, the new passage can then punt it again, so a third passage can receive it. However, it might be easier to just use story variables at that point.
+
+It doesn't matter when in the passage you call `@punt`. You can punt multiple temporary variables at once by passing them all as arguments to `@punt`. Calling `@punt` twice or more on the same temporary variable in the same passage has no effect.
+
+```brick
+:: Passage 1
+@(_x = 5)
+@punt(_x)
+
+[[Passage 2]]
+
+:: Passage 2
+// _x will be 5
+// It's a good idea to double-check any punted variables in the newer passage
+Temp variable \_x is now: _x
+
+// After clicking this link, _x will be forgotten.
+[[Passage 3]]
+```
+
 ## Config
 
 Some features of Brick can be customized via the `Config` object

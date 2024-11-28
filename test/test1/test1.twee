@@ -61,6 +61,8 @@ Now let's try a link: @link('Passage 2', 'Passage 2') or maybe [[Passage 2]]
 
 [[Append Test]]
 
+[[Punt Test]]
+
 Here's a big block:
 <div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
 
@@ -268,3 +270,24 @@ The following paragraph should be "1 2 3":
   @prepend("#testParagraph") { 1 }
   @append("#testParagraph") { 3 }
 }
+
+
+:: Punt Test
+This page sets <code>\_x</code> to <code>5</code>.
+@(_x = 5)
+@punt(_x)
+
+[[Punt Test 2]]
+
+:: Punt Test 2
+<code>\_x</code> is now: <code>_x</code>
+
+[[Punt Test 3]]
+
+:: Punt Test 3
+<code>\_x</code> is now: <code>_x</code>
+
+[[Start]]
+
+
+

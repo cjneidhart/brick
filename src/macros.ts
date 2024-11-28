@@ -1,5 +1,5 @@
 import config from "./config";
-import { navigate, tempVariables } from "./engine";
+import * as engine from "./engine";
 import { MacroError } from "./error";
 import { isMacro, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { render, renderPassage } from "./renderer";
@@ -73,16 +73,16 @@ export class MacroContext {
       for (const capture of context.captures) {
         // In case of repeats, avoid overwriting existing old value
         if (!(capture.name in oldVals)) {
-          oldVals[capture.name] = tempVariables[capture.name];
+          oldVals[capture.name] = engine.tempVariables[capture.name];
         }
-        tempVariables[capture.name] = capture.value;
+        engine.tempVariables[capture.name] = capture.value;
       }
 
       let returnValue: unknown;
       try {
         returnValue = func.apply(this, args);
       } finally {
-        Object.assign(tempVariables, oldVals);
+        Object.assign(engine.tempVariables, oldVals);
       }
 
       return returnValue;
@@ -251,7 +251,7 @@ add("link", {
           onClick.call(this, mouseEvent);
         }
         if (button.dataset.linkDestination) {
-          navigate(button.dataset.linkDestination);
+          engine.navigate(button.dataset.linkDestination);
         }
       }),
     );
@@ -655,3 +655,30 @@ add("replace", {
 
 alias("replace", "append");
 alias("replace", "prepend");
+
+add("punt", {
+  skipArgs: true,
+  handler(...args) {
+    if (this.content) {
+      throw new Error("Does not take content");
+    }
+
+    if (args.length === 0) {
+      throw new Error("requires at least one argument");
+    }
+
+    if (!args.every((arg) => typeof arg === "string")) {
+      throw new Error("received a non-string arg");
+    }
+
+    if (!args.every((arg) => arg.startsWith("Engine.temp."))) {
+      throw new Error("only temp variables can be punted");
+    }
+
+    for (const arg of args) {
+      engine.punt(arg.slice(12));
+    }
+
+    return "";
+  },
+});

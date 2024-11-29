@@ -4,7 +4,7 @@ import { BreakSignal } from "./macros";
 import * as passages from "./passages";
 import { init as initSaves } from "./saves";
 import { BrickPublic, evalJavaScript } from "./scripting";
-import { makeElement, stringify } from "./util";
+import { getElementById, makeElement, stringify } from "./util";
 
 window.addEventListener("error", (event) => {
   const { error } = event;
@@ -45,6 +45,11 @@ const storyData = document.getElementsByTagName("tw-storydata")[0];
 passages.init(storyData);
 const styles = storyData.querySelectorAll('style[type="text/twine-css"]');
 const scripts = storyData.querySelectorAll('script[type="text/twine-javascript"]');
+
+const storyInterface = passages.get("StoryInterface");
+if (storyInterface) {
+  getElementById("brick-viewport").outerHTML = storyInterface.content;
+}
 
 const storyTitle =
   storyData.getAttribute("name") ||

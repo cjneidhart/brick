@@ -47,7 +47,6 @@ const BANNED_NAMES = [
   "StoryCaption",
   "StoryDisplayTitle",
   "StoryInit",
-  "StoryInterface",
   "StoryMenu",
   "StorySettings",
   "StorySubtitle",

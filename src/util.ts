@@ -199,7 +199,11 @@ export function* enumerate<T>(
  * An alternative to the `String` constructor, with special
  * behavior for `Array`s. More special-cases may be added in the future.
  */
-export function stringify(value: unknown): string {
+export function stringify(value?: unknown): string {
+  if (arguments.length === 0) {
+    return "";
+  }
+
   if (
     value instanceof Array &&
     !(Symbol.toPrimitive in value) &&

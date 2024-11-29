@@ -3,6 +3,12 @@
 This project follows semantic versioning.
 All changes are backwards-incompatible since it has not reached `1.0.0`.
 
+## Unreleased
+
+### Added
+
+- `stringify` utility function.
+
 ## [0.2.1] - 2024-11-27
 
 ### Added

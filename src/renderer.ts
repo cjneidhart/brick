@@ -5,7 +5,7 @@ import { BreakSignal, get as getMacro, MacroContext } from "./macros";
 import { ElementTemplate, isMacro, NodeTemplate, Parser } from "./parser";
 import { Passage, get as getPassage } from "./passages";
 import { evalExpression } from "./scripting";
-import { makeElement } from "./util";
+import { makeElement, stringify } from "./util";
 
 const PHRASING_TAGS = [
   "abbr",
@@ -81,7 +81,7 @@ function _isPhrasingNode(node: string | Element): boolean {
 /** Return a `<span>` describing the error, and log the error to the console */
 function renderError(error: BrickError): HTMLSpanElement {
   console.error(error);
-  return makeElement("span", { class: "brick-error" }, String(error));
+  return makeElement("span", { class: "brick-error" }, stringify(error));
 }
 
 export function renderPassage(target: HTMLElement, passage: string | Passage): boolean {
@@ -251,11 +251,7 @@ function renderRaw(
       target.append(renderError(new BrickError(nt.message, nt.passageName, nt.lineNumber)));
     } else {
       const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
-      if (Array.isArray(value) && value.toString === Array.prototype.toString) {
-        target.append(`[${value.join(", ")}]`);
-      } else {
-        target.append(String(value));
-      }
+      target.append(stringify(value));
     }
   }
 
@@ -273,7 +269,7 @@ function renderElement(
   }
   for (const [key, script] of template.evalAttributes) {
     try {
-      const value = String(evalExpression(script));
+      const value = stringify(evalExpression(script));
       element.setAttribute(key, value);
     } catch (error) {
       if (error instanceof BreakSignal) {

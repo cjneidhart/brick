@@ -778,4 +778,8 @@ export class Parser {
       };
     }
   }
+
+  toString() {
+    return "[object Parser]";
+  }
 }

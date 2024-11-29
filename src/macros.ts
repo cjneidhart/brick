@@ -4,7 +4,7 @@ import { MacroError } from "./error";
 import { isMacro, MacroTemplate, NodeTemplate, Parser } from "./parser";
 import { render, renderPassage } from "./renderer";
 import { evalAssign, evalExpression, evalJavaScript } from "./scripting";
-import { makeElement, uniqueId } from "./util";
+import { makeElement, stringify, uniqueId } from "./util";
 
 interface CapturedVar {
   name: string;
@@ -90,6 +90,10 @@ export class MacroContext {
 
     return wrapped as unknown as F;
   }
+
+  toString() {
+    return "[object MacroContext]";
+  }
 }
 
 interface Macro {
@@ -170,10 +174,7 @@ add("print", {
       throw new Error(`no body allowed`);
     }
 
-    if (Array.isArray(args[0]) && args[0].toString === Array.prototype.toString) {
-      return `[${args[0].join(", ")}]`;
-    }
-    return String(args[0]);
+    return stringify(args[0]);
   },
 });
 
@@ -187,9 +188,14 @@ add("render", {
     if (this.content) {
       throw new Error(`no body allowed`);
     }
+    if (typeof args[0] !== "string") {
+      throw new Error(
+        "argument must be a string. Use the String() constructor if you want to convert a value to a string.",
+      );
+    }
     const frag = document.createDocumentFragment();
     // TODO prevent infinite recursion
-    const parser = new Parser(String(args[0]), this.passageName, this.lineNumber);
+    const parser = new Parser(args[0], this.passageName, this.lineNumber);
     render(frag, parser.parse());
     return frag;
   },
@@ -443,7 +449,7 @@ add("textBox", {
       throw new Error("label must be a string or Node");
     }
 
-    const initValue = String(evalExpression(place) || "");
+    const initValue = stringify(evalExpression(place) || "");
 
     const input = makeElement("input", {
       id: uniqueId(),

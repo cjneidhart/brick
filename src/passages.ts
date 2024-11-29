@@ -30,6 +30,10 @@ export class Passage {
   get content() {
     return this.#element.textContent;
   }
+
+  toString() {
+    return `Passage "${this.name}"`;
+  }
 }
 
 // TODO: provide more detailed error messages, which recommend an alternative.

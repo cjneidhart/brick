@@ -194,3 +194,19 @@ export function* enumerate<T>(
     i++;
   }
 }
+
+/**
+ * An alternative to the `String` constructor, with special
+ * behavior for `Array`s. More special-cases may be added in the future.
+ */
+export function stringify(value: unknown): string {
+  if (
+    value instanceof Array &&
+    !(Symbol.toPrimitive in value) &&
+    value.toString === Array.prototype.toString
+  ) {
+    return `[${value.join(", ")}]`;
+  }
+
+  return String(value);
+}

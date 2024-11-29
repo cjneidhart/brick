@@ -4,7 +4,7 @@ import { BreakSignal } from "./macros";
 import * as passages from "./passages";
 import { init as initSaves } from "./saves";
 import { BrickPublic, evalJavaScript } from "./scripting";
-import { makeElement } from "./util";
+import { makeElement, stringify } from "./util";
 
 window.addEventListener("error", (event) => {
   const { error } = event;
@@ -19,7 +19,7 @@ window.addEventListener("error", (event) => {
     msg += `@${error.type} was called outside a loop, at "${error.context.passageName}" line ${error.context.lineNumber}`;
   } else {
     msg += "Non-error object was thrown and not caught:\n";
-    msg += String(event);
+    msg += stringify(event);
   }
   alert(msg);
 });

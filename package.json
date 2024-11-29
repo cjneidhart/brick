@@ -25,5 +25,8 @@
     "prebuild": "tsc --noEmit",
     "build": "node build.js",
     "test": "node test.js"
+  },
+  "prettier": {
+    "printWidth": 100
   }
 }

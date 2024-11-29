@@ -49,7 +49,12 @@ Even if it's already listed in this file, creating an Issue helps me decide what
 - Automated benchmarks.
 - Persistent storage, similar to `memorize()` and `recall()` in SugarCube.
 - Author-defined settings, which have a nice UI and persist between saves.
-- Debug mode.
+- Debug mode, which is really two separate features:
+  - debug view, which highlights each macro's output and shows their context
+  - variable watcher
+- lifecyle events and/or hooks.
+- `@for` macro: for-in syntax and C-style syntax.
+- Multiple layouts?
 
 ## Very long-term goal
 

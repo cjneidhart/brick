@@ -1,3 +1,10 @@
+/**
+ * @module config
+ *
+ * This defines the global `config` object, which lets authors customize Brick's
+ * behavior.
+ */
+
 const config: {
   maxLoopIterations: number;
   preProcessText?: Function;

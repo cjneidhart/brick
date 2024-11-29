@@ -1,3 +1,6 @@
+// https://github.com/klembot/twinejs/blob/develop/EXTENDING.md
+// https://codemirror.net/5/doc/manual.html#modeapi
+
 function startState() {
   return {
     blockComment: false,

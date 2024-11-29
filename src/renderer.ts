@@ -127,7 +127,7 @@ export function render(
     recursionRecoveryMode = true;
     return false;
   }
-  let returnValue = false;
+  let returnValue;
   try {
     recursionCount--;
     returnValue = renderRaw(target, input, parentContext);

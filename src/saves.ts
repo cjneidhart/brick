@@ -1,3 +1,20 @@
+/**
+ * @module saves
+ *
+ * This is the main abstraction layer for saving to a user's storage.
+ * Brick uses IndexedDB for its saves, which has many advantages over the traditional localStorage:
+ * - Most primitives and objects are serialized automatically, unlike using JSON.stringify.
+ * - Autoincrementing key generators means we don't have to create our own unique keys.
+ * - Separate stores makes it easy to keep things type-safe
+ *
+ * The main cost for all this is that all operations are asynchronous.
+ * Additionally, we still have to do extra work to serialize custom classes.
+ *
+ * See also:
+ * - https://developer.mozilla.org/en-US/docs/Web/API/IndexedDB_API/Using_IndexedDB
+ * - https://www.npmjs.com/package/idb
+ */
+
 import { slugify } from "./util";
 import * as idb from "idb";
 
@@ -80,13 +97,11 @@ async function cullUnusedMoments(): Promise<void> {
       }
     }
 
-    let cursor = await momentStore.openCursor();
     const deletePromises = [];
-    while (cursor) {
+    for await (const cursor of momentStore) {
       if (!momentsToKeep.has(cursor.key)) {
         deletePromises.push(cursor.delete());
       }
-      cursor = await cursor.continue();
     }
     await Promise.all(deletePromises);
   }

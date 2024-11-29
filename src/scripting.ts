@@ -1,7 +1,14 @@
-import Config from "./config";
+/**
+ * @module scripting
+ *
+ * This module defines the functions and values that should be available to
+ * author-executed code. It's also where most type-checking occurs.
+ */
+
+import config from "./config";
 import { showPassage } from "./dialog";
 import { backward, forward, redo, storyVariables, tempVariables } from "./engine";
-import * as Passages from "./passages";
+import * as passages from "./passages";
 import * as util from "./util";
 
 /** This is defined in `build.js` */
@@ -22,11 +29,11 @@ export const BrickPublic = {
       return tempVariables;
     },
   },
-  Config,
+  config,
   Dialog: {
     showPassage,
   },
-  Passages,
+  passages,
   clone: util.clone,
   either(values: unknown): unknown {
     if (arguments.length !== 1) {

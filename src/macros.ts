@@ -1,3 +1,10 @@
+/**
+ * @module macros
+ *
+ * This module defines the function `macros.add` which lets authors define new macros.
+ * It also includes all of the built-in macros in Brick.
+ */
+
 import config from "./config";
 import * as engine from "./engine";
 import { MacroError } from "./error";

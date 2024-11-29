@@ -1,3 +1,10 @@
+/**
+ * @module dialog
+ *
+ * This module defines functions for working with Brick's dialog element.
+ * It also defines the built-in dialogs, such as the Saves UI.
+ */
+
 import * as engine from "./engine";
 import { renderPassage } from "./renderer";
 import type { History } from "./saves";

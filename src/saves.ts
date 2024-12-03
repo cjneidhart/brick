@@ -122,7 +122,7 @@ export async function getMoment(id: number): Promise<Moment> {
 export async function putMoment(moment: Moment): Promise<number> {
   const simpleMoment = {
     ...moment,
-    vars: replaceSaveObject(moment.vars) as Record<string, unknown>,
+    vars: replaceSaveObject(moment.vars, false) as Record<string, unknown>,
   };
   return await db.put("moments", simpleMoment);
 }
@@ -209,8 +209,14 @@ export function registerClass(
   if (typeof deserialize !== "function") {
     throw new Error("registerClass: `deserialize` must be undefined or a string");
   }
-  if (authorClasses.some((specialClass) => specialClass.name === name) || name === "undefined") {
+  if (
+    authorClasses.some((specialClass) => specialClass.name === name) ||
+    ["undefined", "neg-inf", "pos-inf", "nan", "Map", "Date", "Set", "RegExp"].includes(name)
+  ) {
     throw new Error(`registerClass: "${name}" has already been registered`);
+  }
+  if (([Map, Set, Date, RegExp] as Function[]).includes(constructor)) {
+    throw new Error(`${constructor.name} is already handled by Brick.`);
   }
   authorClasses.unshift({
     constructor,
@@ -233,6 +239,32 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
       if (object.length !== 2) {
         throw new Error("malformed save data");
       }
+      switch (tag) {
+        case "undefined":
+          return undefined;
+        case "pos-inf":
+          return Infinity;
+        case "neg-inf":
+          return -Infinity;
+        case "nan":
+          return NaN;
+        case "bigint":
+          if ("BigInt" in window && typeof window.BigInt === "function") {
+            return window.BigInt(object[1]);
+          } else {
+            throw new Error("This browser does not support BigInts");
+          }
+        case "null-proto":
+          return Object.assign(Object.create(null), object[1]);
+        case "Map":
+          return new Map(object[1]);
+        case "Set":
+          return new Set(object[1]);
+        case "Date":
+          return new Date(object[1]);
+        case "RegExp":
+          return new RegExp(object[1]);
+      }
       const defn = authorClasses.find((defn) => defn.name === tag);
       if (!defn) {
         throw new Error("malformed save data");
@@ -245,10 +277,10 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
     const newMap = new Map<unknown, unknown>();
     for (let [key, value] of object as Map<unknown, unknown>) {
       if (typeof key === "object" && key) {
-        key = replaceSaveObject(key as Record<string, unknown>);
+        key = reviveSaveObject(key as Record<string, unknown>);
       }
       if (typeof value === "object" && value) {
-        value = replaceSaveObject(value as Record<string, unknown>);
+        value = reviveSaveObject(value as Record<string, unknown>);
       }
       newMap.set(key, value);
     }
@@ -257,7 +289,7 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
     const newSet = new Set<unknown>();
     for (let value of object as Set<unknown>) {
       if (typeof value === "object" && value) {
-        value = replaceSaveObject(value as Record<string, unknown>);
+        value = reviveSaveObject(value as Record<string, unknown>);
       }
       newSet.add(value);
     }
@@ -266,14 +298,31 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
   return object;
 }
 
-function replaceSaveValue(value: unknown): unknown {
+function replaceSaveValue(value: unknown, json: boolean): unknown {
   switch (typeof value) {
     case "boolean":
     case "string":
-    case "number":
     case "undefined":
+      return json ? ["!brick-revive:undefined"] : value;
+    case "number":
+      if (json) {
+        switch (value) {
+          case Infinity:
+            return ["!brick-revive:pos-inf"];
+          case -Infinity:
+            return ["!brick-revive:neg-inf"];
+          default:
+            return Number.isNaN(value) ? ["!brick-revive:nan"] : value;
+        }
+      } else {
+        return value;
+      }
     case "bigint":
-      return value;
+      if (json) {
+        return ["!brick-revive:bigint", String(value)];
+      } else {
+        return value;
+      }
     case "function":
     case "symbol":
       throw new Error(`Cannot serialize a ${typeof value}`);
@@ -281,12 +330,12 @@ function replaceSaveValue(value: unknown): unknown {
       if (value === null) {
         return null;
       }
-      return replaceSaveObject(value as Record<string, unknown>);
+      return replaceSaveObject(value as Record<string, unknown>, json);
     }
   }
 }
 
-function replaceSaveObject(object: Record<string, unknown>): object {
+function replaceSaveObject(object: Record<string, unknown>, json: boolean): object {
   if (Array.isArray(object)) {
     if (typeof object[0] === "string" && /^!+brick-revive:/.test(object[0])) {
       return ["!" + object[0], ...object.slice(1)];
@@ -296,19 +345,53 @@ function replaceSaveObject(object: Record<string, unknown>): object {
   }
 
   if (object instanceof Map) {
-    const newMap = new Map<unknown, unknown>();
-    for (const [key, value] of object as Map<unknown, unknown>) {
-      newMap.set(replaceSaveValue(key), replaceSaveValue(value));
+    if (json) {
+      const arr = [];
+      for (const [key, value] of object as Map<unknown, unknown>) {
+        arr.push([replaceSaveValue(key, json), replaceSaveValue(value, json)]);
+      }
+      return ["!brick-revive:Map", arr];
+    } else {
+      const newMap = new Map<unknown, unknown>();
+      for (const [key, value] of object as Map<unknown, unknown>) {
+        newMap.set(replaceSaveValue(key, json), replaceSaveValue(value, json));
+      }
+      return newMap;
     }
-    return newMap;
   }
 
   if (object instanceof Set) {
-    const newSet = new Set<unknown>();
-    for (const value of object as Set<unknown>) {
-      newSet.add(replaceSaveValue(value));
+    if (json) {
+      const arr = [];
+      for (const item of object as Set<unknown>) {
+        arr.push(replaceSaveValue(item, json));
+      }
+      return ["!brick-revive:Set", arr];
+    } else {
+      const newSet = new Set<unknown>();
+      for (const value of object as Set<unknown>) {
+        newSet.add(replaceSaveValue(value, json));
+      }
+      return newSet;
     }
-    return newSet;
+  }
+
+  if (object instanceof Date) {
+    if (json) {
+      return ["!brick-revive:Date", object.toJSON()];
+    } else {
+      return object;
+    }
+  }
+
+  if (object instanceof RegExp) {
+    if (json) {
+      // NOTE: to match the structuredClone algorithm (used by IndexedDB)
+      // we don't preserve the `.lastIndex` property.
+      return ["!brick-revive:RegExp", [object.source, object.flags]];
+    } else {
+      return object;
+    }
   }
 
   if (object instanceof Date || object instanceof RegExp) {
@@ -317,7 +400,7 @@ function replaceSaveObject(object: Record<string, unknown>): object {
 
   for (const defn of authorClasses) {
     if (object instanceof defn.constructor) {
-      return [`!brick-revive:${defn.name}`, replaceSaveValue(defn.serialize(object))];
+      return [`!brick-revive:${defn.name}`, replaceSaveValue(defn.serialize(object), json)];
     }
   }
 
@@ -328,8 +411,8 @@ function replaceSaveObject(object: Record<string, unknown>): object {
 
   const newObj: Record<string, unknown> = {};
   for (const key in object) {
-    newObj[key] = replaceSaveValue(object[key]);
+    newObj[key] = replaceSaveValue(object[key], json);
   }
 
-  return newObj;
+  return proto === null ? ["!brick-revive:null-proto", newObj] : newObj;
 }

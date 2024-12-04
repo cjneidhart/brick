@@ -33,17 +33,21 @@ export async function init() {
 
 export async function resumeOrStart() {
   if (!(await loadFromSlot("active"))) {
+    turnCount = 1;
+    passageName = passages.start().name;
+    storyVariables = {};
+    tempVariables = {};
+    punted = [];
     const moment: Moment = {
-      passageName: passages.start().name,
+      passageName,
       timestamp: Date.now(),
-      turnCount: 1,
+      turnCount,
       vars: storyVariables,
     };
     historyMoments = [moment];
     historyIds = [await saves.putMoment(moment)];
     index = 0;
     saveHistoryActive();
-    await loadCurrentMoment();
     renderActive();
   }
 }
@@ -112,7 +116,11 @@ export async function navigate(passage: string | Passage) {
   };
   historyMoments.push(newMoment);
   historyIds.push(await saves.putMoment(newMoment));
-  index++;
+  if (historyMoments.length > config.historyLength) {
+    historyMoments = historyMoments.slice(-config.historyLength);
+    historyIds = historyIds.slice(-config.historyLength);
+  }
+  index = historyIds.length - 1;
   saveHistoryActive();
   renderActive();
 }
@@ -125,13 +133,15 @@ export async function loadFromSlot(slot: number | "active"): Promise<boolean> {
   const maybeHistory = await saves.getHistory(slot);
   if (!maybeHistory) {
     return false;
-  } else {
-    historyIds = maybeHistory.momentIds;
-    historyMoments = Array(historyIds.length);
-    historyMoments.fill(undefined);
-    index = maybeHistory.index;
   }
+
+  historyIds = maybeHistory.momentIds;
+  historyMoments = Array(historyIds.length);
+  historyMoments.fill(undefined);
+  index = maybeHistory.index;
+
   await loadCurrentMoment();
+
   mainElement.innerHTML = "";
   renderActive();
   return true;

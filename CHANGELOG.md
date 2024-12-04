@@ -7,8 +7,9 @@ All changes are backwards-incompatible since it has not reached `1.0.0`.
 
 ### Added
 
-- `StoryInterface` special passage
+- `StoryInterface` special passage.
 - `stringify` utility function.
+- `historyLength` configuration option.
 
 ## [0.2.1] - 2024-11-27
 

@@ -432,7 +432,16 @@ Temp variable \_x is now: _x
 
 ## Config
 
-Some features of Brick can be customized via the `Config` object
+Some features of Brick can be customized via the `Config` object.
+
+### `Config.historyLength`: `number` (default: `100`)
+
+This sets the maximum length of the history.
+In effect, this is how many turns back the user can rewind.
+This includes the current turn, so the minimum is `1`.
+
+Altering this setting has no effect on performance.
+However, raising it too high can cause unnecessary clutter in the player's storage.
 
 ### `Config.maxLoopIterations`: `number` (default: `1000`)
 

@@ -6,10 +6,12 @@
  */
 
 const config: {
+  historyLength: number;
   maxLoopIterations: number;
   preProcessText?: Function;
   stream: boolean;
 } = {
+  historyLength: 100,
   maxLoopIterations: 1000,
   preProcessText: undefined,
   stream: false,
@@ -20,6 +22,17 @@ function throwTypeError(location: string, expected: string, got: unknown): never
 }
 
 export default {
+  get historyLength(): number {
+    return config.historyLength;
+  },
+
+  set historyLength(value: unknown) {
+    if (typeof value !== "number" || value <= 0 || value % 1 !== 0) {
+      throw new TypeError("config.historyLength must be a positive integer");
+    }
+    config.historyLength = value;
+  },
+
   get maxLoopIterations(): number {
     return config.maxLoopIterations;
   },

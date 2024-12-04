@@ -82,7 +82,7 @@ export function clone<T>(original: T): T {
             "Can't clone an object with an unknown prototype and no `.clone()` method",
           );
         }
-        const newObj: Record<string, unknown> = {};
+        const newObj: Record<string, unknown> = Object.create(prototype);
         for (const key in original) {
           newObj[key] = clone(original[key]);
         }

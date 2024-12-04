@@ -227,7 +227,7 @@ export function registerClass(
 }
 
 function reviveSaveObject(object: Record<string, unknown>): unknown {
-  for (const key in Object.keys(object)) {
+  for (const key in object) {
     const value = object[key];
     if (typeof value === "object" && value !== null) {
       object[key] = reviveSaveObject(value as Record<string, unknown>);
@@ -236,40 +236,10 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
   if (object instanceof Array && typeof object[0] === "string") {
     if (object[0].startsWith("!brick-revive:")) {
       const tag = object[0].substring(14);
-      if (object.length !== 2) {
+      if (![1, 2].includes(object.length)) {
         throw new Error("malformed save data");
       }
-      switch (tag) {
-        case "undefined":
-          return undefined;
-        case "pos-inf":
-          return Infinity;
-        case "neg-inf":
-          return -Infinity;
-        case "nan":
-          return NaN;
-        case "bigint":
-          if ("BigInt" in window && typeof window.BigInt === "function") {
-            return window.BigInt(object[1]);
-          } else {
-            throw new Error("This browser does not support BigInts");
-          }
-        case "null-proto":
-          return Object.assign(Object.create(null), object[1]);
-        case "Map":
-          return new Map(object[1]);
-        case "Set":
-          return new Set(object[1]);
-        case "Date":
-          return new Date(object[1]);
-        case "RegExp":
-          return new RegExp(object[1]);
-      }
-      const defn = authorClasses.find((defn) => defn.name === tag);
-      if (!defn) {
-        throw new Error("malformed save data");
-      }
-      return defn.deserialize(object[1]);
+      return reviveSpecialObject(tag, object[1]);
     } else if (/^!{2,}brick-revive:/.test(object[0])) {
       object[0] = object[0].substring(1);
     }
@@ -296,6 +266,60 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
     return newSet;
   }
   return object;
+}
+
+/** Revive a object that had to be stored in a "!brick-revive:" array.
+ * @param tag The first element of the array, with "!brick-revive" stripped off
+ * @param data The second element of the array */
+function reviveSpecialObject(tag: string, data: unknown) {
+  switch (tag) {
+    case "undefined":
+      return undefined;
+    case "pos-inf":
+      return Infinity;
+    case "neg-inf":
+      return -Infinity;
+    case "nan":
+      return NaN;
+    case "bigint":
+      if ("BigInt" in window && typeof window.BigInt === "function") {
+        return window.BigInt(data);
+      } else {
+        throw new Error("This browser does not support BigInts");
+      }
+    case "null-proto":
+      return Object.assign(Object.create(null), data);
+    case "Map":
+      if (
+        !Array.isArray(data) ||
+        !data.every((entry) => Array.isArray(entry) && entry.length === 2)
+      ) {
+        throw new Error("Malformed save data. Could not revive a Map.");
+      }
+      return new Map(data);
+    case "Set":
+      if (!Array.isArray(data)) {
+        throw new Error("Malformed save data. Could not revive a Set.");
+      }
+      return new Set(data);
+    case "Date":
+      if (typeof data !== "string") {
+        throw new Error("Malformed save data. Could not revive a Date object.");
+      }
+      return new Date(data);
+    case "RegExp": {
+      if (!Array.isArray(data) || data.length !== 2 || !data.every((s) => typeof s === "string")) {
+        throw new Error("Malformed save data. Could not revive a RegExp.");
+      }
+      const [source, flags] = data;
+      return new RegExp(source, flags);
+    }
+  }
+  const defn = authorClasses.find((defn) => defn.name === tag);
+  if (!defn) {
+    throw new Error(`Malformed save data. Unknown type "${tag}".`);
+  }
+  return defn.deserialize(data);
 }
 
 function replaceSaveValue(value: unknown, json: boolean): unknown {

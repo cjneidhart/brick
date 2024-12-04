@@ -108,6 +108,7 @@ async function cullUnusedMoments(): Promise<void> {
   await transaction.done;
 }
 
+/** Retrieve a moment from the database. Throws if the moment was not found. */
 export async function getMoment(id: number): Promise<Moment> {
   const moment = await db.get("moments", id);
   if (!moment) {
@@ -166,6 +167,29 @@ export async function deleteHistory(id: number) {
 
 export async function clearEverything() {
   await Promise.all([db.clear("histories"), db.clear("moments")]);
+}
+
+export async function historyToJson(slot: number): Promise<Record<string, unknown>> {
+  // TODO This current implementation round-trips through the serialization process.
+  // We could potentially speed this up by converting straight from IDB to JSON.
+  const maybeHistory = await getHistory(slot);
+  if (!maybeHistory) {
+    throw new Error(`No history in slot ${slot}`);
+  }
+  const history = {
+    index: maybeHistory.index,
+    timestamp: maybeHistory.timestamp,
+    title: maybeHistory.title,
+    moments: await Promise.all(
+      maybeHistory.momentIds.map(async (id) => {
+        const moment = await getMoment(id);
+        (moment as { vars: object }).vars = replaceSaveObject(moment.vars, true);
+        return moment;
+      }),
+    ),
+  };
+
+  return history;
 }
 
 /**
@@ -326,6 +350,7 @@ function replaceSaveValue(value: unknown, json: boolean): unknown {
   switch (typeof value) {
     case "boolean":
     case "string":
+      return value;
     case "undefined":
       return json ? ["!brick-revive:undefined"] : value;
     case "number":

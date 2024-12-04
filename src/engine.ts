@@ -103,6 +103,7 @@ export async function navigate(passage: string | Passage) {
   // clear moments past the current index
   historyIds.length = index + 1;
   historyMoments.length = index + 1;
+  turnCount++;
 
   if (punted.length > 0) {
     storyVariables["-brick-punted"] = punted.map((varName) => [varName, tempVariables[varName]]);

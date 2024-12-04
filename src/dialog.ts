@@ -14,8 +14,10 @@ import { getElementById, makeElement } from "./util";
 let dialogElement: HTMLDialogElement;
 let titleElt: HTMLElement;
 let modalBody: HTMLElement;
+let storyTitleSlug: string;
 
-export function init() {
+export function init(slug: string) {
+  storyTitleSlug = slug;
   const maybeDialog = getElementById("brick-dialog");
   if (maybeDialog instanceof HTMLDialogElement) {
     dialogElement = maybeDialog;
@@ -92,7 +94,14 @@ function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) 
   });
 
   const exportButton = makeElement("button", { class: "brick-ui-btn" }, "Export");
-  exportButton.addEventListener("click", () => alert("Not supported yet"));
+  exportButton.addEventListener("click", () => {
+    for (const button of saveList.querySelectorAll("button")) {
+      button.removeEventListener("click", historyLoadHandler);
+      button.addEventListener("click", historyExportHandler);
+      button.textContent = "Download";
+    }
+    renderExportButtons(saveList, buttons);
+  });
 
   const importButton = makeElement("button", { class: "brick-ui-btn" }, "Import");
   importButton.addEventListener("click", () => alert("Not supported yet"));
@@ -139,6 +148,21 @@ function renderDeleteButtons(saveList: HTMLUListElement, buttons: HTMLDivElement
   buttons.append(deleteAllButton, cancelButton);
 }
 
+function renderExportButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) {
+  const cancelButton = makeElement("button", { class: "brick-ui-btn" }, "Cancel");
+  cancelButton.addEventListener("click", () => {
+    for (const button of saveList.querySelectorAll("button")) {
+      button.removeEventListener("click", historyExportHandler);
+      button.addEventListener("click", historyLoadHandler);
+      button.textContent = "Load";
+    }
+    renderSaveButtons(saveList, buttons);
+  });
+
+  buttons.innerHTML = "";
+  buttons.append(cancelButton);
+}
+
 function makeHistoryListing(history: History): HTMLLIElement {
   const time = new Date(history.timestamp).toLocaleString();
   const { id } = history;
@@ -162,7 +186,7 @@ function makeHistoryListing(history: History): HTMLLIElement {
 async function historyLoadHandler(this: HTMLButtonElement) {
   const id = Number(this.dataset.brickHistoryId);
   if (id !== id) {
-    throw new Error(`Tried to load invalid ID "${this.dataset.brickHistoryId}`);
+    throw new Error(`Tried to load invalid ID "${this.dataset.brickHistoryId}"`);
   }
   dialogElement.close();
   if (!(await engine.loadFromSlot(id))) {
@@ -173,7 +197,7 @@ async function historyLoadHandler(this: HTMLButtonElement) {
 async function historyDeleteHandler(this: HTMLButtonElement) {
   const id = Number(this.dataset.brickHistoryId);
   if (id !== id) {
-    throw new Error(`Tried to delete invalid ID "${this.dataset.brickHistoryId}`);
+    throw new Error(`Tried to delete invalid ID "${this.dataset.brickHistoryId}"`);
   }
   await saves.deleteHistory(id);
   const saveList = this.parentElement?.parentElement;
@@ -183,6 +207,23 @@ async function historyDeleteHandler(this: HTMLButtonElement) {
       makeElement("li", { class: "brick-saves-empty" }, makeElement("em", {}, "No saves found")),
     );
   }
+}
+
+async function historyExportHandler(this: HTMLButtonElement) {
+  const id = Number(this.dataset.brickHistoryId);
+  if (Number.isNaN(id)) {
+    throw new Error(`Tried to export invalid ID "${this.dataset.brickHistoryId}"`);
+  }
+  const history = await saves.historyToJson(id);
+  const filename = `${storyTitleSlug}-${history.timestamp}.json`;
+  // 2024, and creating a fake anchor is still the only way to do this
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(history)], { type: "application/json" }),
+  );
+  const anchor = makeElement("a", { download: filename, href: url });
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
 }
 
 export function showRestartPrompt() {

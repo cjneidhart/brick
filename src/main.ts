@@ -4,7 +4,7 @@ import { BreakSignal } from "./macros";
 import * as passages from "./passages";
 import { init as initSaves } from "./saves";
 import { BrickPublic, evalJavaScript } from "./scripting";
-import { getElementById, makeElement, stringify } from "./util";
+import { getElementById, makeElement, slugify, stringify } from "./util";
 
 window.addEventListener("error", (event) => {
   const { error } = event;
@@ -73,7 +73,7 @@ addClicker("brick-saves", dialog.showSavesMenu);
 addClicker("brick-restart", dialog.showRestartPrompt);
 
 async function init() {
-  dialog.init();
+  dialog.init(slugify(storyTitle));
   await initSaves(storyTitle, ifid);
   await engine.init();
 

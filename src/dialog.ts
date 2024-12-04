@@ -187,6 +187,7 @@ async function historyDeleteHandler(this: HTMLButtonElement) {
 
 export function showRestartPrompt() {
   reset();
+  dialogElement.classList.add("brick-restart");
   titleElt.textContent = "Restart";
   modalBody.append(makeElement("p", {}, "Are you sure you would like to restart?"));
   const restartButton = makeElement("button", { class: "brick-ui-btn" }, "Restart");

@@ -217,3 +217,7 @@
   flex-direction: row;
   justify-content: space-between;
 }
+
+dialog.brick-restart .brick-ui-btn {
+  margin-right: 1em;
+}

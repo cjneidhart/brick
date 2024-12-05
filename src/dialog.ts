@@ -214,9 +214,9 @@ async function historyExportHandler(this: HTMLButtonElement) {
   if (Number.isNaN(id)) {
     throw new Error(`Tried to export invalid ID "${this.dataset.brickHistoryId}"`);
   }
-  const history = await saves.historyToJson(id);
+  const history = await saves.exportHistory(id);
   // Format the date as "YYYYMMDD-hhmmss"
-  const timestamp = new Date(history.timestamp as number)
+  const timestamp = new Date(history.timestamp)
     .toISOString()
     .replace(/-|:|\..*/g, "")
     .replace("T", "-");

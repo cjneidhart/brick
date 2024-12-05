@@ -43,6 +43,20 @@ export interface History {
   readonly title: string;
 }
 
+export interface MomentSerialized {
+  passageName: string;
+  timestamp: number;
+  turnCount: number;
+  vars: Record<string, unknown>;
+}
+
+export interface HistorySerialized {
+  index: number;
+  timestamp: number;
+  title: string;
+  moments: MomentSerialized[];
+}
+
 interface SerializeDefinition {
   constructor: Function;
   name: string;
@@ -169,7 +183,8 @@ export async function clearEverything() {
   await Promise.all([db.clear("histories"), db.clear("moments")]);
 }
 
-export async function historyToJson(slot: number): Promise<Record<string, unknown>> {
+/** Return a given history as a JSON-stringifiable object */
+export async function exportHistory(slot: number): Promise<HistorySerialized> {
   // TODO This current implementation round-trips through the serialization process.
   // We could potentially speed this up by converting straight from IDB to JSON.
   const maybeHistory = await getHistory(slot);
@@ -182,14 +197,26 @@ export async function historyToJson(slot: number): Promise<Record<string, unknow
     title: maybeHistory.title,
     moments: await Promise.all(
       maybeHistory.momentIds.map(async (id) => {
-        const moment = await getMoment(id);
-        (moment as { vars: object }).vars = replaceSaveObject(moment.vars, true);
+        const moment = await getMoment(id) as MomentSerialized;
+        moment.vars = replaceSaveObject(moment.vars, true) as Record<string, unknown>;
         return moment;
       }),
     ),
   };
 
   return history;
+}
+
+/** Store a history and all its moments in IndexedDB. Returns the ID of the new History. */
+export async function importHistory(history: HistorySerialized): Promise<number> {
+  const momentIds = await Promise.all(history.moments.map(putMoment));
+  const newHistory = {
+    index: history.index,
+    timestamp: history.timestamp,
+    title: history.title,
+    momentIds,
+  };
+  return await db.put("histories", newHistory) as number;
 }
 
 /**

@@ -215,15 +215,21 @@ async function historyExportHandler(this: HTMLButtonElement) {
     throw new Error(`Tried to export invalid ID "${this.dataset.brickHistoryId}"`);
   }
   const history = await saves.historyToJson(id);
-  const filename = `${storyTitleSlug}-${history.timestamp}.json`;
+  // Format the date as "YYYYMMDD-hhmmss"
+  const timestamp = new Date(history.timestamp as number)
+    .toISOString()
+    .replace(/-|:|\..*/g, "")
+    .replace("T", "-");
+  const filename = `${storyTitleSlug}-${timestamp}.json`;
   // 2024, and creating a fake anchor is still the only way to do this
   const url = URL.createObjectURL(
     new Blob([JSON.stringify(history)], { type: "application/json" }),
   );
   const anchor = makeElement("a", { download: filename, href: url });
-  document.body.append(anchor);
+  // document.body.append(anchor);
   anchor.click();
-  anchor.remove();
+  // anchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 export function showRestartPrompt() {

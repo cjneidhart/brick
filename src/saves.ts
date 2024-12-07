@@ -197,7 +197,7 @@ export async function exportHistory(slot: number): Promise<HistorySerialized> {
     title: maybeHistory.title,
     moments: await Promise.all(
       maybeHistory.momentIds.map(async (id) => {
-        const moment = await getMoment(id) as MomentSerialized;
+        const moment = (await getMoment(id)) as MomentSerialized;
         moment.vars = replaceSaveObject(moment.vars, true) as Record<string, unknown>;
         return moment;
       }),
@@ -207,16 +207,69 @@ export async function exportHistory(slot: number): Promise<HistorySerialized> {
   return history;
 }
 
-/** Store a history and all its moments in IndexedDB. Returns the ID of the new History. */
-export async function importHistory(history: HistorySerialized): Promise<number> {
-  const momentIds = await Promise.all(history.moments.map(putMoment));
-  const newHistory = {
-    index: history.index,
-    timestamp: history.timestamp,
-    title: history.title,
+function importError(message: string): never {
+  throw new Error(`Malformed save data: ${message}`);
+}
+
+export async function importFile(file: File): Promise<number> {
+  const text = await file.text();
+  const json: unknown = JSON.parse(text);
+  if (typeof json !== "object" || json === null || Array.isArray(json)) {
+    importError("history is not an object");
+  } else if (!("index" in json)) {
+    importError("Missing `index` property");
+  } else if (typeof json.index !== "number") {
+    importError("`index` property is not a number");
+  } else if (!("timestamp" in json)) {
+    importError("Missing `timestamp` property");
+  } else if (typeof json.timestamp !== "number") {
+    importError("`timestamp` property is not a number");
+  } else if (!("title" in json)) {
+    importError("Missing `title` property");
+  } else if (typeof json.title !== "string") {
+    importError("`title` property is not a string");
+  } else if (!("moments" in json)) {
+    importError("Missing `moments` property");
+  } else if (!Array.isArray(json.moments)) {
+    importError("`moments` property is not an array");
+  }
+  const { moments } = json;
+  const momentIds = await Promise.all(
+    moments.map((moment: unknown) => {
+      if (typeof moment !== "object" || moment === null) {
+        importError("one or more moments are not objects");
+      } else if (!("passageName" in moment)) {
+        importError("missing `passageName` property");
+      } else if (typeof moment.passageName !== "string") {
+        importError("`passageName` property is not a string");
+      } else if (!("timestamp" in moment)) {
+        importError("missing `timestamp` property");
+      } else if (typeof moment.timestamp !== "number") {
+        importError("`timestamp` property is not a number");
+      } else if (!("turnCount" in moment)) {
+        importError("missing `turnCount` property");
+      } else if (typeof moment.turnCount !== "number") {
+        importError("`turnCount` property is not a number");
+      } else if (!("vars" in moment)) {
+        importError("missing `vars` property");
+      } else if (typeof moment.vars !== "object" || moment.vars === null) {
+        importError("`vars` property is not an object");
+      }
+      return putMoment({
+        passageName: moment.passageName,
+        timestamp: moment.timestamp,
+        turnCount: moment.turnCount,
+        vars: reviveSaveObject(moment.vars as Record<string, unknown>) as Record<string, unknown>,
+      });
+    }),
+  );
+  const history = {
+    index: json.index,
+    timestamp: json.timestamp,
+    title: json.title,
     momentIds,
   };
-  return await db.put("histories", newHistory) as number;
+  return (await db.put("histories", history)) as number;
 }
 
 /**

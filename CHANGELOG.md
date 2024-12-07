@@ -7,6 +7,7 @@ All changes are backwards-incompatible since it has not reached `1.0.0`.
 
 ### Added
 
+- Saves can now be imported and exported as JSON files.
 - `StoryInterface` special passage.
 - `stringify` utility function.
 - `historyLength` configuration option.

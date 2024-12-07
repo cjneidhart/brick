@@ -103,8 +103,18 @@ function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) 
     renderExportButtons(saveList, buttons);
   });
 
+  const fileInputElt = makeElement("input", { type: "file" });
+  fileInputElt.addEventListener("change", async () => {
+    if (!fileInputElt.files || fileInputElt.files.length === 0) {
+      return;
+    }
+    const slot = await saves.importFile(fileInputElt.files[0]);
+    console.log(slot);
+    dialogElement.close();
+    await engine.loadFromSlot(slot);
+  });
   const importButton = makeElement("button", { class: "brick-ui-btn" }, "Import");
-  importButton.addEventListener("click", () => alert("Not supported yet"));
+  importButton.addEventListener("click", () => fileInputElt.click());
 
   const newSaveButton = makeElement("button", { class: "brick-ui-btn" }, "Save");
   newSaveButton.addEventListener("click", async () => {
@@ -132,7 +142,7 @@ function renderDeleteButtons(saveList: HTMLUListElement, buttons: HTMLDivElement
   });
   setTimeout(() => {
     deleteAllButton.disabled = false;
-  }, 3000);
+  }, 2000);
 
   const cancelButton = makeElement("button", { class: "brick-ui-btn" }, "Cancel");
   cancelButton.addEventListener("click", () => {

@@ -4,7 +4,7 @@ import * as passages from "./passages";
 import { renderPassage } from "./renderer";
 import type { Moment, History } from "./saves";
 import * as saves from "./saves";
-import { clone, getElementById, makeElement } from "./util";
+import { addTypoChecking, clone, getElementById, makeElement } from "./util";
 
 let mainElement: HTMLElement;
 let historyIds: number[];
@@ -26,7 +26,7 @@ export async function init() {
   index = -1;
   turnCount = 0;
   passageName = "";
-  storyVariables = {};
+  storyVariables = addTypoChecking({});
   tempVariables = {};
   punted = [];
 }
@@ -35,7 +35,7 @@ export async function resumeOrStart() {
   if (!(await loadFromSlot("active"))) {
     turnCount = 1;
     passageName = passages.start().name;
-    storyVariables = {};
+    storyVariables = addTypoChecking({});
     tempVariables = {};
     punted = [];
     const moment: Moment = {
@@ -59,7 +59,7 @@ export async function loadCurrentMoment() {
     moment = await saves.getMoment(historyIds[index]);
     historyMoments[index] = moment;
   }
-  storyVariables = clone(moment.vars);
+  storyVariables = addTypoChecking(clone(moment.vars));
   turnCount = moment.turnCount;
   passageName = moment.passageName;
 }

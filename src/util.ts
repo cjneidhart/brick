@@ -1,3 +1,5 @@
+import levenshtein from "js-levenshtein";
+
 const DELETED_CHARS = new Set<string>("'\",()[]{}.!`?");
 
 /** Convert a string into a "slug" which is easier to use within CSS
@@ -213,4 +215,31 @@ export function stringify(value?: unknown): string {
   }
 
   return String(value);
+}
+
+const typoCheckHandler = {
+  get<T extends object>(target: T, prop: string | symbol, receiver: object) {
+    if (prop in receiver || typeof prop !== "string") {
+      return Reflect.get(target, prop, receiver);
+    }
+
+    const allKeys = Object.getOwnPropertyNames(receiver);
+    let prototype = Object.getPrototypeOf(receiver);
+    while (prototype) {
+      allKeys.push(...Object.getOwnPropertyNames(prototype));
+      prototype = Object.getPrototypeOf(prototype);
+    }
+
+    const distances = allKeys.map((name) => ({ name, distance: levenshtein(prop, name) }));
+    distances.sort((a, b) => a.distance - b.distance);
+    if (distances.length > 0) {
+      console.warn(`Unknown property "${prop}". Did you mean "${distances[0].name}"?`);
+    }
+
+    return Reflect.get(target, prop, receiver);
+  },
+};
+
+export function addTypoChecking<T extends object>(obj: T): T {
+  return new Proxy(obj, typoCheckHandler) as T;
 }

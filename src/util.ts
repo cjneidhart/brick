@@ -217,29 +217,37 @@ export function stringify(value?: unknown): string {
   return String(value);
 }
 
-const typoCheckHandler = {
-  get<T extends object>(target: T, prop: string | symbol, receiver: object) {
-    if (prop in receiver || typeof prop !== "string") {
+/** Return a Proxy around `obj`. When an unknown property of `obj` is read
+ * a warning will be issued. */
+export function addTypoChecking<T extends object>(
+  obj: T,
+  messageGenerator?: (name: string, bestGuess: string) => string,
+): T {
+  messageGenerator ??= (name, bestGuess) =>
+    `Unknown property "${name}". Did you mean "${bestGuess}"?`;
+  const handler = {
+    get(target: object, prop: string | symbol, receiver: object) {
+      if (prop in receiver || typeof prop !== "string") {
+        return Reflect.get(target, prop, receiver);
+      }
+
+      // Collect all string keys of `receiver` and its prototypes, regardless
+      // of their enumerability.
+      const allKeys = Object.getOwnPropertyNames(receiver);
+      let prototype = Object.getPrototypeOf(receiver);
+      while (prototype) {
+        allKeys.push(...Object.getOwnPropertyNames(prototype));
+        prototype = Object.getPrototypeOf(prototype);
+      }
+
+      const distances = allKeys.map((name) => ({ name, distance: levenshtein(prop, name) }));
+      distances.sort((a, b) => a.distance - b.distance);
+      if (distances.length > 0) {
+        console.warn(messageGenerator(prop, distances[0].name));
+      }
+
       return Reflect.get(target, prop, receiver);
-    }
-
-    const allKeys = Object.getOwnPropertyNames(receiver);
-    let prototype = Object.getPrototypeOf(receiver);
-    while (prototype) {
-      allKeys.push(...Object.getOwnPropertyNames(prototype));
-      prototype = Object.getPrototypeOf(prototype);
-    }
-
-    const distances = allKeys.map((name) => ({ name, distance: levenshtein(prop, name) }));
-    distances.sort((a, b) => a.distance - b.distance);
-    if (distances.length > 0) {
-      console.warn(`Unknown property "${prop}". Did you mean "${distances[0].name}"?`);
-    }
-
-    return Reflect.get(target, prop, receiver);
-  },
-};
-
-export function addTypoChecking<T extends object>(obj: T): T {
-  return new Proxy(obj, typoCheckHandler) as T;
+    },
+  };
+  return new Proxy(obj, handler) as T;
 }

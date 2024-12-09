@@ -16,6 +16,15 @@ let punted: string[];
 export let storyVariables: Record<string, unknown>;
 export let tempVariables: Record<string, unknown>;
 
+function storyVariablesWarning(name: string, bestGuess: string): string {
+  return `Unknown story variable "$${name}". Did you mean "$${bestGuess}"?`;
+}
+
+function createStoryVariables(vars?: Record<string, unknown>) {
+  vars ??= {};
+  return addTypoChecking(vars, storyVariablesWarning);
+}
+
 /** Initialize the engine */
 export async function init() {
   mainElement = getElementById("brick-main");
@@ -26,7 +35,7 @@ export async function init() {
   index = -1;
   turnCount = 0;
   passageName = "";
-  storyVariables = addTypoChecking({});
+  storyVariables = createStoryVariables();
   tempVariables = {};
   punted = [];
 }
@@ -35,7 +44,7 @@ export async function resumeOrStart() {
   if (!(await loadFromSlot("active"))) {
     turnCount = 1;
     passageName = passages.start().name;
-    storyVariables = addTypoChecking({});
+    storyVariables = createStoryVariables();
     tempVariables = {};
     punted = [];
     const moment: Moment = {
@@ -59,7 +68,7 @@ export async function loadCurrentMoment() {
     moment = await saves.getMoment(historyIds[index]);
     historyMoments[index] = moment;
   }
-  storyVariables = addTypoChecking(clone(moment.vars));
+  storyVariables = createStoryVariables(clone(moment.vars));
   turnCount = moment.turnCount;
   passageName = moment.passageName;
 }
@@ -160,7 +169,7 @@ function saveHistoryActive() {
 function renderActive() {
   tempVariables = {};
   punted = [];
-  if (storyVariables["-brick-punted"] instanceof Array) {
+  if ("-brick-punted" in storyVariables && storyVariables["-brick-punted"] instanceof Array) {
     for (const [key, val] of storyVariables["-brick-punted"]) {
       if (typeof key !== "string") {
         console.warn("non-string key in $-brick-punted");

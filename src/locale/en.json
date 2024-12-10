@@ -1,0 +1,21 @@
+{
+  "generic": {
+    "cancel": "Cancel",
+    "restart": "Restart"
+  },
+  "misc": {
+    "restartConfirmation": "Are you sure you would like to restart?"
+  },
+  "savesDialog": {
+    "delete": "Delete",
+    "deleteAll": "Delete All",
+    "deleteMode": "Delete",
+    "export": "Export",
+    "exportMode": "Export",
+    "empty": "No saves found",
+    "import": "Import",
+    "loadSave": "Load",
+    "newSave": "Save",
+    "title": "Saves"
+  }
+}

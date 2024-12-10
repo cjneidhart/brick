@@ -6,6 +6,7 @@
  */
 
 import * as engine from "./engine";
+import { localize } from "./localize";
 import { renderPassage } from "./renderer";
 import type { History } from "./saves";
 import * as saves from "./saves";
@@ -57,7 +58,7 @@ export function showPassage(passageName: string) {
 
 export async function showSavesMenu() {
   reset();
-  titleElt.append("Saves");
+  titleElt.append(localize("savesDialog.title"));
   modalBody.append("Loading...");
   dialogElement.classList.add("brick-saves-menu");
   dialogElement.showModal();
@@ -71,7 +72,11 @@ export async function showSavesMenu() {
   modalBody.append(saveList);
   if (saveListings.length === 0) {
     saveList.append(
-      makeElement("li", { class: "brick-saves-empty" }, makeElement("em", {}, "No saves found")),
+      makeElement(
+        "li",
+        { class: "brick-saves-empty" },
+        makeElement("em", {}, localize("savesDialog.empty")),
+      ),
     );
   } else {
     saveList.append(...saveListings);
@@ -83,7 +88,11 @@ export async function showSavesMenu() {
 }
 
 function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) {
-  const deleteButton = makeElement("button", { class: "brick-ui-btn" }, "Delete");
+  const deleteButton = makeElement(
+    "button",
+    { class: "brick-ui-btn" },
+    localize("savesDialog.deleteMode"),
+  );
   deleteButton.addEventListener("click", () => {
     for (const button of saveList.querySelectorAll("button")) {
       button.removeEventListener("click", historyLoadHandler);
@@ -93,12 +102,16 @@ function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) 
     renderDeleteButtons(saveList, buttons);
   });
 
-  const exportButton = makeElement("button", { class: "brick-ui-btn" }, "Export");
+  const exportButton = makeElement(
+    "button",
+    { class: "brick-ui-btn" },
+    localize("savesDialog.exportMode"),
+  );
   exportButton.addEventListener("click", () => {
     for (const button of saveList.querySelectorAll("button")) {
       button.removeEventListener("click", historyLoadHandler);
       button.addEventListener("click", historyExportHandler);
-      button.textContent = "Download";
+      button.textContent = localize("savesDialog.export");
     }
     renderExportButtons(saveList, buttons);
   });
@@ -113,10 +126,18 @@ function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) 
     dialogElement.close();
     await engine.loadFromSlot(slot);
   });
-  const importButton = makeElement("button", { class: "brick-ui-btn" }, "Import");
+  const importButton = makeElement(
+    "button",
+    { class: "brick-ui-btn" },
+    localize("savesDialog.import"),
+  );
   importButton.addEventListener("click", () => fileInputElt.click());
 
-  const newSaveButton = makeElement("button", { class: "brick-ui-btn" }, "Save");
+  const newSaveButton = makeElement(
+    "button",
+    { class: "brick-ui-btn" },
+    localize("savesDialog.newSave"),
+  );
   newSaveButton.addEventListener("click", async () => {
     const history = await engine.saveToSlot();
     saveList.querySelector(".brick-saves-empty")?.remove();
@@ -131,7 +152,7 @@ function renderDeleteButtons(saveList: HTMLUListElement, buttons: HTMLDivElement
   const deleteAllButton = makeElement(
     "button",
     { class: "brick-ui-btn", disabled: "" },
-    "Delete All",
+    localize("savesDialog.deleteAll"),
   );
   deleteAllButton.addEventListener("click", async function () {
     this.disabled = true;
@@ -144,12 +165,13 @@ function renderDeleteButtons(saveList: HTMLUListElement, buttons: HTMLDivElement
     deleteAllButton.disabled = false;
   }, 2000);
 
-  const cancelButton = makeElement("button", { class: "brick-ui-btn" }, "Cancel");
+  const cancelButton = makeElement("button", { class: "brick-ui-btn" }, localize("generic.cancel"));
   cancelButton.addEventListener("click", () => {
+    const buttonText = localize("savesDialog.loadSave");
     for (const button of saveList.querySelectorAll("button")) {
       button.removeEventListener("click", historyDeleteHandler);
       button.addEventListener("click", historyLoadHandler);
-      button.textContent = "Load";
+      button.textContent = buttonText;
     }
     renderSaveButtons(saveList, buttons);
   });
@@ -159,12 +181,13 @@ function renderDeleteButtons(saveList: HTMLUListElement, buttons: HTMLDivElement
 }
 
 function renderExportButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) {
-  const cancelButton = makeElement("button", { class: "brick-ui-btn" }, "Cancel");
+  const cancelButton = makeElement("button", { class: "brick-ui-btn" }, localize("generic.cancel"));
   cancelButton.addEventListener("click", () => {
+    const buttonText = localize("savesDialog.loadSave");
     for (const button of saveList.querySelectorAll("button")) {
       button.removeEventListener("click", historyExportHandler);
       button.addEventListener("click", historyLoadHandler);
-      button.textContent = "Load";
+      button.textContent = buttonText;
     }
     renderSaveButtons(saveList, buttons);
   });
@@ -182,7 +205,7 @@ function makeHistoryListing(history: History): HTMLLIElement {
   const button = makeElement(
     "button",
     { class: "brick-ui-btn", "data-brick-history-id": String(id) },
-    "Load",
+    localize("savesDialog.loadSave"),
   );
   button.addEventListener("click", historyLoadHandler);
   return makeElement(
@@ -214,7 +237,11 @@ async function historyDeleteHandler(this: HTMLButtonElement) {
   this.parentElement?.remove();
   if (saveList && saveList.childElementCount === 0) {
     saveList.append(
-      makeElement("li", { class: "brick-saves-empty" }, makeElement("em", {}, "No saves found")),
+      makeElement(
+        "li",
+        { class: "brick-saves-empty" },
+        makeElement("em", {}, localize("savesDialog.empty")),
+      ),
     );
   }
 }
@@ -246,11 +273,15 @@ export function showRestartPrompt() {
   reset();
   dialogElement.classList.add("brick-restart");
   titleElt.textContent = "Restart";
-  modalBody.append(makeElement("p", {}, "Are you sure you would like to restart?"));
-  const restartButton = makeElement("button", { class: "brick-ui-btn" }, "Restart");
+  modalBody.append(makeElement("p", {}, localize("misc.restartConfirmation")));
+  const restartButton = makeElement(
+    "button",
+    { class: "brick-ui-btn" },
+    localize("generic.restart"),
+  );
   restartButton.addEventListener("click", engine.restart);
 
-  const closeButton = makeElement("button", { class: "brick-ui-btn" }, "Cancel");
+  const closeButton = makeElement("button", { class: "brick-ui-btn" }, localize("generic.cncel"));
   closeButton.addEventListener("click", () => dialogElement.close());
 
   modalBody.append(restartButton, closeButton);

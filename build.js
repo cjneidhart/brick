@@ -53,7 +53,9 @@ const buildContexts = await Promise.all([
 const [brickJs, brickCss, editorExtensions] = buildContexts.map((ctx) => ctx.outputFiles[0].text);
 
 const template = readTextFile("src/brick.html");
-const reboot = readTextFile("node_modules/bootstrap/dist/css/bootstrap-reboot.min.css");
+const reboot = readTextFile(
+  new URL(import.meta.resolve("bootstrap/dist/css/bootstrap-reboot.min.css")),
+);
 
 const storyFormat = template
   .replace("/*BOOTSTRAP_STYLE*/", reboot.replaceAll("$", "$$$$"))

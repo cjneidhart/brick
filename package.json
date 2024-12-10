@@ -24,8 +24,7 @@
     "js-levenshtein": "^1.1.6"
   },
   "scripts": {
-    "prebuild": "tsc --noEmit",
-    "build": "node build.js",
+    "build": "tsc --noEmit && node build.js",
     "test": "node test.js"
   },
   "prettier": {

@@ -269,8 +269,13 @@ function renderElement(
   }
   for (const [key, script] of template.evalAttributes) {
     try {
-      const value = stringify(evalExpression(script));
-      element.setAttribute(key, value);
+      const value = evalExpression(script);
+      if (key.startsWith("on") && key.length >= 3 && typeof value === "function") {
+        // TODO warning for typos such as onClick
+        element.addEventListener(key.substring(2), value as EventListener);
+      } else {
+        element.setAttribute(key, stringify(value));
+      }
     } catch (error) {
       if (error instanceof BreakSignal) {
         throw error;

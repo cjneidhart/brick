@@ -1,39 +1,39 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en-US" data-bs-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <title>{{STORY_NAME}}</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style id="style-bootstrap">
+      /*BOOTSTRAP_STYLE*/
+    </style>
+    <style id="style-brick">
+      /*BRICK_STYLE*/
+    </style>
+  </head>
 
-<head>
-  <meta charset="utf-8">
-  <title>{{STORY_NAME}}</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <style id="style-bootstrap">
-    /*BOOTSTRAP_STYLE*/
-  </style>
-  <style id="style-brick">
-    /*BRICK_STYLE*/
-  </style>
-</head>
+  <body>
+    {{STORY_DATA}}
+    <div id="brick-viewport">
+      <aside id="ui-bar">
+        <div id="brick-history-controls">
+          <button id="brick-history-backward" class="brick-ui-btn" type="button">&#x2190;</button>
+          <button id="brick-history-forward" class="brick-ui-btn" type="button">&#x2192;</button>
+        </div>
+        <h1 id="story-title">{{STORY_NAME}}</h1>
+        <ul id="brick-menu-core">
+          <li><button id="brick-saves" class="brick-ui-btn" type="button">SAVES</button></li>
+          <li><button id="brick-restart" class="brick-ui-btn" type="button">RESTART</button></li>
+        </ul>
+      </aside>
 
-<body>
-  {{STORY_DATA}}
-  <div id="brick-viewport">
-    <aside id="ui-bar">
-      <div id="brick-history-controls">
-        <button id="brick-history-backward" class="brick-ui-btn" type="button">&#x2190;</button>
-        <button id="brick-history-forward" class="brick-ui-btn" type="button">&#x2192;</button>
-      </div>
-      <h1 id="story-title">{{STORY_NAME}}</h1>
-      <ul id="brick-menu-core">
-        <li><button id="brick-saves" class="brick-ui-btn" type="button">SAVES</button></li>
-        <li><button id="brick-restart" class="brick-ui-btn" type="button">RESTART</button></li>
-      </ul>
-    </aside>
-
-    <main id="brick-main">
-      <noscript>JavaScript must be enabled to play this story.</noscript>
-    </main>
-  </div>
-  <dialog id="brick-dialog"></dialog>
-  <script id="script-brick" type="text/javascript">/*BRICK_SCRIPT*/</script>
-</body>
-
+      <main id="brick-main">
+        <noscript>JavaScript must be enabled to play this story.</noscript>
+      </main>
+    </div>
+    <dialog id="brick-dialog"></dialog>
+    <script id="script-brick" type="text/javascript">
+      /*BRICK_SCRIPT*/
+    </script>
+  </body>
 </html>

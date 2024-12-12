@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { env } from "node:process";
 import esbuild from "esbuild";
 import { parse as semverParse } from "semver";
+/* global URL */
 
 function readTextFile(path) {
   return fs.readFileSync(path, { encoding: "utf-8" });

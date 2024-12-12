@@ -21,6 +21,7 @@ const sidebars: SidebarsConfig = {
   tutorialSidebar: [
     "index",
     "macros",
+    "config",
     // 'hello',
     // {
     //   type: 'category',

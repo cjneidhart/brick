@@ -25,6 +25,8 @@
   },
   "scripts": {
     "build": "tsc --noEmit && node build.js",
+    "fmt": "prettier --write .",
+    "lint": "eslint",
     "test": "node test.js"
   },
   "prettier": {

@@ -80,4 +80,4 @@ const storyJson = {
 
 const outString = `window.storyFormat(${JSON.stringify(storyJson)});`;
 fs.writeFileSync("storyformats/brick/format.js", outString);
-fs.copyFileSync("icon.svg", "storyformats/brick/icon.svg");
+fs.copyFileSync("../icon.svg", "storyformats/brick/icon.svg");

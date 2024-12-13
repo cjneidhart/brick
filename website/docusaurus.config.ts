@@ -7,7 +7,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 const config: Config = {
   title: "Brick",
   tagline: "A modern story format",
-  favicon: "img/favicon.ico",
+  favicon: "img/favicon.ico?v=2",
 
   // Set the production url of your site here
   url: "https://brick-twee.readthedocs.io",
@@ -41,6 +41,7 @@ const config: Config = {
           // Remove this to remove the "edit this page" links.
           // editUrl: "https://github.com/cjneidhart/brick",
         },
+        blog: false,
         // blog: {
         //   showReadingTime: true,
         //   feedOptions: {

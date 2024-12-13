@@ -2,7 +2,7 @@
 
 This is a list of built-in macros.
 
-## `@()`, the unnamed macro
+## `@()`, the unnamed macro {#unnamed}
 
 This macro can be used to silently execute JavaScript.
 It is mostly useful for setting story/temporary variables, or for calling other functions with side effects.
@@ -25,7 +25,7 @@ Unlike other macros, the unnamed macro can execute multiple statements:
 )
 ```
 
-## `@print()` and `@-()`
+## `@print()` and `@-()` {#print}
 
 `@print` can be used to insert strings into the rendered markup.
 If you just need to print the value of a variable, you can simply write that variable in markup.
@@ -37,7 +37,7 @@ But for situations where you need to alter the variable slightly before printing
 You need an additional @print(500 - $money) gold to afford this sword.
 ```
 
-## `@render()` and `@=()`
+## `@render()` and `@=()` {#render}
 
 `@render` is the supercharged version of `@print`.
 While `@print` emits `text` as-is, `@render` actually renders `text` as Brick markup.
@@ -86,7 +86,20 @@ When the link is clicked, two things will happen:
 })
 ```
 
-## `@if()`, `@elseif()`, and `@else`
+## `@include()`
+
+This macro can be used to embed one passage within another.
+Simply pass in the name of the passage you want to include.
+
+### Example
+
+Include the contents of the passage "Dark Alley" in the current passage.
+
+```brick
+@include("Dark Alley")
+```
+
+## `@if()`, `@elseif()`, and `@else` {#if-elseif-else}
 
 These macros are the most basic tool for conditional logic.
 Their structure must be, in order:

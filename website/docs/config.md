@@ -1,3 +1,6 @@
+---
+toc_max_heading_level: 2
+---
 # Config
 
 The `config` object, available globally, defines a number of useful settings you can use to customize Brick.
@@ -39,7 +42,7 @@ That string will be used in place of the passage's actual contents.
 
 This example uses a regular expression to convert every variant of "Chris" (i.e. "CHRIS", "chris", or "cHrIs") to "Chris".
 
-```brick
+```js
 config.preProcessText = function (passage) {
   return passage.contents.replace(/\bchris\b/ig, "Chris");
 };

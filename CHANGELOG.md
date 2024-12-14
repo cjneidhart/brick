@@ -8,7 +8,7 @@ All changes are backwards-incompatible since it has not reached `1.0.0`.
 ### Added
 
 - Saves can now be imported and exported as JSON files.
-- Trying to read an unset story variable triggers a "Did you mean...?" warning in the console.
+- Trying to read an unset story or temporary variable triggers a "Did you mean...?" warning in the console.
 - Functions can be used as dynamic attributes for event listener attributes such as `onclick`.
 - `StoryInterface` special passage.
 - `stringify` utility function.

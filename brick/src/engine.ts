@@ -20,9 +20,17 @@ function storyVariablesWarning(name: string, bestGuess: string): string {
   return `Unknown story variable "$${name}". Did you mean "$${bestGuess}"?`;
 }
 
+function tempVariablesWarning(name: string, bestGuess: string): string {
+  return `Unknown temporary variable "_${name}". Did you mean "_${bestGuess}"?`;
+}
+
 function createStoryVariables(vars?: Record<string, unknown>) {
   vars ??= {};
   return addTypoChecking(vars, storyVariablesWarning);
+}
+
+function createTempVariables() {
+  return addTypoChecking({}, tempVariablesWarning);
 }
 
 /** Initialize the engine */
@@ -36,7 +44,7 @@ export async function init() {
   turnCount = 0;
   passageName = "";
   storyVariables = createStoryVariables();
-  tempVariables = {};
+  tempVariables = createTempVariables();
   punted = [];
 }
 
@@ -45,7 +53,7 @@ export async function resumeOrStart() {
     turnCount = 1;
     passageName = passages.start().name;
     storyVariables = createStoryVariables();
-    tempVariables = {};
+    tempVariables = createTempVariables();
     punted = [];
     const moment: Moment = {
       passageName,
@@ -167,7 +175,7 @@ function saveHistoryActive() {
 
 /** Render the active moment. */
 function renderActive() {
-  tempVariables = {};
+  tempVariables = createTempVariables();
   punted = [];
   if ("-brick-punted" in storyVariables && storyVariables["-brick-punted"] instanceof Array) {
     for (const [key, val] of storyVariables["-brick-punted"]) {

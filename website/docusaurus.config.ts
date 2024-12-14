@@ -96,7 +96,7 @@ const config: Config = {
           items: [
             {
               label: "Reference",
-              to: "/docs/index",
+              to: "/docs/intro",
             },
           ],
         },

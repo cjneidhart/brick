@@ -1,0 +1,18 @@
+# Required
+version: 2
+
+# Set the OS, Python version, and other tools you might need
+build:
+  os: ubuntu-24.04
+  tools:
+    nodejs: "22"
+
+  commands:
+    - npm install -g pnpm
+    # Install Docusaurus dependencies
+    - cd website/ && pnpm install
+    # Build the site
+    - cd website/ && pnpm run build
+    # Copy generated files into Read the Docs directory
+    - mkdir --parents $READTHEDOCS_OUTPUT/html/
+    - cp --recursive website/build/* $READTHEDOCS_OUTPUT/html/

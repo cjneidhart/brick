@@ -2,6 +2,7 @@ import fs from "node:fs";
 import { env } from "node:process";
 import esbuild from "esbuild";
 import { parse as semverParse } from "semver";
+/* global URL */
 
 function readTextFile(path) {
   return fs.readFileSync(path, { encoding: "utf-8" });
@@ -80,4 +81,4 @@ const storyJson = {
 
 const outString = `window.storyFormat(${JSON.stringify(storyJson)});`;
 fs.writeFileSync("storyformats/brick/format.js", outString);
-fs.copyFileSync("icon.svg", "storyformats/brick/icon.svg");
+fs.copyFileSync("../icon.svg", "storyformats/brick/icon.svg");

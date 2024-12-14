@@ -1,6 +1,2 @@
-/storyformats
-
 .vscode
 node_modules
-
-test/*.html

@@ -1,0 +1,17 @@
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hole" gradientTransform="rotate(90)">
+      <stop offset="0%" stop-color="#911111" />
+      <stop offset="100%" stop-color="#1f0000" />
+    </linearGradient>
+  </defs>
+  <polygon points="0,220 0,340 160,400 400,180 400,60 240,0" fill="firebrick" />
+  <polygon points="0,220 0,340 160,400 160,280" fill="#911111"  />
+  <polygon points="160,400 160,280 400,60 400,180" fill="#C33333"  />
+  <polygon points="0,220 160,280 400,60 240,0" fill="firebrick"/>
+  <!-- top line from 0,220 to 240,0
+        bottom line from 160,280 to 400,60
+        center line from 80,260 to 320,30-->
+  <ellipse cx="140" cy="202.5" rx="50" ry="40" fill="url(#hole)" />
+  <ellipse cx="260" cy="87.5" rx="50" ry="40" fill="url(#hole)" />
+</svg>

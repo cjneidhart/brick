@@ -5,16 +5,18 @@ import "dotenv/config";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
+const fullUrl = URL.parse(process.env.READTHEDOCS_CANONICAL_URL || "https://brick-tw.readthedocs.io");
+
 const config: Config = {
   title: "Brick",
   tagline: "A modern story format",
   favicon: "img/favicon.ico?v=2",
 
   // Set the production url of your site here
-  url: process.env.READTHEDOCS_CANONICAL_URL || "https://brick-tw.readthedocs.io",
+  url: fullUrl.origin,
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/",
+  baseUrl: fullUrl.pathname,
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.

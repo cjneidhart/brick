@@ -132,3 +132,12 @@ You can include JavaScript expressions as HTML attributes by using parentheses i
 @(_title = "Surprise")
 <span title=(_title + "!!!")>Hover over me for a surprise.</span>
 ```
+
+For most attributes, the value will be converted into a string.
+But for the event handler attributes, such as `onclick`,
+if the expression's value is a function, it will be bound with `addEventListener`.
+
+```brick
+@(_handler = () => alert("Surprise!"))
+<button ondblclick=(_handler)>Double Click Me!</button>
+```

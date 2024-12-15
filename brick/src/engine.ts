@@ -16,17 +16,20 @@ let punted: string[];
 export let storyVariables: Record<string, unknown>;
 export let tempVariables: Record<string, unknown>;
 
-function storyVariablesWarning(name: string, bestGuess: string): string {
-  return `Unknown story variable "$${name}". Did you mean "$${bestGuess}"?`;
+function storyVariablesWarning(name: string, bestGuess?: string): string {
+  return typeof bestGuess === "string"
+    ? `Unknown story variable "$${name}". Did you mean "$${bestGuess}"?`
+    : `Unknown story variable "$${name}".`;
 }
 
-function tempVariablesWarning(name: string, bestGuess: string): string {
-  return `Unknown temporary variable "_${name}". Did you mean "_${bestGuess}"?`;
+function tempVariablesWarning(name: string, bestGuess?: string): string {
+  return typeof bestGuess === "string"
+    ? `Unknown temporary variable "_${name}". Did you mean "_${bestGuess}"?`
+    : `Unknown temporary variable "_${name}".`;
 }
 
 function createStoryVariables(vars?: Record<string, unknown>) {
-  vars ??= {};
-  return addTypoChecking(vars, storyVariablesWarning);
+  return addTypoChecking(vars || {}, storyVariablesWarning);
 }
 
 function createTempVariables() {

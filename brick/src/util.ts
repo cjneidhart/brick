@@ -221,7 +221,7 @@ export function stringify(value?: unknown): string {
  * a warning will be issued. */
 export function addTypoChecking<T extends object>(
   obj: T,
-  messageGenerator?: (name: string, bestGuess: string) => string,
+  messageGenerator?: (name: string, bestGuess?: string) => string,
 ): T {
   messageGenerator ??= (name, bestGuess) =>
     `Unknown property "${name}". Did you mean "${bestGuess}"?`;
@@ -241,9 +241,16 @@ export function addTypoChecking<T extends object>(
       }
 
       const distances = allKeys.map((name) => ({ name, distance: levenshtein(prop, name) }));
-      distances.sort((a, b) => a.distance - b.distance);
+      const { name: bestGuess } = distances.reduce(
+        (record, current) => {
+          return current.distance <= prop.length * 0.4 && current.distance < record.distance
+            ? current
+            : record;
+        },
+        { name: undefined as string | undefined, distance: Infinity },
+      );
       if (distances.length > 0) {
-        console.warn(messageGenerator(prop, distances[0].name));
+        console.warn(messageGenerator(prop, bestGuess));
       }
 
       return Reflect.get(target, prop, receiver);

@@ -6,6 +6,32 @@ It is made with a focus on performance and ease-of-use.
 [Tweego]: https://motoslave.net/tweego
 [Twine]: https://twinery.org
 
+## Installation
+
+### Twine
+
+In the top menu of Twine, click **Twine** -> **Story Formats** to open the Story Formats panel.
+At the top of that panel, click **+ Add**.
+Paste in the URL `https://cjneidhart.github.io/brick/latest/format.js`, then click the green
+<strong style={{color: "var(--ifm-color-success)"}}>+ Add</strong>
+to confirm.
+
+After creating a new story, at the top click **Story** -> **Details** to open the Story Details panel.
+In that panel, use the dropdown to select Brick.
+To be sure you're using Brick, type `@link(` in a passage.
+The `@` should change from red to blue when you type the `(`.
+
+### Tweego
+
+Download the [latest version of Brick].
+Consult [Tweego's documentation](https://www.motoslave.net/tweego/docs/#getting-started-story-formats-search-directories)
+and place the `format.js` file in an appropriate directory.
+Make sure your `StoryData` passage has
+<code style={{whiteSpace: "nowrap"}}>"format": "Brick"</code>
+(case-sensitive) and
+<code style={{whiteSpace: "nowrap"}}>"format-version": 0</code>.
+
+[latest version of Brick]: https://cjneidhart.github.io/brick/latest/format.js
 
 ## Fundamental Concepts
 

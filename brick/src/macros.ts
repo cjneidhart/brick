@@ -98,8 +98,8 @@ export class MacroContext {
     return wrapped as unknown as F;
   }
 
-  toString() {
-    return "[object MacroContext]";
+  get [Symbol.toStringTag]() {
+    return this.constructor.name;
   }
 }
 

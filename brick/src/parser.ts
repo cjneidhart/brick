@@ -119,6 +119,10 @@ export class Parser {
     this.lineNumber = lineNumber || 1;
   }
 
+  get [Symbol.toStringTag]() {
+    return this.constructor.name;
+  }
+
   consume(pattern: RegExp): RegExpExecArray | null {
     pattern.lastIndex = this.index;
     const match = pattern.exec(this.input);

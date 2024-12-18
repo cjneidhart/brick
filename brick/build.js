@@ -22,6 +22,7 @@ version = {
   minor: version.minor,
   patch: version.patch,
   version: version.version,
+  time: Date.now(),
 };
 
 fs.mkdirSync("storyformats/brick", { recursive: true });

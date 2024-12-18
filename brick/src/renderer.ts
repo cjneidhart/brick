@@ -1,8 +1,8 @@
 import Config from "./config";
-import { storyVariables, tempVariables } from "./engine";
+import { constants, storyVariables, tempVariables } from "./engine";
 import { BrickError, DynamicAttributeError, MacroError } from "./error";
-import { BreakSignal, get as getMacro, MacroContext } from "./macros";
-import { ElementTemplate, isMacro, NodeTemplate, Parser } from "./parser";
+import { BreakSignal, BRICK_MACRO_SYMBOL, isMacro, Macro, MacroContext } from "./macros";
+import { ElementTemplate, NodeTemplate, Parser, PostscriptCall } from "./parser";
 import { Passage, get as getPassage } from "./passages";
 import { evalExpression } from "./scripting";
 import { makeElement, stringify } from "./util";
@@ -172,77 +172,87 @@ function renderRaw(
           target.append(p);
         }
       }
-    } else if (nt.type === "macro") {
-      const macroData = getMacro(nt.name);
-      if (!macroData) {
-        const error = new BrickError(
-          `Macro not found: "${nt.name}"`,
-          nt.passageName,
-          nt.lineNumber,
-        );
-        target.append(renderError(error));
-        noErrors = false;
-        continue;
-      }
-
-      let childContext: MacroContext;
-      let params: unknown[];
-      if (macroData.trailingMacros) {
-        const templates = [nt];
-        for (let j = i + 1; j < input.length; j++) {
-          const nextNode = input[j];
-          if (isMacro(nextNode) && macroData.trailingMacros.includes(nextNode.name)) {
-            templates.push(nextNode);
-            i = j;
-          } else if (typeof nextNode === "string" && !nextNode.trim()) {
-            // skip over whitespace
-          } else {
+    } else if (nt.type === "expr") {
+      const store =
+        nt.store === "constants"
+          ? constants
+          : nt.store === "story"
+            ? storyVariables
+            : tempVariables;
+      let value = store[nt.base];
+      let previousValue = null;
+      const lastOpAsCall: PostscriptCall | undefined =
+        nt.ops[nt.ops.length - 1]?.type === "call"
+          ? (nt.ops[nt.ops.length - 1] as PostscriptCall)
+          : undefined;
+      const simpleOps = lastOpAsCall ? nt.ops.slice(0, -1) : nt.ops;
+      for (const op of simpleOps) {
+        switch (op.type) {
+          case "index": {
+            const index = op.needsEval ? evalExpression(op.key) : op.key;
+            previousValue = value;
+            value = (value as Record<string, unknown>)[index as string];
             break;
           }
-        }
 
-        childContext = new MacroContext(
-          nt.name,
-          nt.passageName,
-          nt.lineNumber,
-          parentContext,
-          templates,
-        );
-        params = [];
-      } else {
-        params = macroData.skipArgs ? nt.args : nt.args.map((arg) => evalExpression(arg));
-        childContext = new MacroContext(
-          nt.name,
+          case "call": {
+            const args = op.args.map(evalExpression);
+            if (typeof value !== "function") {
+              throw Error();
+            }
+            const newValue = value.apply(previousValue, args);
+            previousValue = value;
+            value = newValue;
+          }
+        }
+      }
+
+      if (isMacro(value)) {
+        const args = lastOpAsCall?.args || [];
+        const context = new MacroContext(
+          "TODO",
           nt.passageName,
           nt.lineNumber,
           parentContext,
           nt.content,
         );
-      }
-
-      try {
-        const macroOutput = macroData.handler.apply(childContext, params);
-        target.append(macroOutput);
-      } catch (error: unknown) {
-        if (error instanceof BreakSignal) {
-          throw error;
+        const opts = value[BRICK_MACRO_SYMBOL];
+        const skipArgs = typeof opts === "object" && opts.skipArgs;
+        renderMacro(target, value, context, skipArgs ? args : args.map(evalExpression));
+      } else {
+        if (nt.content) {
+          renderError(
+            new BrickError("non-macros can't have bodies", nt.passageName, nt.lineNumber),
+          );
         }
-
-        const wrapped = error instanceof MacroError ? error : new MacroError(childContext, error);
-        target.append(renderError(wrapped));
+        if (lastOpAsCall) {
+          const args = lastOpAsCall.args.map(evalExpression);
+          if (typeof value !== "function") {
+            throw Error();
+          }
+          const newValue = value.apply(previousValue, args);
+          previousValue = value;
+          value = newValue;
+        }
+        target.append(value instanceof Node ? value : String(value));
       }
+    } else if (nt.type === "chain") {
+      const name = nt.segments[0].name;
+      const macro = constants[name];
+      if (!isMacro(macro)) {
+        throw new Error("chain macro not a macro");
+      }
+      const context = new MacroContext(name, nt.passageName, nt.lineNumber, parentContext, []);
+      renderMacro(target, macro, context, nt.segments);
     } else if (nt.type === "element") {
       noErrors = renderElement(nt, target, parentContext) || noErrors;
     } else if (nt.type === "linkBox") {
-      const macroData = getMacro("link");
-      if (!macroData) {
-        throw new Error("Can't find @link macro for wiki-style [[link]]");
+      const linkMacro = constants.link;
+      if (!isMacro(linkMacro)) {
+        throw "link is not link";
       }
-      if (!nt.text) {
-        throw new Error("The text of a [[link box]] cannot be empty");
-      }
-      const childContext = new MacroContext("link", nt.passageName, nt.lineNumber);
-      target.append(macroData.handler.call(childContext, nt.text, nt.link));
+      const context = new MacroContext("link", nt.passageName, nt.lineNumber);
+      renderMacro(target, linkMacro, context, [nt.text, nt.link]);
     } else if (nt.type === "error") {
       noErrors = false;
       // const br = makeElement("br");
@@ -250,8 +260,7 @@ function renderRaw(
       // const span = makeElement("span", { class: "brick-error" }, `ERROR: ${nt.message}`, br, loc);
       target.append(renderError(new BrickError(nt.message, nt.passageName, nt.lineNumber)));
     } else {
-      const value = (nt.type === "story" ? storyVariables : tempVariables)[nt.name];
-      target.append(stringify(value));
+      throw new Error();
     }
   }
 
@@ -287,4 +296,25 @@ function renderElement(
   const noErrors = render(element, template.content, parentContext);
   target.append(element);
   return noErrors;
+}
+
+function renderMacro(
+  target: ParentNode,
+  macro: Macro,
+  context: MacroContext,
+  args: unknown[],
+): boolean {
+  try {
+    const macroOutput = macro.call(null, context, ...args);
+    target.append(macroOutput);
+    return true;
+  } catch (error: unknown) {
+    if (error instanceof BreakSignal) {
+      throw error;
+    }
+
+    const wrapped = error instanceof MacroError ? error : new MacroError(context, error);
+    target.append(renderError(wrapped));
+    return false;
+  }
 }

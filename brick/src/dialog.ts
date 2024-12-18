@@ -122,7 +122,6 @@ function renderSaveButtons(saveList: HTMLUListElement, buttons: HTMLDivElement) 
       return;
     }
     const slot = await saves.importFile(fileInputElt.files[0]);
-    console.log(slot);
     dialogElement.close();
     await engine.loadFromSlot(slot);
   });
@@ -281,7 +280,7 @@ export function showRestartPrompt() {
   );
   restartButton.addEventListener("click", engine.restart);
 
-  const closeButton = makeElement("button", { class: "brick-ui-btn" }, localize("generic.cncel"));
+  const closeButton = makeElement("button", { class: "brick-ui-btn" }, localize("generic.cancel"));
   closeButton.addEventListener("click", () => dialogElement.close());
 
   modalBody.append(restartButton, closeButton);

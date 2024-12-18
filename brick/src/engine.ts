@@ -15,6 +15,7 @@ let passageName: string;
 let punted: string[];
 export let storyVariables: Record<string, unknown>;
 export let tempVariables: Record<string, unknown>;
+export let constants: Record<string, unknown>;
 
 function storyVariablesWarning(name: string, bestGuess?: string): string {
   return typeof bestGuess === "string"
@@ -48,6 +49,7 @@ export async function init() {
   passageName = "";
   storyVariables = createStoryVariables();
   tempVariables = createTempVariables();
+  constants = {};
   punted = [];
 }
 

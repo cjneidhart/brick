@@ -7,7 +7,7 @@
 
 import config from "./config";
 import { showPassage } from "./dialog";
-import { backward, forward, redo, storyVariables, tempVariables } from "./engine";
+import { backward, constants, forward, redo, storyVariables, tempVariables } from "./engine";
 import * as passages from "./passages";
 import * as util from "./util";
 
@@ -18,6 +18,7 @@ declare const BRICK_VERSION: Record<string, unknown>;
 // TODO: type-checking
 export const BrickPublic = {
   BRICK_VERSION,
+  constants,
   Engine: {
     forward,
     backward,
@@ -64,6 +65,7 @@ export const BrickPublic = {
 BrickPublic.BRICK_VERSION.toString = function () {
   return this.version as string;
 };
+BrickPublic.BRICK_VERSION.time = new Date(BrickPublic.BRICK_VERSION.time as number);
 
 const envKeys = Object.keys(BrickPublic);
 const envValues = Object.values(BrickPublic);

@@ -1,3 +1,5 @@
+import { constants } from "./engine";
+import { BRICK_MACRO_SYMBOL, isMacro } from "./macros";
 import { countSubstrings } from "./util";
 
 const RE = {
@@ -22,7 +24,7 @@ const RE = {
   },
   macroArgsStart: / *\(/y,
   macroBodyStart: /\s*\{/y,
-  macroName: /[-_=<>\p{ID_Start}][-=<>\p{ID_Continue}]*/uy,
+  macroName: /[-\p{ID_Start}][-\p{ID_Continue}]*|=/uy,
   maybeElementClose: /\/[-\p{ID_Continue}]+(?: *>)?/uy,
   normalChars: /[^[\\$_?<@/}]+/y,
   singleChar: /[^]/y,
@@ -94,17 +96,40 @@ export interface ErrorMessage extends NodeTemplateBase {
   locationSample: string;
 }
 
-export type NodeTemplate =
-  | ElementTemplate
-  | MacroTemplate
-  | string
-  | NakedVariable
-  | LinkBox
-  | ErrorMessage;
-
-export function isMacro(nt: NodeTemplate): nt is MacroTemplate {
-  return typeof nt === "object" && nt.type === "macro";
+export interface Expr extends NodeTemplateBase {
+  type: "expr";
+  store: "constants" | "story" | "temp";
+  base: string;
+  ops: PostscriptOp[];
+  content?: NodeTemplate[];
 }
+
+export interface PostscriptIndex {
+  type: "index";
+  key: string;
+  needsEval: boolean;
+}
+
+export interface PostscriptCall {
+  type: "call";
+  args: string[];
+  raw: string;
+}
+
+type PostscriptOp = PostscriptCall | PostscriptIndex;
+
+export interface MacroChain extends NodeTemplateBase {
+  type: "chain";
+  segments: MacroChainSegment[];
+}
+
+export interface MacroChainSegment {
+  name: string;
+  args: string[];
+  body: NodeTemplate[];
+}
+
+export type NodeTemplate = string | ElementTemplate | Expr | MacroChain | LinkBox | ErrorMessage;
 
 export class Parser {
   input: string;
@@ -165,18 +190,18 @@ export class Parser {
   parse(closer?: RegExp): NodeTemplate[] {
     const output: NodeTemplate[] = [];
 
-    let iterations = 0;
+    let prevIndex = -1;
     outer: while (this.index < this.input.length) {
-      if (iterations >= 1_000_000) {
+      if (this.index === prevIndex) {
         output.push(this.error("Parser stuck in infinite loop"));
         return output;
-      } else {
-        iterations++;
       }
-      const oldIndex = this.index;
+      prevIndex = this.index;
+
+      const startIndex = this.index;
       this.consume(RE.normalChars);
-      if (this.index !== oldIndex) {
-        output.push(this.input.substring(oldIndex, this.index));
+      if (this.index !== startIndex) {
+        output.push(this.input.substring(startIndex, this.index));
       }
 
       if (closer && this.consume(closer)) {
@@ -197,7 +222,7 @@ export class Parser {
           break;
 
         case "@":
-          output.push(this.parseMacro());
+          output.push(this.parseExpr("constants"));
           break;
 
         case "/":
@@ -218,12 +243,12 @@ export class Parser {
           break;
 
         case "$": {
-          output.push(this.parseNakedVariable("story"));
+          output.push(this.parseExpr("story"));
           break;
         }
 
         case "_": {
-          output.push(this.parseNakedVariable("temp"));
+          output.push(this.parseExpr("temp"));
           break;
         }
 
@@ -277,6 +302,173 @@ export class Parser {
     }
 
     return output;
+  }
+
+  parseExpr(store: "constants" | "story" | "temp"): Expr | MacroChain {
+    const { lineNumber } = this;
+    let base = "";
+    if (store !== "constants" || this.lookahead() !== "(") {
+      const match = this.consume(RE.macroName);
+      if (!match) {
+        throw Error();
+      }
+      base = match[0];
+    }
+
+    if (store === "constants") {
+      const macro = constants[base];
+      if (isMacro(macro)) {
+        const macroOpts = macro[BRICK_MACRO_SYMBOL];
+        if (typeof macroOpts === "object") {
+          if (macroOpts.chainWith) {
+            return this.parseMacroChain(base, macroOpts.chainWith);
+          } else if (macroOpts.isForMacro) {
+            return this.parseForMacro();
+          }
+        }
+      }
+    }
+
+    const ops: PostscriptOp[] = [];
+    outerLoop: while (true) {
+      switch (this.lookahead()) {
+        case "(": {
+          this.index++;
+          const startIndex = this.index;
+          const args = this.parseJsArgs(")");
+          if (!(args instanceof Array)) {
+            throw Error();
+          }
+          const raw = this.input.substring(startIndex, this.index - 1);
+          ops.push({ type: "call", args, raw });
+          break;
+        }
+
+        case "[": {
+          this.index++;
+          const args = this.parseJsArgs("]");
+          if (!(args instanceof Array)) {
+            throw Error();
+          }
+          ops.push({ type: "index", key: args.join(","), needsEval: true });
+          break;
+        }
+
+        case ".": {
+          this.index++;
+          const match = this.consume(RE.js.identifier);
+          if (match) {
+            ops.push({ type: "index", key: match[0], needsEval: false });
+          } else {
+            this.index--;
+            break outerLoop;
+          }
+          break;
+        }
+
+        case " ":
+          if (store === "constants" && ops.length === 0) {
+            this.index++;
+          } else {
+            break outerLoop;
+          }
+          break;
+
+        default:
+          break outerLoop;
+      }
+    }
+
+    const content = this.consume(RE.macroBodyStart) ? this.parse(/\}/y) : undefined;
+
+    return {
+      type: "expr",
+      lineNumber,
+      passageName: this.passageName,
+      store,
+      base,
+      ops,
+      content,
+    };
+  }
+
+  parseMacroChain(firstName: string, chainNameRe: RegExp): MacroChain {
+    const lineNumber = this.lineNumber;
+    if (!this.consume(RE.macroArgsStart)) {
+      throw "todo";
+    }
+
+    const firstArgs = this.parseJsArgs(")");
+    if (!(firstArgs instanceof Array)) {
+      throw Error("todo'):");
+    }
+    if (!this.consume(RE.macroBodyStart)) {
+      throw "error";
+    }
+    const firstBody = this.parse(/\}/y);
+    let indexAfterRBrace = this.index;
+
+    const blocks = [{ name: firstName, args: firstArgs, body: firstBody }];
+    const nameRegExp = chainNameRe.sticky
+      ? chainNameRe
+      : new RegExp(chainNameRe, chainNameRe.flags + "y");
+    while (this.consume(/\s*@/y)) {
+      const match = this.consume(nameRegExp);
+      if (!match) {
+        this.index = indexAfterRBrace;
+        break;
+      }
+      const name = match[0];
+
+      let args: string[] = [];
+      if (this.lookahead() === "(") {
+        const maybeArgs = this.parseJsArgs(")");
+        if (!(maybeArgs instanceof Array)) {
+          throw "ererdsaf";
+        }
+        args = maybeArgs;
+      }
+
+      let body: NodeTemplate[] = [];
+      if (this.consume(RE.macroBodyStart)) {
+        body = this.parse(/\}/y);
+        indexAfterRBrace = this.index;
+      }
+
+      blocks.push({ name, args, body });
+    }
+
+    const macro: MacroChain = {
+      type: "chain",
+      passageName: this.passageName,
+      lineNumber,
+      segments: blocks,
+    };
+
+    return macro;
+  }
+
+  parseForMacro(): Expr {
+    const { lineNumber } = this;
+    if (!this.consume(RE.macroArgsStart)) {
+      throw "bad for";
+    }
+    const args = this.parseForArgs();
+    if (!(args instanceof Array)) {
+      throw args;
+    }
+
+    const body = this.consume(RE.macroBodyStart) ? this.parse(/\}/y) : undefined;
+
+    return {
+      type: "expr",
+      passageName: this.passageName,
+      lineNumber,
+      store: "constants",
+      base: "for",
+      ops: [{ type: "call", args, raw: "TODO" }],
+      content: body,
+    };
   }
 
   parseElement(): ElementTemplate | ErrorMessage {
@@ -451,6 +643,7 @@ export class Parser {
   }
 
   parseForArgs(): string[] | ErrorMessage {
+    console.log(`Entered parseForArgs at "${this.input.substring(this.index, this.index + 10)}"`);
     // TODO refine this
     const match = this.consume(/\s*([^]*?)\s+of\b/y);
     if (!match) {

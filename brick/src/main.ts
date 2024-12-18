@@ -1,6 +1,6 @@
 import * as dialog from "./dialog";
 import * as engine from "./engine";
-import { BreakSignal } from "./macros";
+import * as macros from "./macros";
 import * as passages from "./passages";
 import { init as initSaves } from "./saves";
 import { BrickPublic, evalJavaScript } from "./scripting";
@@ -15,7 +15,7 @@ window.addEventListener("error", (event) => {
     if (error.stack) {
       msg += "\n" + error.stack;
     }
-  } else if (error instanceof BreakSignal) {
+  } else if (error instanceof macros.BreakSignal) {
     msg += `@${error.type} was called outside a loop, at "${error.context.passageName}" line ${error.context.lineNumber}`;
   } else {
     msg += "Non-error object was thrown and not caught:\n";
@@ -76,6 +76,7 @@ async function init() {
   dialog.init(slugify(storyTitle));
   await initSaves(storyTitle, ifid);
   await engine.init();
+  macros.installBuiltins(engine.constants);
 
   for (const script of scripts) {
     evalJavaScript(script.textContent);

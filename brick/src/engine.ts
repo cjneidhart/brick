@@ -29,12 +29,22 @@ function tempVariablesWarning(name: string, bestGuess?: string): string {
     : `Unknown temporary variable "_${name}".`;
 }
 
+function constantsWarning(name: string, bestGuess?: string): string {
+  return typeof bestGuess === "string"
+    ? `Unknown constant "@${name}". Did you mean "@${bestGuess}"?`
+    : `Unknown constant "@${name}".`;
+}
+
 function createStoryVariables(vars?: Record<string, unknown>) {
   return addTypoChecking(vars || {}, storyVariablesWarning);
 }
 
 function createTempVariables() {
   return addTypoChecking({}, tempVariablesWarning);
+}
+
+function createConstants() {
+  return addTypoChecking({}, constantsWarning);
 }
 
 /** Initialize the engine */
@@ -49,18 +59,21 @@ export async function init() {
   passageName = "";
   storyVariables = createStoryVariables();
   tempVariables = createTempVariables();
-  constants = {};
+  constants = createConstants();
   punted = [];
 }
 
+/** Either resume from the "active" history, or start a new history at the start passage. */
 export async function resumeOrStart() {
+  Object.freeze(constants);
+
   if (!(await loadFromSlot("active"))) {
     turnCount = 1;
     passageName = passages.start().name;
     storyVariables = createStoryVariables();
     tempVariables = createTempVariables();
     punted = [];
-    const moment: Moment = {
+    const moment = {
       passageName,
       timestamp: Date.now(),
       turnCount,

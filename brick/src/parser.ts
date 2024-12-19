@@ -548,100 +548,6 @@ export class Parser {
     };
   }
 
-  parseNakedVariable(type: "story" | "temp"): NakedVariable | MacroTemplate | ErrorMessage {
-    const startIdx = this.index;
-    let match = this.consume(RE.js.identifier);
-    if (!match) {
-      const leadingChar = type === "story" ? "$" : "_";
-      const bs = "or escaped with a backslash `\\`";
-      return this.error(`${leadingChar} must be part of a ${type} variable, ${bs}`);
-    }
-    const baseVarName = match[0];
-    const suffixStart = this.index;
-    while (true) {
-      switch (this.lookahead()) {
-        case ".":
-          match = this.consume(RE.js.field);
-          if (match) {
-            continue;
-          }
-          // not a match: break out, the period will be treated as plain markup later
-          break;
-
-        case "[":
-          this.index++;
-          this.parseJsArgs("]");
-          continue;
-
-        case "(":
-          this.index++;
-          this.parseJsArgs(")");
-          continue;
-      }
-
-      break;
-    }
-
-    if (this.index === suffixStart) {
-      // simple: just a plain variable
-      return {
-        type,
-        passageName: this.passageName,
-        lineNumber: this.lineNumber,
-        name: baseVarName,
-      };
-    } else {
-      // more complicated: substitute with @print
-      const prefix = type === "story" ? "Engine.vars." : "Engine.temp.";
-      return {
-        type: "macro",
-        name: "print",
-        args: [prefix + this.input.substring(startIdx, this.index)],
-        passageName: this.passageName,
-        lineNumber: this.lineNumber,
-      };
-    }
-  }
-
-  parseMacro(): MacroTemplate | ErrorMessage {
-    const match = this.consume(RE.macroName);
-    let macroName;
-    if (match) {
-      macroName = match[0];
-    } else {
-      // edge case: unnamed macro
-      if (this.lookahead() === "(") {
-        macroName = "";
-      } else {
-        return this.error("`@` must be followed by a macro name, or be escaped with a `\\`");
-      }
-    }
-
-    let args: string[] | null = null;
-    if (this.consume(RE.macroArgsStart)) {
-      const argsResult = macroName === "for" ? this.parseForArgs() : this.parseJsArgs(")");
-      if ("type" in argsResult) {
-        return argsResult;
-      }
-      args = argsResult;
-    }
-
-    const hasContent = this.consume(RE.macroBodyStart);
-    if (!args && !hasContent) {
-      return this.error("Macro invocations must be followed by `(` or `[`");
-    }
-    const content = hasContent ? this.parse(/\}/y) : undefined;
-
-    return {
-      type: "macro",
-      name: macroName,
-      args: args || [],
-      content,
-      passageName: this.passageName,
-      lineNumber: this.lineNumber,
-    };
-  }
-
   parseForArgs(): string[] | ErrorMessage {
     console.log(`Entered parseForArgs at "${this.input.substring(this.index, this.index + 10)}"`);
     // TODO refine this
@@ -781,21 +687,13 @@ export class Parser {
           break;
 
         case "$":
-          this.index++;
-          match = this.consume(RE.js.identifier);
-          if (match) {
-            output.push("Engine.vars.", match[0]);
-            regexpAllowed = false;
-          } else {
-            return this.error("Illegal identifier");
-          }
-          break;
-
         case "_":
+        case "@":
           this.index++;
           match = this.consume(RE.js.identifier);
           if (match) {
-            output.push("Engine.temp.", match[0]);
+            const prefix = c === "$" ? "Engine.vars." : c === "_" ? "Engine.temp." : "constants.";
+            output.push(prefix, match[0]);
             regexpAllowed = false;
           } else {
             return this.error("Illegal identifier");

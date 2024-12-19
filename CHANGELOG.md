@@ -3,6 +3,17 @@
 This project follows semantic versioning.
 All changes are backwards-incompatible since it has not reached `1.0.0`.
 
+## Unreleased
+
+### Changed
+
+- Added a third type of variable, constants.
+  They can be accessed by prefixing an identifier with `@`,
+  which is transpiled to `constants.NAME`.
+  Constants can only be created or deleted during story startup.
+- Macros no longer live in a special registry.
+  Now, macros are just methods of the `constants` global value.
+
 ## [0.2.2] - 2024-12-15
 
 ### Added

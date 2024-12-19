@@ -18,7 +18,9 @@ declare const BRICK_VERSION: Record<string, unknown>;
 // TODO: type-checking
 export const BrickPublic = {
   BRICK_VERSION,
-  constants,
+  get constants() {
+    return constants;
+  },
   Engine: {
     forward,
     backward,
@@ -67,8 +69,14 @@ BrickPublic.BRICK_VERSION.toString = function () {
 };
 BrickPublic.BRICK_VERSION.time = new Date(BrickPublic.BRICK_VERSION.time as number);
 
-const envKeys = Object.keys(BrickPublic);
-const envValues = Object.values(BrickPublic);
+let envKeys: string[];
+let envValues: unknown[];
+
+export function init() {
+  envKeys = Object.keys(BrickPublic);
+  envValues = Object.values(BrickPublic);
+  window.Brick = BrickPublic;
+}
 
 export function evalJavaScript(js: string): unknown {
   const fn = new Function(...envKeys, `'use strict';${js}`);

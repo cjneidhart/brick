@@ -3,8 +3,19 @@ import * as engine from "./engine";
 import * as macros from "./macros";
 import * as passages from "./passages";
 import { init as initSaves } from "./saves";
-import { BrickPublic, evalJavaScript } from "./scripting";
+import * as scripting from "./scripting";
 import { getElementById, makeElement, slugify, stringify } from "./util";
+
+declare global {
+  interface Window {
+    Brick: typeof scripting.BrickPublic;
+  }
+
+  // textContent is only `null` for `document`, for all Elements it is always a string.
+  interface Element {
+    textContent: string;
+  }
+}
 
 window.addEventListener("error", (event) => {
   const { error } = event;
@@ -28,18 +39,6 @@ window.addEventListener("unhandledrejection", (event) => {
   const { reason } = event;
   alert(`Fatal Error!\n${reason}`);
 });
-
-declare global {
-  interface Window {
-    Brick: typeof BrickPublic;
-  }
-
-  // textContent is only `null` for `document`, for all Elements it is always a string.
-  interface Element {
-    textContent: string;
-  }
-}
-window.Brick = BrickPublic;
 
 const storyData = document.getElementsByTagName("tw-storydata")[0];
 passages.init(storyData);
@@ -76,10 +75,11 @@ async function init() {
   dialog.init(slugify(storyTitle));
   await initSaves(storyTitle, ifid);
   await engine.init();
+  scripting.init();
   macros.installBuiltins(engine.constants);
 
   for (const script of scripts) {
-    evalJavaScript(script.textContent);
+    scripting.evalJavaScript(script.textContent);
   }
 
   await engine.resumeOrStart();

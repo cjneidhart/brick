@@ -24,13 +24,10 @@ The `@` should change from red to blue when you type the `(`.
 ### Tweego
 
 Download the [latest version of Brick].
-Consult [Tweego's documentation](https://www.motoslave.net/tweego/docs/#getting-started-story-formats-search-directories)
-and place the `format.js` file in an appropriate directory.
-Make sure your `StoryData` passage has
-<code style={{whiteSpace: "nowrap"}}>"format": "Brick"</code>
-(case-sensitive) and
-<code style={{whiteSpace: "nowrap"}}>"format-version": 0</code>.
+Consult [Tweego's documentation] and place the `format.js` file in an appropriate directory.
+Make sure your `StoryData` passage has `"format": "Brick"` (case-sensitive) and `"format-version": 0`.
 
+[Tweego's documentation]: https://www.motoslave.net/tweego/docs/#getting-started-story-formats-search-directories
 [latest version of Brick]: https://cjneidhart.github.io/brick/latest/format.js
 
 ## Fundamental Concepts

@@ -259,14 +259,11 @@ function token(stream, state) {
   }
 }
 
-function mode() {
+export function mode() {
   return { startState, token };
 }
 
-this.editorExtensions = {
-  twine: {
-    "^2.0.0": {
-      codeMirror: { mode },
-    },
-  },
-};
+export function register(CodeMirror) {
+  CodeMirror.defineMode("brick", mode);
+}
+

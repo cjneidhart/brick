@@ -18,7 +18,7 @@
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme='dark'] {
+[data-theme="dark"] {
   --ifm-color-primary: #ed333b;
   --ifm-color-primary-dark: #eb1922;
   --ifm-color-primary-darker: #e1141d;
@@ -27,4 +27,99 @@
   --ifm-color-primary-lighter: #f15b61;
   --ifm-color-primary-lightest: #f48287;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+p code {
+  white-space: nowrap;
+}
+
+.code-block {
+  .cm-header {
+    color: blue;
+  }
+  .cm-quote {
+    color: #090;
+  }
+  .cm-negative {
+    color: #d44;
+  }
+  .cm-positive {
+    color: #292;
+  }
+  .cm-header,
+  .cm-strong {
+    font-weight: bold;
+  }
+  .cm-em {
+    font-style: italic;
+  }
+  .cm-link {
+    text-decoration: underline;
+  }
+  .cm-strikethrough {
+    text-decoration: line-through;
+  }
+
+  .cm-keyword {
+    color: #708;
+  }
+  .cm-atom {
+    color: #219;
+  }
+  .cm-number {
+    color: #164;
+  }
+  .cm-def {
+    color: #00f;
+  }
+  /* .cm-variable,
+  .cm-punctuation,
+  .cm-property,
+  .cm-operator {
+  } */
+  .cm-variable-2 {
+    color: #05a;
+  }
+  .cm-variable-3,
+  .cm-s-default .cm-type {
+    color: #085;
+  }
+  .cm-comment {
+    /* color: #a50; */
+    color: #999988;
+    font-style: italic;
+  }
+  .cm-string {
+    color: #a11;
+  }
+  .cm-string-2 {
+    color: #f50;
+  }
+  .cm-meta {
+    color: #555;
+  }
+  .cm-qualifier {
+    color: #555;
+  }
+  .cm-builtin {
+    color: #30a;
+  }
+  .cm-bracket {
+    color: #997;
+  }
+  .cm-tag {
+    color: #170;
+  }
+  .cm-attribute {
+    color: #00c;
+  }
+  .cm-hr {
+    color: #999;
+  }
+  .cm-link {
+    color: #00c;
+  }
+  .cm-error {
+    color: #f00;
+  }
 }

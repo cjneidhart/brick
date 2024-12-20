@@ -27,6 +27,20 @@ version = {
 
 fs.mkdirSync("storyformats/brick", { recursive: true });
 
+// Because the Twine extension expects an assignment to be made to `this.editorExtensions`,
+// we have to jump through a lot of hoops to get all the code in one file and not in an IIFE.
+const twineExtensionsPreBuild =
+  readTextFile(new URL(import.meta.resolve("brick-codemirror"))).replaceAll("\nexport", "\n") +
+  `
+REPLACE_WITH_THIS_KEYWORD.editorExtensions = {
+  twine: {
+    "^2.4.0": {
+      codeMirror: { mode },
+    },
+  },
+};
+`;
+
 const baseContext = {
   bundle: true,
   define: { BRICK_VERSION: JSON.stringify(version) },
@@ -49,7 +63,10 @@ const buildContexts = await Promise.all([
   esbuild.build({
     ...baseContext,
     bundle: false, // So it doesn't get wrapped in an IIFE
-    entryPoints: ["src/extend-twine.js"],
+    stdin: {
+      contents: twineExtensionsPreBuild,
+      loader: "js",
+    },
   }),
 ]);
 const [brickJs, brickCss, editorExtensions] = buildContexts.map((ctx) => ctx.outputFiles[0].text);
@@ -75,7 +92,7 @@ const storyJson = {
     "and a focus on performance and simplicity.<br><br>" +
     '<a href="https://github.com/cjneidhart/brick">Homepage</a>',
   source: storyFormat,
-  hydrate: editorExtensions.replace("(void 0).editorExtensions", "this.editorExtensions"),
+  hydrate: editorExtensions.replace("REPLACE_WITH_THIS_KEYWORD", "this"),
   url: "https://github.com/cjneidhart/brick",
   license: "GPL-3.0",
 };

@@ -1,11 +1,11 @@
-import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
-import "dotenv/config";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
-const fullUrl = URL.parse(process.env.READTHEDOCS_CANONICAL_URL || "https://brick-tw.readthedocs.io");
+const fullUrl = URL.parse(
+  process.env.READTHEDOCS_CANONICAL_URL || "https://brick-tw.readthedocs.io/en/latest"
+);
 
 const config: Config = {
   title: "Brick",
@@ -39,6 +39,7 @@ const config: Config = {
       "classic",
       {
         docs: {
+          breadcrumbs: false,
           sidebarPath: "./sidebars.ts",
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
@@ -68,8 +69,7 @@ const config: Config = {
   ],
 
   themeConfig: {
-    // Replace with your project's social card
-    image: "img/docusaurus-social-card.jpg",
+    image: "img/brick-social-card.jpg",
     navbar: {
       title: "Brick",
       logo: {
@@ -137,6 +137,9 @@ const config: Config = {
       copyright: `Copyright © ${new Date().getFullYear()} Chris Neidhart. Built with Docusaurus.`,
     },
   } satisfies Preset.ThemeConfig,
+  customFields: {
+    rtdVersion: process.env.READTHEDOCS_VERSION || "latest",
+  },
 };
 
 export default config;

@@ -1,3 +1,11 @@
+/**
+ * @module CodeBlock
+ *
+ * Replace the built-in `CodeBlock` component, which uses Prism for its syntax highlighting,
+ * with a custom component that uses CodeMirror.
+ * Specifically, this component uses CodeMirror's `runmode` addon.
+ */
+
 import React, { isValidElement } from "react";
 import useIsBrowser from "@docusaurus/useIsBrowser";
 import { parseLanguage } from "@docusaurus/theme-common/internal";

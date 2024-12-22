@@ -4,10 +4,10 @@
 function startState() {
   return {
     blockComment: false,
-    expectMacroBody: false,
     js: false,
     nesting: [],
     jsNesting: [],
+    status: "default",
   };
 }
 
@@ -48,6 +48,7 @@ const OPERATORS = [
   "=",
   "==",
   "===",
+  "=>",
   ">",
   ">>",
   ">>>",
@@ -63,12 +64,12 @@ const OPERATORS = [
   "~",
 ];
 
-const RE_NUMBER_ERROR = /^[0-9.a-fA-F]+n?/;
+const RE_NUMBER_ERROR = /^[_0-9.a-fA-F]+n?/;
 // "I wish for a declarative method to express a lexical grammar"
 // the programmer said, and the monkey's paw curled.
 const RE_NUMBER_LEADING_ZERO =
   /^(?:[bB](?:_?[01])+n?|[oO](?:_?[0-7])+n?|[xX](?:_?[0-9a-fA-F])+n?|n|(?:\.(?:_?[0-9])*)?(?:[eE](?:_?[0-9])+)?)/;
-const RE_POSTNUMBER_ERROR = /^[0-9\p{ID_Start}]/u;
+const RE_POSTNUMBER_ERROR = /^[_0-9\p{ID_Start}]/u;
 
 function postNumberCheck(stream) {
   return stream.match(RE_POSTNUMBER_ERROR) ? "error number" : "number";
@@ -86,7 +87,11 @@ function tokenJsNumber(stream, firstChar) {
       return postNumberCheck(stream);
     }
   } else {
-    if (stream.match(/^(?:(?:_?[0-9])*(?:\.(?:_?[0-9])*)?(?:[eE](?:_?[0-9])+)?|(?:_?[0-9])*n)/)) {
+    if (
+      stream.match(
+        /^(?:(?:_?[0-9])*(?:\.(?:_?[0-9])*)?(?:[eE](?:_?[0-9])+)?|(?:_?[0-9])*n)/
+      )
+    ) {
       return postNumberCheck(stream);
     }
   }
@@ -101,9 +106,9 @@ function tokenJs(stream, state) {
     return OPERATORS.includes(stream.current()) ? "operator" : "error operator";
   }
 
-  if (stream.match(/^[$_a-zA-Z][$_a-zA-Z0-9]*/)) {
-    if (["$", "_"].includes(stream.current()[0])) {
-      return "variable-3";
+  if (stream.match(/^@?[$_a-zA-Z][$_a-zA-Z0-9]*/)) {
+    if (["$", "_", "@"].includes(stream.current()[0])) {
+      return "variable-2";
     } else if (KEYWORDS.includes(stream.current())) {
       return "keyword";
     } else {
@@ -113,7 +118,10 @@ function tokenJs(stream, state) {
 
   const c = stream.next();
 
-  if ((c >= "0" && c <= "9") || (c === "." && stream.peek() >= "0" && stream.peek() <= "9")) {
+  if (
+    (c >= "0" && c <= "9") ||
+    (c === "." && stream.peek() >= "0" && stream.peek() <= "9")
+  ) {
     return tokenJsNumber(stream, c);
   }
 
@@ -148,9 +156,7 @@ function tokenJs(stream, state) {
         state.jsNesting.pop();
         if (state.jsNesting.length === 0) {
           state.js = false;
-          state.expectMacroBody = true;
-          stream.eatSpace();
-          return "variable-2";
+          return "bracket";
         } else {
           return "bracket";
         }
@@ -180,6 +186,147 @@ function tokenJs(stream, state) {
   }
 }
 
+const miniModes = {
+  closingTag(stream, state) {
+    state.status = "default";
+    if (stream.match(/^\s*>/)) {
+      return "bracket";
+    }
+    stream.next();
+    return "error";
+  },
+
+  closingTagPreName(stream, state) {
+    if (stream.match(/\p{ID_Start}\p{ID_Continue}*(?:-\p{ID_Continue})*/u)) {
+      state.status = "closingTag";
+      return "tag";
+    }
+    state.status = "default";
+    stream.next();
+    return "error";
+  },
+
+  expectAttrValue(stream, state) {
+    if (stream.match(/^"([^"]*)"/)) {
+      state.status = "openTag";
+      return "string";
+    } else if (stream.match(/^".*/)) {
+      state.status = "default";
+      return "string error";
+    } else if (stream.eat("(")) {
+      state.js = true;
+      state.jsNesting = [")"];
+      state.status = "openTag";
+      return "bracket";
+    } else {
+      state.status = "default";
+      stream.next();
+      return "error";
+    }
+  },
+
+  exprFollowUp(stream, state) {
+    if (stream.eat("[")) {
+      state.jsNesting = ["]"];
+      state.js = true;
+      return "bracket";
+    }
+
+    if (stream.eat("(")) {
+      state.jsNesting = [")"];
+      state.js = true;
+      return "bracket";
+    }
+
+    if (stream.eat(".")) {
+      state.status = "exprPostDot";
+      return "";
+    }
+
+    if (stream.match(/^\s*\{/)) {
+      state.nesting.push("}");
+      return "bracket";
+    }
+
+    state.status = "default";
+    return token(stream, state);
+  },
+
+  exprPostDot(stream, state) {
+    if (stream.match(/^\p{ID_Start}\p{ID_Continue}*/u)) {
+      state.status = "exprFollowUp";
+      return "variable-2";
+    }
+
+    state.status = "default";
+    return token(stream, state);
+  },
+
+  macroFollowUp(stream, state) {
+    if (stream.match(/^\s*\(/)) {
+      state.jsNesting = [")"];
+      state.js = true;
+      state.status = "exprFollowUp";
+      return "bracket";
+    }
+
+    return miniModes.exprFollowUp(stream, state);
+  },
+
+  openTag(stream, state) {
+    if (state.maybeAttrEquals) {
+      state.maybeAttrEquals = false;
+      if (stream.eat("=")) {
+        state.status = "expectAttrValue";
+        return "";
+      }
+    }
+    if (stream.match(/^\s*\/?>/)) {
+      state.status = "default";
+      return "bracket";
+    }
+    if (
+      stream.match(/^\s*\p{ID_Start}\p{ID_Continue}*(?:-\p{ID_Continue})*/u)
+    ) {
+      state.maybeAttrEquals = true;
+      return "attribute";
+    }
+
+    stream.next();
+    state.status = "default";
+    return "error";
+  },
+
+  openTagPreName(stream, state) {
+    if (stream.match(/^\p{ID_Start}\p{ID_Continue}*(?:-\p{ID_Continue})*/u)) {
+      state.status = "openTag";
+      return "tag";
+    } else {
+      state.status = "default";
+      stream.next();
+      return "error";
+    }
+  },
+
+  wikiLink(stream, state) {
+    if (stream.match(/^->|<-|\|/)) {
+      return "bracket";
+    }
+
+    if (stream.match("]]")) {
+      state.status = "default";
+      return "bracket";
+    }
+
+    if (stream.match(/^[^<|\-\]]+/)) {
+      return null;
+    }
+
+    stream.next();
+    return null;
+  },
+};
+
 function token(stream, state) {
   if (state.blockComment) {
     if (stream.match(/^[^]*?\*\//)) {
@@ -194,21 +341,22 @@ function token(stream, state) {
     return tokenJs(stream, state);
   }
 
-  const c = stream.next();
-  if (state.expectMacroBody) {
-    state.expectMacroBody = false;
-    if (c === "{") {
-      state.nesting.push("}");
-      return "bracket";
-    }
+  if (state.status in miniModes) {
+    return miniModes[state.status](stream, state);
   }
 
+  const c = stream.next();
+
   switch (c) {
+    case "@":
     case "$":
     case "_":
-      if (stream.match(/^[$_a-zA-Z]/)) {
-        stream.match(/^[$_a-zA-Z0-9]*/);
-        return "variable-3";
+      if (
+        stream.match(/^\p{ID_Start}\p{ID_Continue}*/u) ||
+        (c === "@" && stream.peek() === "(")
+      ) {
+        state.status = c === "@" ? "macroFollowUp" : "exprFollowUp";
+        return "variable-2";
       } else {
         return "error";
       }
@@ -225,36 +373,45 @@ function token(stream, state) {
         return null;
       }
 
-    case "@":
-      if (stream.match(/^[a-zA-Z]*\s*\(/)) {
-        state.jsNesting = [")"];
-        state.js = true;
-        return "variable-2";
-      } else if (stream.match(/^[a-zA-Z]*\s*\{/)) {
-        stream.backUp(1);
-        state.expectMacroBody = true;
-        return "variable-2";
-      } else {
-        return "error";
+    case "{":
+      return "error";
+
+    case "[":
+      if (stream.eat("[")) {
+        state.status = "wikiLink";
+        return "bracket";
       }
 
     case "}":
-      if (state.nesting[state.nesting.length - 1] === "}") {
+      if (c === state.nesting.at(-1)) {
         state.nesting.pop();
         return "bracket";
-      } else {
-        return null;
       }
+      return "error";
 
     case "\\":
-      if (stream.next()) {
-        return "atom";
+      stream.next();
+      return "atom";
+
+    case "<": {
+      const peek = stream.peek();
+      if (/\p{ID_Start}/u.test(peek)) {
+        state.status = "openTagPreName";
+        return "bracket";
+      } else if (peek === "/") {
+        stream.next();
+        state.status = "closingTagPreName";
+        return "bracket";
       } else {
-        return "error";
+        return "bracket error";
       }
+    }
+
+    case ">":
+      return "error";
 
     default:
-      stream.match(/^[^$_/@{}\\]*/);
+      stream.match(/^[^$_/@{}\\<>\[]*/);
       return null;
   }
 }
@@ -266,4 +423,3 @@ export function mode() {
 export function register(CodeMirror) {
   CodeMirror.defineMode("brick", mode);
 }
-

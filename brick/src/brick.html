@@ -1,39 +1,62 @@
 <!doctype html>
 <html lang="en-US" data-bs-theme="dark">
-  <head>
-    <meta charset="utf-8" />
-    <title>{{STORY_NAME}}</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <style id="style-bootstrap">
-      /*BOOTSTRAP_STYLE*/
-    </style>
-    <style id="style-brick">
-      /*BRICK_STYLE*/
-    </style>
-  </head>
 
-  <body>
-    {{STORY_DATA}}
-    <div id="brick-viewport">
-      <aside id="ui-bar">
-        <div id="brick-history-controls">
-          <button id="brick-history-backward" class="brick-ui-btn" type="button">&#x2190;</button>
-          <button id="brick-history-forward" class="brick-ui-btn" type="button">&#x2192;</button>
-        </div>
-        <h1 id="story-title">{{STORY_NAME}}</h1>
-        <ul id="brick-menu-core">
-          <li><button id="brick-saves" class="brick-ui-btn" type="button">SAVES</button></li>
-          <li><button id="brick-restart" class="brick-ui-btn" type="button">RESTART</button></li>
-        </ul>
-      </aside>
+<head>
+  <meta charset="utf-8" />
+  <title>{{STORY_NAME}}</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style id="style-bootstrap">
+    /*BOOTSTRAP_STYLE*/
+  </style>
+  <style id="style-brick">
+    /*BRICK_STYLE*/
+  </style>
+</head>
 
-      <main id="brick-main">
-        <noscript>JavaScript must be enabled to play this story.</noscript>
-      </main>
-    </div>
-    <dialog id="brick-dialog"></dialog>
-    <script id="script-brick" type="text/javascript">
-      /*BRICK_SCRIPT*/
-    </script>
-  </body>
+<body>
+  {{STORY_DATA}}
+  <div id="brick-viewport">
+    <aside id="ui-bar">
+      <div id="brick-history-controls">
+        <button id="brick-history-backward" class="brick-ui-btn" type="button">&#x2190;</button>
+        <button id="brick-history-forward" class="brick-ui-btn" type="button">&#x2192;</button>
+      </div>
+      <h1 id="story-title">{{STORY_NAME}}</h1>
+      <ul id="brick-menu-core">
+        <li><button id="brick-saves" class="brick-ui-btn" type="button">SAVES</button></li>
+        <li><button id="brick-restart" class="brick-ui-btn" type="button">RESTART</button></li>
+      </ul>
+    </aside>
+
+    <main id="brick-main">
+      <noscript>JavaScript must be enabled to play this story.</noscript>
+    </main>
+  </div>
+  <dialog id="brick-dialog"></dialog>
+  <script id="script-brick" type="text/javascript">
+    /**
+     * Copyright (C) 2024  Chris Neidhart
+     *
+     *
+     * The JavaScript code in this element is free software: you can
+     * redistribute it and/or modify it under the terms of the GNU
+     * General Public License (GNU GPL) as published by the Free Software
+     * Foundation, either version 3 of the License, or (at your option)
+     * any later version.  The code is distributed WITHOUT ANY WARRANTY;
+     * without even the implied warranty of MERCHANTABILITY or FITNESS
+     * FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+     *
+     * As additional permission under GNU GPL version 3 section 7, you
+     * may distribute non-source (e.g., minimized or compacted) forms of
+     * that code without the copy of the GNU GPL normally required by
+     * section 4, provided you include this license notice and a URL
+     * through which recipients can access the Corresponding Source.
+     *
+     * The source code for this <script> element is available at:
+     *    https://github.com/cjneidhart/brick
+     */
+    /*BRICK_SCRIPT*/
+  </script>
+</body>
+
 </html>

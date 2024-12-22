@@ -9,6 +9,7 @@ import config from "./config";
 import { showPassage } from "./dialog";
 import { backward, constants, forward, redo, storyVariables, tempVariables } from "./engine";
 import * as passages from "./passages";
+import * as saves from "./saves";
 import * as util from "./util";
 
 /** This is defined in `build.js` */
@@ -37,6 +38,9 @@ export const BrickPublic = {
     showPassage,
   },
   passages,
+  saves: {
+    registerClass: saves.registerClass,
+  },
   clone: util.clone,
   either(values: unknown): unknown {
     if (arguments.length !== 1) {

@@ -30,7 +30,8 @@ export default function CodeBlock({
   language: languageProp,
   ..._props
 }) {
-  const language = (languageProp ?? parseLanguage(className))?.toLowerCase();
+  const languageShort = (languageProp ?? parseLanguage(className))?.toLowerCase();
+  const language = languageShort === "js" ? "javascript" : languageShort;
   const children = maybeStringifyChildren(rawChildren);
 
   const isBrowser = useIsBrowser();
@@ -38,6 +39,7 @@ export default function CodeBlock({
   if (isBrowser) {
     const codeMirror = require("codemirror");
     require("codemirror/addon/runmode/runmode");
+    require("codemirror/mode/javascript/javascript");
     const {register: registerBrick} = require("brick-codemirror");
     registerBrick(codeMirror);
     const output = [];

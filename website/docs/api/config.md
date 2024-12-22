@@ -26,8 +26,8 @@ However, raising it too high can cause unnecessary clutter in the player's stora
 If a loop runs more than this many times, it will be cancelled and an error message will be displayed.
 You can set this to `Infinity` to disable it.
 
-[`@while`]: ./macros#while
-[`@for`]: ./macros#for
+[`@while`]: ../macros#while
+[`@for`]: ../macros#for
 
 ## `preProcessText`
 

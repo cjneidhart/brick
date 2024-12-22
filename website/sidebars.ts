@@ -22,7 +22,11 @@ const sidebars: SidebarsConfig = {
     "intro",
     "markup",
     "macros",
-    "config",
+    {
+      type: "category",
+      label: "API",
+      items: ["api/config", "api/saves"],
+    },
     // 'hello',
     // {
     //   type: 'category',

@@ -16,8 +16,6 @@ Even if it's already listed in this file, creating an Issue helps me decide what
 ## Planned Features
 
 - Automated testing.
-- Nicer-looking documentation, potentially using a service like readthedocs.io.
-  This ties in with:
 - A new-user tutorial. This would start with the very basics, like links between passages, and eventually get to advanced JavaScript features.
 - A way for users to add macros via markup, like `<<widget>>` in SugarCube or `(macro: )` in Harlowe.
   I'll probably call it `@macro`.

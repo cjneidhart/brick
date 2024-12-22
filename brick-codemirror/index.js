@@ -356,7 +356,7 @@ function token(stream, state) {
         (c === "@" && stream.peek() === "(")
       ) {
         state.status = c === "@" ? "macroFollowUp" : "exprFollowUp";
-        return "variable-2";
+        return c === "@" ? "keyword" : "variable-2";
       } else {
         return "error";
       }

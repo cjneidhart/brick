@@ -111,7 +111,7 @@ You can also include HTML elements in markup.
 
 ```brick
 // This uses <code> to display text in a monospace font.
-<code>I'm sorry Dave, I'm afraid I can't do that<code>,
+<code>I'm sorry Dave, I'm afraid I can't do that</code>,
 said <abbr title="Heuristically Programmed Algorithmic Computer">HAL</abbr>.
 ```
 

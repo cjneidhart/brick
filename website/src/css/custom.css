@@ -125,3 +125,94 @@ p code {
     color: #f00;
   }
 }
+
+[data-theme="dark"] .code-block {
+  .cm-header {
+    color: hsl(240, 100%, 66%);
+  }
+  .cm-quote {
+    color: #439c43;
+  }
+  .cm-negative {
+    color: #d44;
+  }
+  .cm-positive {
+    color: #292;
+  }
+  .cm-header,
+  .cm-strong {
+    font-weight: bold;
+  }
+  .cm-em {
+    font-style: italic;
+  }
+  .cm-link {
+    text-decoration: underline;
+  }
+  .cm-strikethrough {
+    text-decoration: line-through;
+  }
+
+  .cm-keyword {
+    color: rgb(192, 89, 206);
+  }
+  .cm-atom {
+    color: rgb(76, 61, 175);
+  }
+  .cm-number {
+    color: rgb(46, 160, 114);
+  }
+  .cm-def {
+    color: rgb(100, 100, 255);
+  }
+  /* .cm-variable,
+  .cm-punctuation,
+  .cm-property,
+  .cm-operator {
+  } */
+  .cm-variable-2 {
+    color: rgb(85, 151, 218);
+  }
+  .cm-variable-3,
+  .cm-s-default .cm-type {
+    color: #085;
+  }
+  .cm-comment {
+    /* color: #a50; */
+    color: #727269;
+    font-style: italic;
+  }
+  .cm-string {
+    color: rgb(228, 94, 61);
+  }
+  .cm-string-2 {
+    color: rgb(253, 140, 84);
+  }
+  .cm-meta {
+    color: #555;
+  }
+  .cm-qualifier {
+    color: #555;
+  }
+  .cm-builtin {
+    color: #30a;
+  }
+  .cm-bracket {
+    color: #997;
+  }
+  .cm-tag {
+    color: rgb(103, 190, 87);
+  }
+  .cm-attribute {
+    color: rgb(112, 109, 255);
+  }
+  .cm-hr {
+    color: #999;
+  }
+  .cm-link {
+    color: #00c;
+  }
+  .cm-error {
+    color: #f00;
+  }
+}

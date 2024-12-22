@@ -18,9 +18,10 @@ const sidebars: SidebarsConfig = {
 
   // But you can create a sidebar manually
 
-  tutorialSidebar: [
+  referenceSidebar: [
     "intro",
     "markup",
+    "special-names",
     "macros",
     {
       type: "category",

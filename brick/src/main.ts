@@ -2,6 +2,7 @@ import * as dialog from "./dialog";
 import * as engine from "./engine";
 import * as macros from "./macros";
 import * as passages from "./passages";
+import { renderPassage } from "./renderer";
 import { init as initSaves } from "./saves";
 import * as scripting from "./scripting";
 import { getElementById, makeElement, slugify, stringify } from "./util";
@@ -78,8 +79,45 @@ async function init() {
   scripting.init();
   macros.installBuiltins(engine.constants);
 
+  // "macro"-tagged passages
+  for (const psg of passages.withTag("macro")) {
+    if (!/\p{ID_Start}\p{ID_Continue}*/u.test(psg.name)) {
+      throw new Error(`Invalid macro name: "${psg.name}"`);
+    }
+    const macro: macros.Macro = (context, ...args) => {
+      if (context.content) {
+        throw new Error('This macro was created with the "macro" tag and cannot take children');
+      }
+      if (args.length !== 0) {
+        throw new Error(
+          'This macro was created with the "macro" tag and does not accept arguments',
+        );
+      }
+      const div = makeElement("div");
+      renderPassage(div, psg);
+      return div;
+    };
+    macro[macros.BRICK_MACRO_SYMBOL] = true;
+    engine.constants[psg.name] = macro;
+  }
+
   for (const script of scripts) {
     scripting.evalJavaScript(script.textContent);
+  }
+
+  const storyInit = passages.get("StoryInit");
+  if (storyInit) {
+    const div = makeElement("div");
+    renderPassage(div, storyInit);
+    div.normalize();
+    const trimmed = div.textContent.trim();
+    if (trimmed) {
+      console.warn(
+        "StoryInit, when rendered, contained non-whitespace characters. " +
+          "This is likely an error. Its contents:\n" +
+          trimmed,
+      );
+    }
   }
 
   await engine.resumeOrStart();

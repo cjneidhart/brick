@@ -63,3 +63,14 @@ A sequence of connected moments forms a _history_.
 Players can use the saves menu to create, delete, and move between histories.
 There is always one "active" history.
 This history will be restored when the player returns to the page after reloading or closing the tab.
+
+In addition to story variables, Brick also provides _temporary variables_ and _constants_.
+Temporary variables start with a `_` character.
+They function as a sort of scratch-pad that can be used by a single passage.
+Whenever the passage changes, all temporary variables are erased.
+
+Constants start with a `@` character.
+Constants can only be created during startup, usually in your [StoryInit] passage.
+Macros are actually just a special type of function that can be accessed as a constant.
+
+[StoryInit]: ./special-names#storyinit

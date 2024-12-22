@@ -35,9 +35,9 @@ This is plain text that will be printed.
 Here's some more text. This text will be printed as well.
 ```
 
-## Naked Variables
+## Variables
 
-Story and temporary variables can be included in markup without needing the `@print` macro.
+Story variables, temporary variables, and constants can be included in markup without needing the `@print` macro.
 
 ```brick
 @($appleCount = 5)

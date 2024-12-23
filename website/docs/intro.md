@@ -12,7 +12,7 @@ It is made with a focus on performance and ease-of-use.
 
 In the top menu of Twine, click **Twine** -> **Story Formats** to open the Story Formats panel.
 At the top of that panel, click **+ Add**.
-Paste in the URL `https://cjneidhart.github.io/brick/latest/format.js`, then click the green
+Paste in the URL `https://cjneidhart.github.io/brick/v0.3.1/format.js`, then click the green
 <strong style={{color: "var(--ifm-color-success)"}}>+ Add</strong>
 to confirm.
 
@@ -28,7 +28,7 @@ Consult [Tweego's documentation] and place the `format.js` file in an appropriat
 Make sure your `StoryData` passage has `"format": "Brick"` (case-sensitive) and `"format-version": 0`.
 
 [Tweego's documentation]: https://www.motoslave.net/tweego/docs/#getting-started-story-formats-search-directories
-[latest version of Brick]: https://cjneidhart.github.io/brick/latest/format.js
+[latest version of Brick]: https://cjneidhart.github.io/brick/v0.3.1/format.js
 
 ## Fundamental Concepts
 

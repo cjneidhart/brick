@@ -240,7 +240,7 @@ const miniModes = {
 
     if (stream.eat(".")) {
       state.status = "exprPostDot";
-      return "";
+      return stream.peek() && /\p{ID_Start}/u.test(stream.peek()) ? "variable-2" : "";
     }
 
     if (stream.match(/^\s*\{/)) {
@@ -395,7 +395,7 @@ function token(stream, state) {
 
     case "<": {
       const peek = stream.peek();
-      if (/\p{ID_Start}/u.test(peek)) {
+      if (peek && /\p{ID_Start}/u.test(peek)) {
         state.status = "openTagPreName";
         return "bracket";
       } else if (peek === "/") {

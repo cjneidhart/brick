@@ -40,3 +40,10 @@ export class DynamicAttributeError extends BrickError {
     this.cause = cause;
   }
 }
+
+export class ExprError extends BrickError {
+  constructor(cause: unknown, raw: string, passageName: string, lineNumber: number) {
+    const message = `while evaluating "${raw}": ${cause}`;
+    super(message, passageName, lineNumber);
+  }
+}

@@ -1,8 +1,8 @@
 import Config from "./config";
 import { constants, storyVariables, tempVariables } from "./engine";
-import { BrickError, DynamicAttributeError, MacroError } from "./error";
+import { BrickError, DynamicAttributeError, ExprError, MacroError } from "./error";
 import { BreakSignal, BRICK_MACRO_SYMBOL, isMacro, Macro, MacroContext } from "./macros";
-import { ElementTemplate, NodeTemplate, Parser, PostscriptCall } from "./parser";
+import { ElementTemplate, Expr, NodeTemplate, Parser, PostscriptCall } from "./parser";
 import { Passage, get as getPassage } from "./passages";
 import { evalExpression } from "./scripting";
 import { makeElement, stringify } from "./util";
@@ -157,12 +157,9 @@ function renderRaw(
   }
 
   // let pBuffer: (string | Element)[] = [];
-  for (let i = 0; i < input.length; i++) {
-    const nt = input[i];
-    let elt: Element | string;
+  for (const nt of input) {
     if (typeof nt === "string") {
-      elt = nt;
-      const paragraphs = elt.split("\n\n");
+      const paragraphs = nt.split("\n\n");
       let p = paragraphs.shift();
       if (typeof p === "string") {
         target.append(p);
@@ -173,69 +170,7 @@ function renderRaw(
         }
       }
     } else if (nt.type === "expr") {
-      const store =
-        nt.store === "constants"
-          ? constants
-          : nt.store === "story"
-            ? storyVariables
-            : tempVariables;
-      let value = store[nt.base];
-      let previousValue = null;
-      const lastOpAsCall: PostscriptCall | undefined =
-        nt.ops[nt.ops.length - 1]?.type === "call"
-          ? (nt.ops[nt.ops.length - 1] as PostscriptCall)
-          : undefined;
-      const simpleOps = lastOpAsCall ? nt.ops.slice(0, -1) : nt.ops;
-      for (const op of simpleOps) {
-        switch (op.type) {
-          case "index": {
-            const index = op.needsEval ? evalExpression(op.key) : op.key;
-            previousValue = value;
-            value = (value as Record<string, unknown>)[index as string];
-            break;
-          }
-
-          case "call": {
-            const args = op.args.map(evalExpression);
-            if (typeof value !== "function") {
-              throw Error();
-            }
-            const newValue = value.apply(previousValue, args);
-            previousValue = value;
-            value = newValue;
-          }
-        }
-      }
-
-      if (isMacro(value)) {
-        const args = lastOpAsCall?.args || [];
-        const context = new MacroContext(
-          "TODO",
-          nt.passageName,
-          nt.lineNumber,
-          parentContext,
-          nt.content,
-        );
-        const opts = value[BRICK_MACRO_SYMBOL];
-        const skipArgs = typeof opts === "object" && opts.skipArgs;
-        renderMacro(target, value, context, skipArgs ? args : args.map(evalExpression));
-      } else {
-        if (nt.content) {
-          renderError(
-            new BrickError("non-macros can't have bodies", nt.passageName, nt.lineNumber),
-          );
-        }
-        if (lastOpAsCall) {
-          const args = lastOpAsCall.args.map(evalExpression);
-          if (typeof value !== "function") {
-            throw Error();
-          }
-          const newValue = value.apply(previousValue, args);
-          previousValue = value;
-          value = newValue;
-        }
-        target.append(value instanceof Node ? value : String(value));
-      }
+      noErrors = renderExpr(target, nt, parentContext) && noErrors;
     } else if (nt.type === "chain") {
       const name = nt.segments[0].name;
       const macro = constants[name];
@@ -245,7 +180,7 @@ function renderRaw(
       const context = new MacroContext(name, nt.passageName, nt.lineNumber, parentContext, []);
       renderMacro(target, macro, context, nt.segments);
     } else if (nt.type === "element") {
-      noErrors = renderElement(nt, target, parentContext) || noErrors;
+      noErrors = renderElement(nt, target, parentContext) && noErrors;
     } else if (nt.type === "linkBox") {
       const linkMacro = constants.link;
       if (!isMacro(linkMacro)) {
@@ -260,8 +195,154 @@ function renderRaw(
       // const span = makeElement("span", { class: "brick-error" }, `ERROR: ${nt.message}`, br, loc);
       target.append(renderError(new BrickError(nt.message, nt.passageName, nt.lineNumber)));
     } else {
-      throw new Error();
+      throw new Error(`Unknown NodeTemplate type: ${(nt as Expr).type}`);
     }
+  }
+
+  return noErrors;
+}
+
+function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext): boolean {
+  let noErrors = true;
+  const store =
+    expr.store === "constants"
+      ? constants
+      : expr.store === "story"
+        ? storyVariables
+        : tempVariables;
+  const storeChar = { constants: "@", story: "$", temp: "_" }[expr.store];
+  let value: unknown;
+  try {
+    value = store[expr.base];
+  } catch (error) {
+    const brickError = new ExprError(
+      error,
+      storeChar + expr.base,
+      expr.passageName,
+      expr.lineNumber,
+    );
+    target.append(renderError(brickError));
+    return false;
+  }
+
+  let previousValue: unknown = null;
+  const lastOpAsCall: PostscriptCall | undefined =
+    expr.ops[expr.ops.length - 1]?.type === "call"
+      ? (expr.ops[expr.ops.length - 1] as PostscriptCall)
+      : undefined;
+  const simpleOps = lastOpAsCall ? expr.ops.slice(0, -1) : expr.ops;
+  let valueStr = storeChar + expr.base;
+  for (const op of simpleOps) {
+    switch (op.type) {
+      case "index": {
+        let index;
+        try {
+          index = op.needsEval ? evalExpression(op.key) : op.key;
+        } catch (error) {
+          const brickError = new ExprError(
+            error,
+            op.raw.slice(1, -1),
+            expr.passageName,
+            expr.lineNumber,
+          );
+          target.append(renderError(brickError));
+          return false;
+        }
+        previousValue = value;
+        try {
+          value = (value as Record<string, unknown>)[index as string];
+        } catch (error) {
+          const brickError = new ExprError(
+            error,
+            `${valueStr}${op.raw}`,
+            expr.passageName,
+            expr.lineNumber,
+          );
+          target.append(renderError(brickError));
+          return false;
+        }
+        valueStr += op.raw;
+        break;
+      }
+
+      case "call": {
+        // const args = op.args.map(evalExpression);
+        const args: unknown[] = [];
+        for (const argStr of op.args) {
+          try {
+            args.push(evalExpression(argStr));
+          } catch (error) {
+            const brickError = new ExprError(error, argStr, expr.passageName, expr.lineNumber);
+            target.append(renderError(brickError));
+            return false;
+          }
+        }
+        if (typeof value !== "function") {
+          const error = new BrickError(
+            `"${valueStr}" is not a function`,
+            expr.passageName,
+            expr.lineNumber,
+          );
+          target.append(renderError(error));
+          return false;
+        }
+        let newValue;
+        try {
+          newValue = value.apply(previousValue, args);
+        } catch (error) {
+          const brickError = new ExprError(
+            error,
+            valueStr + op.raw,
+            expr.passageName,
+            expr.lineNumber,
+          );
+          target.append(renderError(brickError));
+        }
+        previousValue = value;
+        value = newValue;
+      }
+    }
+  }
+
+  if (isMacro(value)) {
+    const args = lastOpAsCall?.args || [];
+    const context = new MacroContext(
+      valueStr,
+      expr.passageName,
+      expr.lineNumber,
+      parentContext,
+      expr.content,
+    );
+    const opts = value[BRICK_MACRO_SYMBOL];
+    const skipArgs = typeof opts === "object" && opts.skipArgs;
+    noErrors =
+      renderMacro(target, value, context, skipArgs ? args : args.map(evalExpression)) && noErrors;
+  } else {
+    if (expr.content) {
+      const brickError = new BrickError(
+        `${valueStr} is not a macro`,
+        expr.passageName,
+        expr.lineNumber,
+      );
+      target.append(renderError(brickError));
+      return false;
+    }
+    if (lastOpAsCall) {
+      const args = lastOpAsCall.args.map(evalExpression);
+      if (typeof value !== "function") {
+        const error = new BrickError(
+          `"${valueStr}" is not a function`,
+          expr.passageName,
+          expr.lineNumber,
+        );
+        target.append(renderError(error));
+        return false;
+      }
+      const newValue = value.apply(previousValue, args);
+      previousValue = value;
+      value = newValue;
+    }
+    target.append(value instanceof Node ? value : String(value));
   }
 
   return noErrors;

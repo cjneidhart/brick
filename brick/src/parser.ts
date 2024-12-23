@@ -108,6 +108,7 @@ export interface PostscriptIndex {
   type: "index";
   key: string;
   needsEval: boolean;
+  raw: string;
 }
 
 export interface PostscriptCall {
@@ -331,15 +332,15 @@ export class Parser {
 
     const ops: PostscriptOp[] = [];
     outerLoop: while (true) {
+      const opStartIdx = this.index;
       switch (this.lookahead()) {
         case "(": {
           this.index++;
-          const startIndex = this.index;
           const args = this.parseJsArgs(")");
           if (!(args instanceof Array)) {
             throw Error();
           }
-          const raw = this.input.substring(startIndex, this.index - 1);
+          const raw = this.input.slice(opStartIdx, this.index);
           ops.push({ type: "call", args, raw });
           break;
         }
@@ -350,7 +351,12 @@ export class Parser {
           if (!(args instanceof Array)) {
             throw Error();
           }
-          ops.push({ type: "index", key: args.join(","), needsEval: true });
+          ops.push({
+            type: "index",
+            key: args.join(","),
+            needsEval: true,
+            raw: this.input.slice(opStartIdx, this.index),
+          });
           break;
         }
 
@@ -358,7 +364,12 @@ export class Parser {
           this.index++;
           const match = this.consume(RE.js.identifier);
           if (match) {
-            ops.push({ type: "index", key: match[0], needsEval: false });
+            ops.push({
+              type: "index",
+              key: match[0],
+              needsEval: false,
+              raw: this.input.slice(opStartIdx, this.index),
+            });
           } else {
             this.index--;
             break outerLoop;
@@ -453,10 +464,12 @@ export class Parser {
     if (!this.consume(RE.macroArgsStart)) {
       throw "bad for";
     }
+    const argsStartIdx = this.index - 1;
     const args = this.parseForArgs();
     if (!(args instanceof Array)) {
       throw args;
     }
+    const raw = this.input.slice(argsStartIdx, this.index);
 
     const body = this.consume(RE.macroBodyStart) ? this.parse(/\}/y) : undefined;
 
@@ -466,7 +479,7 @@ export class Parser {
       lineNumber,
       store: "constants",
       base: "for",
-      ops: [{ type: "call", args, raw: "TODO" }],
+      ops: [{ type: "call", args, raw }],
       content: body,
     };
   }

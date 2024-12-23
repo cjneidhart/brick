@@ -24,6 +24,36 @@ $original.value // 20
 $clone.value    // 5
 ```
 
+## `createMacro`
+
+**TYPE**: `createMacro(func)`
+
+`createMacro` is the most powerful way to create macros.
+It returns a macro object, which can be assigned to a property on `constants` and used as a macro.
+When the macro is called, it will call `func`. The first argument will be a special `MacroContext` object.
+All additional arguments will be the arguments received by the macro.
+The macro context has two important properties:
+
+- `contents`: If this is present, it is the AST of the macro's children.
+  It can be passed to [`render`](./misc#render) to be converted into HTML.
+- `createCallback`: this method receives one argument, a function, and returns a function that when called:
+  - unpacks all captured variables into `Engine.temp`
+  - calls the wrapped function
+  - restores the captured variables from before it was called
+  - returns the value returned by the wrapped function
+
+## `either`
+
+**TYPE**: `either(Array<T>) -> T`
+
+Picks a random element from the array, and returns it.
+
+**Example**: Picking a random weekday
+
+```brick
+@(_weekday = either(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]))
+```
+
 ## `makeElement`
 
 **TYPE**: `makeElement(tagName: string, attributes?: object, ...children: (string | Node)[])`
@@ -55,14 +85,29 @@ until it reaches or passes `stop`. Notably, it does not yield `stop`.
 @for(_i of numberRange(5)) { Hello! }
 ```
 
-## `either`
+## `render`
 
-**TYPE**: `either(Array<T>) -> T`
+**TYPE**: `render(target: Element | DocumentFragment, input: AST | Passage, parentContext?: MacroContext)`
 
-Picks a random element from the array, and returns it.
+`render` is mainly intended to be used within macros.
+When `input` is a `Passage`, it will be parsed and converted to an `AST`.
+The `AST` will be rendered onto `target`.
+Any pre-existing children of `target` will be left alone.
 
-**Example**: Picking a random weekday
+## `renderPassage`
 
-```brick
-@(_weekday = either(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]))
-```
+**TYPE**: `renderPassage(target: HTMLElement, passage: string | Passage)`
+
+This can be used to render a passage onto an element.
+If `passage` is a string, it will be interpreted as the name of a passage.
+
+The target's contents will be cleared before rendering the passage.
+`renderPassage` also sets several attributes on the element:
+
+- The element gains a new class, which is the passage's name slugified, prefixed by `psg-`.
+- `data-name` is set to the passage's name, not slugified.
+- `data-tags` is seto to the passage's tags, separated by spaces.
+
+If the passage does not exist, an error indicating as such will be rendered onto the element.
+If the passage does not exist or any errors occurred while rendering, `renderPassage` will return `false`.
+Else, it returns `true`.

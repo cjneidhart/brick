@@ -49,6 +49,15 @@ export class BreakSignal {
   }
 }
 
+export function createMacro(
+  macroFunc: (context: MacroContext, ...args: unknown[]) => string | Node,
+  options?: { chainWith?: RegExp; isForMacro?: boolean; skipArgs?: boolean },
+): Macro {
+  const m: Macro = (ctx, ...args) => macroFunc(ctx, ...args);
+  m[BRICK_MACRO_SYMBOL] = options ?? true;
+  return m;
+}
+
 export function installBuiltins(constants: Record<string, unknown>) {
   Object.assign(constants, {
     "": unnamed,

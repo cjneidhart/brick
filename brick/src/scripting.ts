@@ -8,7 +8,9 @@
 import config from "./config";
 import { showPassage } from "./dialog";
 import { backward, constants, forward, redo, storyVariables, tempVariables } from "./engine";
+import { createMacro } from "./macros";
 import * as passages from "./passages";
+import * as renderer from "./renderer";
 import * as saves from "./saves";
 import * as util from "./util";
 
@@ -42,6 +44,7 @@ export const BrickPublic = {
     registerClass: saves.registerClass,
   },
   clone: util.clone,
+  createMacro,
   either(values: unknown): unknown {
     if (arguments.length !== 1) {
       throw new Error("either(): exactly one argument required");
@@ -66,6 +69,8 @@ export const BrickPublic = {
     }
     return util.randomInt(max);
   },
+  render: renderer.render,
+  renderPassage: renderer.renderPassage,
   slugify: util.slugify,
 };
 BrickPublic.BRICK_VERSION.toString = function () {

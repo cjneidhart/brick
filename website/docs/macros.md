@@ -45,19 +45,19 @@ This means the string can contain HTML elements or additional macros and they wi
 
 `@=` is an alias of `@render`.
 
-```brick
-// In your story JS
-C.red = function (text) {
-  return '<span class="red">' + text + '</span>';
-}
+:::warning
+Using `@render` hurts Brick's ability to generate helpful error messages when something goes wrong.
+When possible, use a custom macro or `@include` to re-use content.
+:::
 
-// In a passage
-You encounter a scary @render(C.red("ogre")).
-// Renders as:
-You encounter a scary <span class="red">ogre</span>.
+```brick
+// Contrived example: Use string interpolation to set a custom attribute key on a <span>
+@render(`<span ${$key}="someValue">This is a span</span>`)
 ```
 
 ## `@link()`
+
+**Syntax**: `@link(label, [passageName], [onClick])`
 
 This creates a hyperlink the user can interact with.
 When the link is clicked, two things will happen:

@@ -8,27 +8,65 @@ See the [`Passage` class] for more information on what a `Passage` object is.
 
 [`Passage` class]: ./types#passage
 
-## `filter`
+## Functions
 
-**TYPE**: `(Passage -> boolean) -> Passage[]`
+### `filter`
 
 Given a predicate function, `filter` returns all passages for which the predicate returns truthy.
 
-## `find`
+#### Signature
 
-**TYPE**: `(Passage -> boolean) -> Passage | undefined`
+```ts
+function filter(predicate: (Passage) => boolean): Passage[];
+```
+
+#### Example
+
+```js
+let woodsOrLakePassages = passages.filter((passage) => {
+  return passage.tags.includes("woods") || passage.tags.includes("lake");
+});
+```
+
+### `find`
 
 Given a predicate function, `find` returns a passage for which the predicate returns truthy.
 
-## `get`
+#### Signature
 
-**TYPE**: `string -> Passage | undefined`
+```ts
+function find(predicate: (Passage) => boolean): Passage | undefined;
+```
+
+### `get`
 
 Returns the passage with the given name, or `undefined` if it does not exist.
 
-## `withTag`
+#### Signature
 
-**TYPE**: `string -> Passage[]`
+```ts
+function get(name: string): Passage | undefined;
+```
+
+#### Example
+
+```js
+let alley = passages.get("A Dark Alley");
+```
+
+### `withTag`
 
 Given a tag name, returns all passages with the given tag.
 Tag names are case-sensitive.
+
+#### Signature
+
+```ts
+function withTag(tag: string): Passage[]
+```
+
+#### Example
+
+```js
+let woodsPassages = passages.withTag("woods");
+```

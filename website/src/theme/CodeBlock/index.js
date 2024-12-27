@@ -31,7 +31,7 @@ export default function CodeBlock({
   ..._props
 }) {
   const languageShort = (languageProp ?? parseLanguage(className))?.toLowerCase();
-  const language = languageShort === "js" ? "javascript" : languageShort;
+  const language = {js: "javascript", ts: "text/typescript"}[languageShort] ?? languageShort;
   const children = maybeStringifyChildren(rawChildren);
 
   const isBrowser = useIsBrowser();

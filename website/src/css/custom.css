@@ -83,8 +83,8 @@ p code {
     color: #05a;
   }
   .cm-variable-3,
-  .cm-s-default .cm-type {
-    color: #085;
+  .cm-type {
+    color: rgb(0, 99, 63);
   }
   .cm-comment {
     /* color: #a50; */
@@ -174,7 +174,7 @@ p code {
     color: rgb(126, 204, 255);
   }
   .cm-variable-3,
-  .cm-s-default .cm-type {
+  .cm-type {
     color: #085;
   }
   .cm-comment {

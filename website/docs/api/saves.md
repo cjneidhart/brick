@@ -2,13 +2,18 @@
 
 The `saves` object contains functions useful for saving and loading data.
 
-## `registerClass`
+## Functions
 
-**SYNTAX**: `registerClass(class_: Class)`
+### `registerClass`
 
-By default, Brick can only store certain types of data in its saves.
-This includes all JavaScript primitives (except Symbols), plain Objects, and a few built-in types like Array and Map.
-`registerClass` allows you to add more types to this list.
+```ts
+function registerClass(class_: Function);
+```
+
+By default, Brick can store most types of JavaScript values in its saves,
+including all primitives (except symbols), generic objects, Arrays, and Maps.
+However, it cannot store instances of unknown classes.
+`registerClass` lets you tell Brick how to safely save and load instances of any class you write.
 
 As an example, suppose you have the following class `Point2D`,
 and you'd like to store instances of `Point2D` in story variables.

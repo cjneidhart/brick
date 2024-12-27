@@ -53,6 +53,7 @@ Even if it's already listed in this file, creating an Issue helps me decide what
 - lifecyle events and/or hooks.
 - `@for` macro: for-in syntax and C-style syntax.
 - Multiple layouts?
+- Alternative ways of newline handling.
 
 ## Very long-term goal
 

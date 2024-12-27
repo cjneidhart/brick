@@ -4,7 +4,7 @@ import type * as Preset from "@docusaurus/preset-classic";
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const fullUrl = URL.parse(
-  process.env.READTHEDOCS_CANONICAL_URL || "https://brick-tw.readthedocs.io/en/latest"
+  process.env.READTHEDOCS_CANONICAL_URL || "https://brick-if.readthedocs.io/en/latest"
 );
 
 const config: Config = {

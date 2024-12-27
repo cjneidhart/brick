@@ -36,4 +36,4 @@ Disallow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://brick-tw.readthedocs.io/sitemap.xml
+Sitemap: https://brick-if.readthedocs.io/sitemap.xml

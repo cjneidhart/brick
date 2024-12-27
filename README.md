@@ -5,7 +5,7 @@ Its priorities are being easy to use, and highly performant.
 Compared to existing formats, Brick draws most of its inspiration from [SugarCube](https://www.motoslave.net/sugarcube/2/),
 but with a syntax that resembles JavaScript instead of HTML.
 
-For a full reference of Brick's syntax, macros, and API, consult the [documentation](https://brick-tw.readthedocs.io).
+For a full reference of Brick's syntax, macros, and API, consult the [documentation](https://brick-if.readthedocs.io).
 
 ## Building manually
 

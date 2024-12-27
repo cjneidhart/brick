@@ -311,7 +311,8 @@ export class Parser {
     if (store !== "constants" || this.lookahead() !== "(") {
       const match = this.consume(RE.macroName);
       if (!match) {
-        throw Error();
+        const storeChar = { constants: "@", story: "$", temp: "_" }[store];
+        throw Error(`Unescaped "${storeChar}"`);
       }
       base = match[0];
     }

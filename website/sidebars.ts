@@ -26,7 +26,13 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "API",
-      items: ["api/config", "api/misc", "api/saves"],
+      items: [
+        "api/config",
+        "api/misc",
+        "api/passages",
+        "api/saves",
+        "api/types",
+      ],
     },
     // 'hello',
     // {

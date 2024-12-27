@@ -23,7 +23,8 @@ export class Passage {
       element
         .getAttribute("tags")
         ?.split(" ")
-        .filter((tag) => tag.length >= 0) || [];
+        .filter((tag) => tag.length >= 0)
+        .sort() || [];
     this.#element = element;
   }
 
@@ -90,10 +91,18 @@ let startPassage: Passage;
 
 /** @param storyData The `<tw-storydata>` element */
 export function init(storyData: Element) {
-  const passageElements = storyData.getElementsByTagName("tw-passagedata");
+  const passageElements = Array.from(storyData.getElementsByTagName("tw-passagedata"));
+  const passageArray = passageElements.map((elt) => new Passage(elt));
+  passageArray.sort((a, b) => {
+    if (a.name === b.name) {
+      return 0;
+    } else {
+      return a.name < b.name ? -1 : 1;
+    }
+  });
 
-  for (const elt of passageElements) {
-    const passage = new Passage(elt);
+
+  for (const passage of passageArray) {
     const { id, name } = passage;
 
     checkBannedNames(passage.name);
@@ -124,7 +133,7 @@ export function init(storyData: Element) {
   if (startPid) {
     const maybeStart = byId.get(startPid);
     if (!maybeStart) {
-      throw new Error(`Could not determine starting passage; no passage with ${startPid}`);
+      throw new Error(`Could not determine starting passage; no passage with ID "${startPid}"`);
     }
     startPassage = maybeStart;
   } else {

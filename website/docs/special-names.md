@@ -53,6 +53,8 @@ Any markup in this passage will be ignored and considered plain text.
 
 ## Tags
 
+For future compatibility, tags starting with `brick` are reserved.
+
 ### `macro`
 
 This tag registers the passage as a macro.

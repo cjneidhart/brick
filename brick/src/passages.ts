@@ -17,7 +17,7 @@ export class Passage {
       throw new Error(`Passage ${id} has no name`);
     }
     this.id = id;
-    this.name = name;
+    this.name = name.trim();
     this.slug = slugify(name);
     this.tags =
       element
@@ -37,23 +37,10 @@ export class Passage {
   }
 }
 
-// TODO: provide more detailed error messages, which recommend an alternative.
-const BANNED_NAMES = [
-  "PassageDone",
-  "PassageFooter",
-  "PassageHeader",
-  "PassageReady",
-  "StoryAuthor",
-  "StoryBanner",
-  "StoryCaption",
-  "StoryDisplayTitle",
-  "StoryMenu",
-  "StorySettings",
-  "StorySubtitle",
-  "StoryTitle",
-];
-
-const BANNED_TAGS = [
+// TODO: provide more detailed warnings for some of these.
+const WARN_PASSAGE_NAMES = ["PassageDone", "PassageFooter", "PassageHeader", "PassageReady"];
+const ALLOWED_SPECIAL_NAMES = ["StoryFooter", "StoryHeader", "StoryInit", "StoryInterface"];
+const WARN_TAGS = new Set([
   "init",
   "script",
   "stylesheet",
@@ -69,18 +56,29 @@ const BANNED_TAGS = [
   "debug-footer",
   "debug-startup",
   "nobr",
-];
+]);
 
 function checkBannedNames(name: string) {
-  if (BANNED_NAMES.includes(name)) {
-    throw new Error(`The passage name "${name}" is not allowed`);
+  if (WARN_PASSAGE_NAMES.includes(name)) {
+    console.warn(
+      `The passage name "${name}" has no special meaning to Brick. Use "StoryHeader" or "StoryFooter" instead.`,
+    );
+  } else if (name === "StoryTitle" || name === "StoryData") {
+    console.warn(
+      `The passage "${name}" should have been removed by your compiler. This is likely an error.`,
+    );
+  } else if (name.startsWith("Story") && !ALLOWED_SPECIAL_NAMES.includes(name)) {
+    throw new Error(`The passage name "${name}" is not allowed.`);
   }
 }
 
 function checkBannedTags(tags: readonly string[], passageName: string) {
   for (const tag of tags) {
-    if (BANNED_TAGS.includes(tag)) {
-      throw new Error(`The tag '${tag}' on the passage "${passageName} is not allowed`);
+    if (WARN_TAGS.has(tag)) {
+      console.warn(`The tag "${tag}" on passage "${passageName}" has no special meaning in Brick.`);
+      WARN_TAGS.delete(tag);
+    } else if (tag.startsWith("brick")) {
+      throw new Error(`The tag "${tag}" on passage "${passageName}" is not allowed.`)
     }
   }
 }
@@ -100,7 +98,6 @@ export function init(storyData: Element) {
       return a.name < b.name ? -1 : 1;
     }
   });
-
 
   for (const passage of passageArray) {
     const { id, name } = passage;
@@ -168,7 +165,7 @@ export function find(predicate: (passage: Passage) => boolean): Passage | undefi
 
 /** @returns the passage with the given name */
 export function get(name: string): Passage | undefined {
-  return byName.get(name);
+  return byName.get(name.trim());
 }
 
 /** @returns the passage that should be used as the story start */

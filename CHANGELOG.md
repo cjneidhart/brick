@@ -3,6 +3,21 @@
 This project follows semantic versioning.
 All changes are backwards-incompatible since it has not reached `1.0.0`.
 
+## Unreleased
+
+### Added
+
+- The `passages` object, with four methods:
+  - `filter`
+  - `find`
+  - `get`
+  - `withTag`
+
+### Changed
+
+- Passage names starting with `Story` are banned, like the documentation says.
+- Passage tags starting with `brick` are banned.
+
 ## [0.3.1] - 2024-12-23
 
 Nothing changed here, I just needed a new version to update the documentation.

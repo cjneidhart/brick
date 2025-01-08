@@ -28,12 +28,13 @@ const RE = {
   maybeElementClose: /\/[-\p{ID_Continue}]+(?: *>)?/uy,
   normalChars: /[^[\\$_?<@/}]+/y,
   singleChar: /[^]/y,
+  styleElement: /([^]*?)<\/style>/y,
   whitespace: /\s*/y,
   wikiLink: /((?:[^\\\]]|\\.)*)\]\]/y,
 };
 
 /** Tags which are not allowed to be descended from `<body>` */
-const BANNED_TAGS = ["base", "body", "link", "head", "html", "meta", "script", "style", "title"];
+const BANNED_TAGS = ["base", "body", "link", "head", "html", "meta", "script", "title"];
 
 /** Tags which can't have child nodes */
 const VOID_TAGS = [
@@ -64,20 +65,6 @@ export interface ElementTemplate extends NodeTemplateBase {
   attributes: Map<string, string>;
   evalAttributes: Map<string, string>;
   content: NodeTemplate[];
-}
-
-// Represents a not-yet-invoked macro
-export interface MacroTemplate extends NodeTemplateBase {
-  type: "macro";
-  name: string;
-  args: string[];
-  content?: NodeTemplate[];
-}
-
-export interface NakedVariable extends NodeTemplateBase {
-  type: "story" | "temp";
-  /** The name of the variable being accessed. */
-  name: string;
 }
 
 /** A wiki-style [[Link]] */
@@ -546,7 +533,18 @@ export class Parser {
       }
     }
 
-    const content = VOID_TAGS.includes(name) ? [] : this.parse(new RegExp(`</${name}>`, "y"));
+    let content: NodeTemplate[];
+    if (name === "style") {
+      const match = this.consume(RE.styleElement);
+      if (!match) {
+        throw new Error("No closing </style> found");
+      }
+      content = [match[1]];
+    } else if (VOID_TAGS.includes(name)) {
+      content = [];
+    } else {
+      content = this.parse(new RegExp(`</${name}>`, "y"));
+    }
 
     if (BANNED_TAGS.includes(name)) {
       return this.error(`Passages cannot contain "<${name}>" elements`);

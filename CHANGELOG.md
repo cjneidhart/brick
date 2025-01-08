@@ -12,6 +12,7 @@ All changes are backwards-incompatible since it has not reached `1.0.0`.
   - `find`
   - `get`
   - `withTag`
+- Passages can now contain `<style>` elements.
 
 ### Changed
 

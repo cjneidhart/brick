@@ -7,6 +7,8 @@ const fullUrl = URL.parse(
   process.env.READTHEDOCS_CANONICAL_URL || "https://brick-if.readthedocs.io/en/latest"
 );
 
+import { version as brickVersion } from "brick/package.json";
+
 const config: Config = {
   title: "Brick",
   tagline: "A modern story format",
@@ -138,6 +140,7 @@ const config: Config = {
     },
   } satisfies Preset.ThemeConfig,
   customFields: {
+    brickDownloadUrl: `https://cjneidhart.github.io/brick/v${brickVersion}/format.js`,
     rtdVersion: process.env.READTHEDOCS_VERSION || "latest",
   },
 };

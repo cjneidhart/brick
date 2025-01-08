@@ -10,9 +10,21 @@ It is made with a focus on performance and ease-of-use.
 
 ### Twine
 
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+export const BrickDownloadCode = () => {
+  const { siteConfig } = useDocusaurusContext();
+  return <code>
+    {siteConfig.customFields.brickDownloadUrl}
+  </code>;
+};
+export const BrickDownloadLink = ({ children }) => {
+  const { brickDownloadUrl } = useDocusaurusContext().siteConfig.customFields;
+  return <a href={brickDownloadUrl}>{ children }</a>;
+}
+
 In the top menu of Twine, click **Twine** -> **Story Formats** to open the Story Formats panel.
 At the top of that panel, click **+ Add**.
-Paste in the URL `https://cjneidhart.github.io/brick/v0.3.1/format.js`, then click the green
+Paste in the URL <BrickDownloadCode />, then click the green
 <strong style={{color: "var(--ifm-color-success)"}}>+ Add</strong>
 to confirm.
 
@@ -23,7 +35,7 @@ The `@` should change from red to blue when you type the `(`.
 
 ### Tweego
 
-Download the [latest version of Brick].
+Download the <BrickDownloadLink>latest version of Brick</BrickDownloadLink>.
 Consult [Tweego's documentation] and place the `format.js` file in an appropriate directory.
 Make sure your `StoryData` passage has `"format": "Brick"` (case-sensitive) and `"format-version": 0`.
 

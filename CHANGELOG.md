@@ -1,7 +1,7 @@
 # Changelog
 
 This project follows semantic versioning.
-All changes are backwards-incompatible since it has not reached `1.0.0`.
+Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
 ## Unreleased
 

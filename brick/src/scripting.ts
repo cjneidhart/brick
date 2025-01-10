@@ -39,7 +39,32 @@ export const BrickPublic = {
   Dialog: {
     showPassage,
   },
-  passages,
+  passages: {
+    filter(predicate: unknown): passages.Passage[] {
+      if (typeof predicate !== "function") {
+        throw new Error("passages.filter: expected a function");
+      }
+      return passages.filter(predicate as (_: passages.Passage) => unknown);
+    },
+    find(predicate: unknown): passages.Passage | undefined {
+      if (typeof predicate !== "function") {
+        throw new Error("passages.find: expected a function");
+      }
+      return passages.find(predicate as (_: passages.Passage) => unknown);
+    },
+    get(name: unknown): passages.Passage | undefined {
+      if (typeof name !== "string") {
+        throw new Error("passages.get: expected a string");
+      }
+      return passages.get(name);
+    },
+    withTag(tag: unknown): passages.Passage[] {
+      if (typeof tag !== "string") {
+        throw new Error("passages.withTag: expected a string");
+      }
+      return passages.withTag(tag);
+    },
+  },
   saves: {
     registerClass: saves.registerClass,
   },

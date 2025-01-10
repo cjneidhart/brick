@@ -1,31 +1,27 @@
 import { slugify } from "./util";
 
 export class Passage {
-  readonly id: string;
   readonly name: string;
   readonly slug: string;
   readonly tags: readonly string[];
   #element: Element;
 
   constructor(element: Element) {
-    const id = element.getAttribute("pid");
-    if (!id) {
-      throw new Error("Passage has no pid: " + element.outerHTML);
-    }
     const name = element.getAttribute("name");
     if (!name) {
-      throw new Error(`Passage ${id} has no name`);
+      throw new Error(`Passage has no name`);
     }
-    this.id = id;
     this.name = name.trim();
     this.slug = slugify(name);
-    this.tags =
+    this.tags = Object.freeze(
       element
         .getAttribute("tags")
         ?.split(" ")
         .filter((tag) => tag.length >= 0)
-        .sort() || [];
+        .sort() || [],
+    );
     this.#element = element;
+    Object.freeze(this);
   }
 
   get content() {
@@ -40,23 +36,7 @@ export class Passage {
 // TODO: provide more detailed warnings for some of these.
 const WARN_PASSAGE_NAMES = ["PassageDone", "PassageFooter", "PassageHeader", "PassageReady"];
 const ALLOWED_SPECIAL_NAMES = ["StoryFooter", "StoryHeader", "StoryInit", "StoryInterface"];
-const WARN_TAGS = new Set([
-  "init",
-  "script",
-  "stylesheet",
-  "Twine.audio",
-  "Twine.image",
-  "Twine.video",
-  "Twine.vtt",
-  "widget",
-  "header",
-  "footer",
-  "startup",
-  "debug-header",
-  "debug-footer",
-  "debug-startup",
-  "nobr",
-]);
+const WARN_TAGS = new Set(["init", "debug-footer", "debug-startup", "nobr"]);
 
 function checkBannedNames(name: string) {
   if (WARN_PASSAGE_NAMES.includes(name)) {
@@ -78,19 +58,25 @@ function checkBannedTags(tags: readonly string[], passageName: string) {
       console.warn(`The tag "${tag}" on passage "${passageName}" has no special meaning in Brick.`);
       WARN_TAGS.delete(tag);
     } else if (tag.startsWith("brick")) {
-      throw new Error(`The tag "${tag}" on passage "${passageName}" is not allowed.`)
+      throw new Error(`The tag "${tag}" on passage "${passageName}" is not allowed.`);
     }
   }
 }
 
-const byId = new Map<string, Passage>();
 const byName = new Map<string, Passage>();
 let startPassage: Passage;
 
 /** @param storyData The `<tw-storydata>` element */
 export function init(storyData: Element) {
+  const startPid = storyData.getAttribute("startnode");
   const passageElements = Array.from(storyData.getElementsByTagName("tw-passagedata"));
-  const passageArray = passageElements.map((elt) => new Passage(elt));
+  const passageArray = passageElements.map((elt) => {
+    const passage = new Passage(elt);
+    if (elt.getAttribute("pid") === startPid) {
+      startPassage = passage;
+    }
+    return passage;
+  });
   passageArray.sort((a, b) => {
     if (a.name === b.name) {
       return 0;
@@ -100,10 +86,10 @@ export function init(storyData: Element) {
   });
 
   for (const passage of passageArray) {
-    const { id, name } = passage;
+    const { name } = passage;
 
-    checkBannedNames(passage.name);
-    if (passage.name.startsWith("::")) {
+    checkBannedNames(name);
+    if (name.startsWith("::")) {
       console.warn(
         `Found a passage named "${name}". Although starting a passage name with "::" is allowed, this is likely a mistake.`,
       );
@@ -111,9 +97,6 @@ export function init(storyData: Element) {
 
     checkBannedTags(passage.tags, name);
 
-    if (byId.has(id)) {
-      throw new Error(`Duplicate passage id ${id}`);
-    }
     if (byName.has(name)) {
       throw new Error(`Duplicate passage name ${name}`);
     }
@@ -122,18 +105,11 @@ export function init(storyData: Element) {
       console.warn(`Passage ${name} has no text.`);
     }
 
-    byId.set(id, passage);
     byName.set(name, passage);
   }
 
-  const startPid = storyData.getAttribute("startnode");
-  if (startPid) {
-    const maybeStart = byId.get(startPid);
-    if (!maybeStart) {
-      throw new Error(`Could not determine starting passage; no passage with ID "${startPid}"`);
-    }
-    startPassage = maybeStart;
-  } else {
+  if (!startPassage) {
+    // Twine and Tweego always set the `startnode` attribute, but we may as well include this just in case
     const maybeStart = byName.get("Start");
     if (!maybeStart) {
       throw new Error(`Could not find a passage named "Start"`);
@@ -142,8 +118,8 @@ export function init(storyData: Element) {
   }
 }
 
-/** @returns all passages for which `predicate` returned true */
-export function filter(predicate: (passage: Passage) => boolean): Passage[] {
+/** @returns all passages for which `predicate` returned truthy */
+export function filter(predicate: (passage: Passage) => unknown): Passage[] {
   const result = [];
   for (const passage of byName.values()) {
     if (predicate(passage)) {
@@ -153,8 +129,8 @@ export function filter(predicate: (passage: Passage) => boolean): Passage[] {
   return result;
 }
 
-/** @returns a passage for which `predicate` returned true */
-export function find(predicate: (passage: Passage) => boolean): Passage | undefined {
+/** @returns a passage for which `predicate` returned truthy */
+export function find(predicate: (passage: Passage) => unknown): Passage | undefined {
   for (const passage of byName.values()) {
     if (predicate(passage)) {
       return passage;

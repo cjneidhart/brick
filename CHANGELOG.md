@@ -16,6 +16,8 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
 ### Changed
 
+- Parse errors are now "loud";
+  encountering a parse error causes Brick to not render anything except the error message.
 - Passage names starting with `Story` are banned, like the documentation says.
 - Passage tags starting with `brick` are banned.
 

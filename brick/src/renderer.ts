@@ -111,7 +111,7 @@ let recursionRecoveryMode = false;
 
 export function render(
   target: ParentNode,
-  input: NodeTemplate[] | Passage,
+  input: NodeTemplate[] | Passage | BrickError,
   parentContext?: MacroContext,
 ): boolean {
   if (recursionRecoveryMode) {
@@ -143,7 +143,7 @@ export function render(
 /** Render the given Brick markup and append it to an element. */
 function renderRaw(
   target: ParentNode,
-  input: NodeTemplate[] | Passage,
+  input: NodeTemplate[] | Passage | BrickError,
   parentContext?: MacroContext,
 ): boolean {
   let noErrors = true;
@@ -154,6 +154,23 @@ function renderRaw(
     }
     const parser = new Parser(text, input.name);
     return render(target, parser.parse(), parentContext);
+  }
+
+  if (input instanceof BrickError) {
+    const passage = getPassage(input.passage);
+    if (!passage) {
+      throw new Error(`Can't render a parse error that occurred in ${input.passage}`);
+    }
+    target.append(renderError(input), makeElement("br"));
+    const lines = passage.content.split("\n").map((line) => makeElement("span", {}, line));
+    lines[input.lineNumber - 1].classList.add("brick-error");
+    const codeElt = makeElement("code");
+    for (const line of lines) {
+      codeElt.append(line, makeElement("br"));
+    }
+    target.append(makeElement("pre", {}, codeElt));
+
+    return false;
   }
 
   // let pBuffer: (string | Element)[] = [];

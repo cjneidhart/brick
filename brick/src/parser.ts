@@ -1,4 +1,5 @@
 import { constants } from "./engine";
+import { BrickError } from "./error";
 import { BRICK_MACRO_SYMBOL, isMacro } from "./macros";
 import { countSubstrings } from "./util";
 
@@ -165,24 +166,28 @@ export class Parser {
     return this.input.slice(start, end);
   }
 
-  error(message: string): ErrorMessage {
-    return {
-      type: "error",
-      passageName: this.passageName,
-      lineNumber: this.lineNumber,
-      message,
-      locationSample: this.locationSample(),
-    };
+  error(message: string): never {
+    throw new BrickError(message, this.passageName, this.lineNumber);
   }
 
-  parse(closer?: RegExp): NodeTemplate[] {
+  parse(): NodeTemplate[] | BrickError {
+    try {
+      return this.parseUnsafe();
+    } catch (error) {
+      if (!(error instanceof BrickError)) {
+        throw error;
+      }
+      return error;
+    }
+  }
+
+  parseUnsafe(closer?: RegExp): NodeTemplate[] {
     const output: NodeTemplate[] = [];
 
     let prevIndex = -1;
     outer: while (this.index < this.input.length) {
       if (this.index === prevIndex) {
-        output.push(this.error("Parser stuck in infinite loop"));
-        return output;
+        this.error("Parser stuck in infinite loop");
       }
       prevIndex = this.index;
 
@@ -220,8 +225,7 @@ export class Parser {
               break;
             case "*":
               if (!this.consume(RE.commentBlock)) {
-                output.push(this.error("Missing trailing `*/` to close the block comment"));
-                return output;
+                this.error("Missing trailing `*/` to close the block comment");
               }
               break;
             default:
@@ -245,8 +249,7 @@ export class Parser {
             this.index++;
             const m = this.consume(RE.wikiLink);
             if (!m) {
-              output.push(this.error("Unmatched `[[`"));
-              break;
+              this.error("Unmatched `[[`");
             }
             const linkBoxFull = m[1];
             const hasRightArrow = linkBoxFull.includes("->");
@@ -254,7 +257,7 @@ export class Parser {
             const hasPipe = linkBoxFull.includes("|");
             const separatorCount = Number(hasRightArrow) + Number(hasLeftArrow) + Number(hasPipe);
             if (separatorCount > 1) {
-              output.push(this.error("Link boxes can only have one of '->', '<-', or '|'"));
+              this.error("Link boxes can only have one of '->', '<-', or '|'");
             } else if (separatorCount === 0) {
               output.push({
                 type: "linkBox",
@@ -286,7 +289,7 @@ export class Parser {
     }
 
     if (closer && !this.consume(closer)) {
-      output.push(this.error(`Failed to match regex "${closer.source}"`));
+      this.error(`Failed to match regex "${closer.source}"`);
     }
 
     return output;
@@ -378,7 +381,7 @@ export class Parser {
       }
     }
 
-    const content = this.consume(RE.macroBodyStart) ? this.parse(/\}/y) : undefined;
+    const content = this.consume(RE.macroBodyStart) ? this.parseUnsafe(/\}/y) : undefined;
 
     return {
       type: "expr",
@@ -404,7 +407,7 @@ export class Parser {
     if (!this.consume(RE.macroBodyStart)) {
       throw "error";
     }
-    const firstBody = this.parse(/\}/y);
+    const firstBody = this.parseUnsafe(/\}/y);
     let indexAfterRBrace = this.index;
 
     const blocks = [{ name: firstName, args: firstArgs, body: firstBody }];
@@ -430,7 +433,7 @@ export class Parser {
 
       let body: NodeTemplate[] = [];
       if (this.consume(RE.macroBodyStart)) {
-        body = this.parse(/\}/y);
+        body = this.parseUnsafe(/\}/y);
         indexAfterRBrace = this.index;
       }
 
@@ -459,7 +462,7 @@ export class Parser {
     }
     const raw = this.input.slice(argsStartIdx, this.index);
 
-    const body = this.consume(RE.macroBodyStart) ? this.parse(/\}/y) : undefined;
+    const body = this.consume(RE.macroBodyStart) ? this.parseUnsafe(/\}/y) : undefined;
 
     return {
       type: "expr",
@@ -477,10 +480,10 @@ export class Parser {
     if (!longName) {
       const closeTag = this.consume(RE.maybeElementClose);
       if (closeTag) {
-        return this.error(`Unexpected closing tag "${closeTag[0]}"`);
+        this.error(`Unexpected closing tag "${closeTag[0]}"`);
       }
 
-      return this.error(
+      this.error(
         "Element names can contain only hyphens, underscores, and ASCII letters and numbers. " +
           'The "<" character must be escaped with a "\\" backslash if not used as an HTML element.',
       );
@@ -516,10 +519,10 @@ export class Parser {
             return value;
           }
           if (value.trim() === "") {
-            return this.error(`Empty JavaScript attribute "${key}"`);
+            this.error(`Empty JavaScript attribute "${key}"`);
           }
           if (this.lookahead() !== ")") {
-            return this.error(`No closing paren on dynamic attribute "${key}"`);
+            this.error(`No closing paren on dynamic attribute "${key}"`);
           }
           this.index++;
           if (attributes.has(key) || evalAttributes.has(key)) {
@@ -528,7 +531,7 @@ export class Parser {
             evalAttributes.set(key, value);
           }
         } else {
-          return this.error("Missing trailing `>` to close the HTML tag");
+          this.error("Missing trailing `>` to close the HTML tag");
         }
       }
     }
@@ -543,11 +546,11 @@ export class Parser {
     } else if (VOID_TAGS.includes(name)) {
       content = [];
     } else {
-      content = this.parse(new RegExp(`</${name}>`, "y"));
+      content = this.parseUnsafe(new RegExp(`</${name}>`, "y"));
     }
 
     if (BANNED_TAGS.includes(name)) {
-      return this.error(`Passages cannot contain "<${name}>" elements`);
+      this.error(`Passages cannot contain "<${name}>" elements`);
     }
     return {
       type: "element",
@@ -565,7 +568,7 @@ export class Parser {
     // TODO refine this
     const match = this.consume(/\s*([^]*?)\s+of\b/y);
     if (!match) {
-      return this.error("Syntax: @for(_VAR of EXPRESSION)");
+      this.error("Syntax: @for(_VAR of EXPRESSION)");
     }
 
     const loopVar = match[1];
@@ -574,11 +577,11 @@ export class Parser {
       return loopCond;
     }
     if (loopCond.trim() === "") {
-      return this.error("Syntax: @for(_VAR of EXPRESSION)");
+      this.error("Syntax: @for(_VAR of EXPRESSION)");
     }
 
     if (!this.consume(/\s*\)/y)) {
-      return this.error("@for: missing closing ')'");
+      this.error("@for: missing closing ')'");
     }
 
     return [loopVar, loopCond];
@@ -599,7 +602,7 @@ export class Parser {
 
     this.consume(RE.whitespace);
     if (this.lookahead() !== closer) {
-      return this.error(`Missing a closing \`${closer}\``);
+      this.error(`Missing a closing \`${closer}\``);
     }
     this.index++;
 
@@ -656,7 +659,7 @@ export class Parser {
             output.push(match[0]);
             regexpAllowed = false;
           } else {
-            return this.error("Unclosed double-quoted string");
+            this.error("Unclosed double-quoted string");
           }
           break;
 
@@ -666,7 +669,7 @@ export class Parser {
             output.push(match[0]);
             regexpAllowed = false;
           } else {
-            return this.error("Unclosed single-quoted string");
+            this.error("Unclosed single-quoted string");
           }
           break;
 
@@ -708,7 +711,7 @@ export class Parser {
             output.push(prefix, match[0]);
             regexpAllowed = false;
           } else {
-            return this.error("Illegal identifier");
+            this.error("Illegal identifier");
           }
           break;
 
@@ -790,7 +793,7 @@ export class Parser {
             output.push(c);
             match = this.consume(RE.js.regexp);
             if (!match) {
-              return this.error("Invalid RegExp literal");
+              this.error("Invalid RegExp literal");
             }
             output.push(match[0]);
             regexpAllowed = false;
@@ -809,14 +812,14 @@ export class Parser {
           }
 
           if (![")", "]", "}"].includes(c || "")) {
-            return this.error(`Can't handle unescaped ${c} yet`);
+            this.error(`Can't handle unescaped ${c} yet`);
           }
           break outer;
       }
     }
 
     if (nesting.length > 0) {
-      return this.error(`Expected a "${nesting.pop()}"`);
+      this.error(`Expected a "${nesting.pop()}"`);
     }
 
     return output.join("");
@@ -830,7 +833,7 @@ export class Parser {
       }
       const c = this.lookahead();
       if (!c) {
-        return this.error("Unclosed template string");
+        this.error("Unclosed template string");
       }
       switch (c) {
         case "`":
@@ -848,7 +851,7 @@ export class Parser {
           }
           output.push(expr);
           if (this.lookahead() !== "}") {
-            return this.error('missing "}" inside template string');
+            this.error('missing "}" inside template string');
           }
           this.index++;
           output.push("}");
@@ -856,7 +859,7 @@ export class Parser {
         }
 
         default:
-          return this.error(`Logic Error: '${c}' (U+${c.charCodeAt(0)}) was not matched by regex`);
+          this.error(`Logic Error: '${c}' (U+${c.charCodeAt(0)}) was not matched by regex`);
       }
     }
   }
@@ -864,8 +867,7 @@ export class Parser {
   makeLinkBox(fullText: string, separator: string): LinkBox | ErrorMessage {
     const split = fullText.split(separator);
     if (split.length !== 2) {
-      const msg = `Links in [[...]] can only contain "${separator}" once`;
-      return this.error(msg);
+      this.error(`Links in [[...]] can only contain "${separator}" once`);
     }
     if (separator === "<-") {
       return {

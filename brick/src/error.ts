@@ -3,9 +3,9 @@ import { ElementTemplate } from "./parser";
 
 export class BrickError extends Error {
   /** The name of the passage the error occurred in */
-  passage?: string;
+  passage: string;
   /** The line number of that passage */
-  lineNumber?: number;
+  lineNumber: number;
   constructor(message: string, passage: string, lineNumber: number) {
     super(`in “${passage}” at line ${lineNumber}: ${message}`);
     this.passage = passage;

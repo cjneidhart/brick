@@ -7,6 +7,7 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
 ### Added
 
+- The `createGetter` function.
 - The `passages` object, with four methods:
   - `filter`
   - `find`

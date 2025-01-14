@@ -58,6 +58,22 @@ export function createMacro(
   return m;
 }
 
+export function createGetter(name: string, func: () => unknown) {
+  Object.defineProperty(engine.constants, name, {
+    configurable: true,
+    enumerable: true,
+    get: func,
+    set(value) {
+      Object.defineProperty(engine.constants, name, {
+        configurable: true,
+        enumerable: true,
+        value,
+        writable: true,
+      });
+    },
+  });
+}
+
 export function installBuiltins(constants: Record<string, unknown>) {
   Object.assign(constants, {
     "": unnamed,

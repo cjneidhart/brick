@@ -8,7 +8,7 @@
 import config from "./config";
 import { showPassage } from "./dialog";
 import { backward, constants, forward, redo, storyVariables, tempVariables } from "./engine";
-import { createMacro } from "./macros";
+import { createGetter, createMacro } from "./macros";
 import * as passages from "./passages";
 import * as renderer from "./renderer";
 import * as saves from "./saves";
@@ -70,6 +70,7 @@ export const BrickPublic = {
   },
   clone: util.clone,
   createMacro,
+  createGetter,
   either(values: unknown): unknown {
     if (arguments.length !== 1) {
       throw new Error("either(): exactly one argument required");

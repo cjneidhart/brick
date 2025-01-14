@@ -32,6 +32,37 @@ $original.value // 20
 $clone.value    // 5
 ```
 
+### `createGetter`
+
+Define a simple getter on the `constants` object.
+Used to define very basic macros that take no arguments and no children.
+
+#### Signature
+
+```ts
+function createGetter(name: string, getter: () => unknown);
+```
+
+#### Example
+
+Story JS:
+
+```js
+createGetter("fullName", () => {
+  const { firstName, lastName } = Engine.vars;
+  return `${firstName} ${lastName}`;
+});
+```
+
+In a passage:
+
+```brick
+@($firstName = "John")
+@($lastName = "Smith")
+Your full name is @fullName.
+// Your full name is John Smith
+```
+
 ### `createMacro`
 
 `createMacro` is the most powerful way to create macros.

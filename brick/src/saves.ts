@@ -93,6 +93,10 @@ export async function init(storyTitle: string, ifid: string) {
   await cullUnusedMoments();
 }
 
+export function finish() {
+  db?.close();
+}
+
 /**
  * If storage is too high, delete any moments in IDB that
  * aren't referenced by any history.

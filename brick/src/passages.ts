@@ -63,17 +63,18 @@ function checkBannedTags(tags: readonly string[], passageName: string) {
   }
 }
 
-const byName = new Map<string, Passage>();
+let byName: Map<string, Passage>;
 let startPassage: Passage;
 
 /** @param storyData The `<tw-storydata>` element */
 export function init(storyData: Element) {
+  let newStart: Passage | undefined = undefined;
   const startPid = storyData.getAttribute("startnode");
   const passageElements = Array.from(storyData.getElementsByTagName("tw-passagedata"));
   const passageArray = passageElements.map((elt) => {
     const passage = new Passage(elt);
     if (elt.getAttribute("pid") === startPid) {
-      startPassage = passage;
+      newStart = passage;
     }
     return passage;
   });
@@ -84,6 +85,7 @@ export function init(storyData: Element) {
       return a.name < b.name ? -1 : 1;
     }
   });
+  byName = new Map();
 
   for (const passage of passageArray) {
     const { name } = passage;
@@ -108,7 +110,9 @@ export function init(storyData: Element) {
     byName.set(name, passage);
   }
 
-  if (!startPassage) {
+  if (newStart) {
+    startPassage = newStart;
+  } else {
     // Twine and Tweego always set the `startnode` attribute, but we may as well include this just in case
     const maybeStart = byName.get("Start");
     if (!maybeStart) {

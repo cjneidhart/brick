@@ -15,6 +15,7 @@
  * - https://www.npmjs.com/package/idb
  */
 
+import { warnOnce } from "./error";
 import { slugify } from "./util";
 import * as idb from "idb";
 
@@ -319,11 +320,22 @@ export function registerClass(
   }
   if (
     authorClasses.some((specialClass) => specialClass.name === name) ||
-    ["undefined", "neg-inf", "pos-inf", "nan", "Map", "Date", "Set", "RegExp"].includes(name)
+    [
+      "undefined",
+      "neg-inf",
+      "pos-inf",
+      "nan",
+      "Map",
+      "Date",
+      "Set",
+      "RegExp",
+      "boxed",
+      "null-proto",
+    ].includes(name)
   ) {
     throw new Error(`registerClass: "${name}" has already been registered`);
   }
-  if (([Map, Set, Date, RegExp] as Function[]).includes(constructor)) {
+  if (([Map, Set, Date, RegExp, Boolean, Number, String] as Function[]).includes(constructor)) {
     throw new Error(`${constructor.name} is already handled by Brick.`);
   }
   authorClasses.unshift({
@@ -379,7 +391,7 @@ function reviveSaveObject(object: Record<string, unknown>): unknown {
 /** Revive a object that had to be stored in a "!brick-revive:" array.
  * @param tag The first element of the array, with "!brick-revive" stripped off
  * @param data The second element of the array */
-function reviveSpecialObject(tag: string, data: unknown) {
+function reviveSpecialObject(tag: string, data: unknown): unknown {
   switch (tag) {
     case "undefined":
       return undefined;
@@ -397,6 +409,17 @@ function reviveSpecialObject(tag: string, data: unknown) {
       }
     case "null-proto":
       return Object.assign(Object.create(null), data);
+    case "boxed":
+      switch (typeof data) {
+        case "boolean":
+          return new Boolean(data);
+        case "number":
+          return new Number(data);
+        case "string":
+          return new String(data);
+        default:
+          throw new TypeError(`Can't revive a boxed ${typeof data}`);
+      }
     case "Map":
       if (
         !Array.isArray(data) ||
@@ -527,8 +550,17 @@ function replaceSaveObject(object: Record<string, unknown>, json: boolean): obje
     }
   }
 
-  if (object instanceof Date || object instanceof RegExp) {
-    return object;
+  if (object instanceof Boolean) {
+    warnOnce("boxedBoolean");
+    return json ? ["!brick-revive:boxed", object.valueOf()] : object;
+  }
+  if (object instanceof Number) {
+    warnOnce("boxedNumber");
+    return json ? ["!brick-revive:boxed", object.valueOf()] : object;
+  }
+  if (object instanceof String) {
+    warnOnce("boxedString");
+    return json ? ["!brick-revive:boxed", object.valueOf()] : object;
   }
 
   for (const defn of authorClasses) {

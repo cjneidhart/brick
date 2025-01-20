@@ -15,7 +15,6 @@ Even if it's already listed in this file, creating an Issue helps me decide what
 
 ## Planned Features
 
-- Automated testing.
 - A new-user tutorial. This would start with the very basics, like links between passages, and eventually get to advanced JavaScript features.
 - A way for users to add macros via markup, like `<<widget>>` in SugarCube or `(macro: )` in Harlowe.
   I'll probably call it `@macro`.
@@ -24,8 +23,6 @@ Even if it's already listed in this file, creating an Issue helps me decide what
     It could be faster if such passages had an opt-in tag.
   - Probably, this would let users define properties on a `.meta` field on each passage,
     or maybe it would let them define properties directly on the passage object.
-  - Could this also let users define passage-specific CSS within that passage?
-    The necessary transform becomes significantly easier if the browser supports CSS nesting.
 - A `state` enum for the engine, to track what state it is currently in, and what operations are allowed.
 - A redirection system. Similar to `Config.navigation.override` in SugarCube or `(redirect: )` in Harlowe.
 - An internal PseudoRandom Number Generator, so users can provide a seed and get consistent results.
@@ -54,6 +51,9 @@ Even if it's already listed in this file, creating an Issue helps me decide what
 - `@for` macro: for-in syntax and C-style syntax.
 - Multiple layouts?
 - Alternative ways of newline handling.
+- A date/time system, so authors don't use JavaScript's `Date`.
+  Might be built-in or an official extension.
+- Lexical scoping of temporary variables.
 
 ## Very long-term goal
 

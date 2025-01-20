@@ -14,6 +14,9 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
   - `get`
   - `withTag`
 - Passages can now contain `<style>` elements.
+- Boxed booleans, numbers, and strings can now be imported and exported properly
+  (they could already be saved to the browser's storage).
+  A warning will be emitted when these types are saved or passed to `clone`.
 
 ### Changed
 

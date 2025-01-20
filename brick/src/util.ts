@@ -1,4 +1,5 @@
 import levenshtein from "js-levenshtein";
+import { warnOnce } from "./error";
 
 const DELETED_CHARS = new Set<string>("'\",()[]{}.!`?");
 
@@ -76,6 +77,15 @@ export function clone<T>(original: T): T {
           newSet.add(clone(val));
         }
         return newSet as T;
+      } else if (original instanceof Boolean) {
+        warnOnce("boxedBoolean");
+        return original;
+      } else if (original instanceof Number) {
+        warnOnce("boxedNumber");
+        return original;
+      } else if (original instanceof String) {
+        warnOnce("boxedString");
+        return original;
       } else {
         // generic object
         const prototype = Object.getPrototypeOf(original);

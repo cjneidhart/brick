@@ -47,3 +47,35 @@ export class ExprError extends BrickError {
     super(message, passageName, lineNumber);
   }
 }
+
+interface OneTimeWarnings {
+  boxedBoolean?: string;
+  boxedNumber?: string;
+  boxedString?: string;
+}
+const oneTimeWarnings: OneTimeWarnings = {
+  boxedBoolean:
+    "You are using a boxed boolean, " +
+    "constructed by calling the global `Boolean` function with the `new` keyword. " +
+    "It is recommended to never use the `new` keyword with the global `Boolean` function, " +
+    "as boxed booleans are always considered to be truthy, " +
+    "regardless of their internal value.",
+  boxedNumber:
+    "You are using a boxed number, " +
+    "constructed by calling the global `Number` function with the `new` keyword. " +
+    "It is recommended to never use the `new` keyword with the global `Number` function, " +
+    "as boxed numbers are slightly different from regular numbers.",
+  boxedString:
+    "You are using a boxed string, " +
+    "constructed by calling the global `String` function with the `new` keyword. " +
+    "It is recommended to never use the `new` keyword with the global `String` function, " +
+    "as boxed strings are slightly different from regular strings.",
+};
+
+export function warnOnce(k: keyof OneTimeWarnings): void {
+  const message = oneTimeWarnings[k];
+  if (message) {
+    oneTimeWarnings[k] = undefined;
+    console.warn(message);
+  }
+}

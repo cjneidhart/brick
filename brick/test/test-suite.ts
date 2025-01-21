@@ -1,6 +1,11 @@
 import * as chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import chaiDom from "chai-dom";
+import type { BrickPublic } from "../src/scripting";
+
+declare global {
+  const Brick: typeof BrickPublic;
+}
 
 chai.use(chaiDom);
 chai.use(chaiAsPromised);
@@ -93,8 +98,7 @@ beforeEach(function () {
   storyScript = document.createElement("script");
   storyData.append(storyScript);
 
-  startPassage = document.createElement("tw-passagedata");
-  startPassage.setAttribute("name", "test start");
+  startPassage = createPassage("test start");
   startPassage.setAttribute("pid", "27");
   storyData.append(startPassage);
 
@@ -175,6 +179,50 @@ describe("Basic Functionality", function () {
     expect(active.childNodes[2]).to.be.instanceOf(HTMLBRElement);
     expect(active.childNodes[3]).to.be.instanceOf(Text);
     expect(active.childNodes[3]).to.have.text("World!");
+  });
+});
+
+describe("Misc. Functions", function () {
+  describe("passageName()", function () {
+    it("returns the name of the active passage", async function () {
+      startPassage.textContent = `@print(passageName())`;
+      await brickInit();
+      const active = getActivePassage();
+      expect(active).to.have.length(0);
+      expect(active).to.have.text("test start");
+    });
+
+    it("throws an error when given any arguments", async function () {
+      startPassage.textContent = `@print(passageName(null))`;
+      await brickInit();
+      const active = getActivePassage();
+      expect(active).to.have.length(1);
+      expect(active.children[0]).to.have.class("brick-error");
+      expect(active.children[0]).to.contain.text("arguments");
+    });
+  });
+
+  describe("tags()", function () {
+    it("returns the passage's tags", async function () {
+      startPassage.setAttribute("tags", "bone broth");
+      startPassage.innerHTML = "";
+      startPassage.append(`@print(tags())`);
+      await brickInit();
+      const active = getActivePassage();
+      expect(active).to.have.length(0);
+      expect(active).to.have.text(`[bone, broth]`);
+      expect(Brick.tags()).to.deep.equal(["bone", "broth"]);
+    });
+
+    it("throws an error when given any arguments", async function () {
+      startPassage.textContent = `@print(tags(null))`;
+      await brickInit();
+      const active = getActivePassage();
+      expect(active).to.have.length(1);
+      expect(active.children[0]).to.have.class("brick-error");
+      expect(active.children[0]).to.contain.text("arguments");
+      expect(() => (Brick.tags as Function)(null)).to.throw;
+    });
   });
 });
 

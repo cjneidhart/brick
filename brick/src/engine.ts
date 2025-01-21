@@ -87,6 +87,10 @@ export async function resumeOrStart() {
   }
 }
 
+export function activePassageName(): string {
+  return passageName;
+}
+
 /** Fetch the current moment from IDB if necessary, then load its variables */
 export async function loadCurrentMoment() {
   let moment = historyMoments[index];

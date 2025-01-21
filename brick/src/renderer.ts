@@ -220,7 +220,6 @@ function renderRaw(
 }
 
 function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext): boolean {
-  let noErrors = true;
   const store =
     expr.store === "constants"
       ? constants
@@ -322,7 +321,7 @@ function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext
   }
 
   if (isMacro(value)) {
-    const args = lastOpAsCall?.args || [];
+    const args: unknown[] = lastOpAsCall?.args || [];
     const context = new MacroContext(
       valueStr,
       expr.passageName,
@@ -332,8 +331,23 @@ function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext
     );
     const opts = value[BRICK_MACRO_SYMBOL];
     const skipArgs = typeof opts === "object" && opts.skipArgs;
-    noErrors =
-      renderMacro(target, value, context, skipArgs ? args : args.map(evalExpression)) && noErrors;
+    if (!skipArgs) {
+      for (let i = 0; i < args.length; i++) {
+        try {
+          args[i] = evalExpression(args[i] as string);
+        } catch (error) {
+          const brickError = new ExprError(
+            error,
+            args[i] as string,
+            expr.passageName,
+            expr.lineNumber,
+          );
+          target.append(renderError(brickError));
+          return false;
+        }
+      }
+    }
+    return renderMacro(target, value, context, args);
   } else {
     if (expr.content) {
       const brickError = new BrickError(
@@ -362,7 +376,7 @@ function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext
     target.append(value instanceof Node ? value : String(value));
   }
 
-  return noErrors;
+  return true;
 }
 
 function renderElement(

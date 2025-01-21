@@ -150,6 +150,23 @@ function numberRange(start: number, stop: number, step?: number): Iterable<numbe
 @for(_i of numberRange(5)) { Hello, player _i! }
 ```
 
+### `passageName`
+
+Returns the name of the active passage.
+
+#### Signature
+
+```ts
+function passageName(): string;
+```
+
+#### Example
+
+```brick
+// Create a header with the current passage's name
+<h1>@print(passageName())</h1>
+```
+
 ### `render`
 
 `render` is mainly intended to be used within macros.
@@ -187,4 +204,25 @@ Else, it returns `true`.
 
 ```ts
 function renderPassage(target: HTMLElement, passage: string | Passage): boolean;
+```
+
+### `tags`
+
+Returns an immutable array containing the active passage's tags.
+
+#### Signature
+
+```ts
+function tags(): readonly string[];
+```
+
+#### Example
+
+```brick
+// Display a different message in any passages tagged "woods"
+@if (tags().includes("woods")) {
+  A few rays of sunlight poke through the thick leaves.
+} @else {
+  The bright sun shines down, causing you to sweat.
+}
 ```

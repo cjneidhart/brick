@@ -7,7 +7,7 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
 ### Added
 
-- The `createGetter` function.
+- The `createGetter`, `passageName`, and `tags` functions.
 - The `passages` object, with four methods:
   - `filter`
   - `find`
@@ -24,6 +24,11 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
   encountering a parse error causes Brick to not render anything except the error message.
 - Passage names starting with `Story` are banned, like the documentation says.
 - Passage tags starting with `brick` are banned.
+
+### Fixed
+
+- Errors that occur while evaluating a macro's arguments are properly caught and rendered,
+  instead of being handled by an `alert()`.
 
 ## [0.3.1] - 2024-12-23
 

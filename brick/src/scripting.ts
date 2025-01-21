@@ -7,7 +7,7 @@
 
 import config from "./config";
 import { showPassage } from "./dialog";
-import { backward, constants, forward, redo, storyVariables, tempVariables } from "./engine";
+import * as engine from "./engine";
 import { createGetter, createMacro } from "./macros";
 import * as passages from "./passages";
 import * as renderer from "./renderer";
@@ -22,17 +22,17 @@ declare const BRICK_VERSION: Record<string, unknown>;
 export const BrickPublic = {
   BRICK_VERSION,
   get constants() {
-    return constants;
+    return engine.constants;
   },
   Engine: {
-    forward,
-    backward,
-    redo,
+    forward: engine.forward,
+    backward: engine.backward,
+    redo: engine.redo,
     get vars() {
-      return storyVariables;
+      return engine.storyVariables;
     },
     get temp() {
-      return tempVariables;
+      return engine.tempVariables;
     },
   },
   config,
@@ -86,6 +86,12 @@ export const BrickPublic = {
   enumerate: util.enumerate,
   makeElement: util.makeElement,
   numberRange: util.numberRange,
+  passageName(): string {
+    if (arguments.length !== 0) {
+      throw new TypeError("passageName(): no arguments allowed");
+    }
+    return engine.activePassageName();
+  },
   randomInt(max: unknown): number {
     if (arguments.length !== 1) {
       throw new Error("randomInt: exactly 1 argument required");
@@ -98,6 +104,13 @@ export const BrickPublic = {
   render: renderer.render,
   renderPassage: renderer.renderPassage,
   slugify: util.slugify,
+  tags(): readonly string[] {
+    if (arguments.length !== 0) {
+      throw new TypeError("tags(): no arguments allowed");
+    }
+    const passage = passages.get(engine.activePassageName());
+    return passage?.tags ?? [];
+  },
 };
 BrickPublic.BRICK_VERSION.toString = function () {
   return this.version as string;

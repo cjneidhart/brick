@@ -564,7 +564,6 @@ export class Parser {
   }
 
   parseForArgs(): string[] | ErrorMessage {
-    console.log(`Entered parseForArgs at "${this.input.substring(this.index, this.index + 10)}"`);
     // TODO refine this
     const match = this.consume(/\s*([^]*?)\s+of\b/y);
     if (!match) {
@@ -707,7 +706,8 @@ export class Parser {
           this.index++;
           match = this.consume(RE.js.identifier);
           if (match) {
-            const prefix = c === "$" ? "Engine.vars." : c === "_" ? "Engine.temp." : "constants.";
+            const prefix =
+              c === "$" ? "Engine.vars." : c === "_" ? "brickTempVarScope." : "constants.";
             output.push(prefix, match[0]);
             regexpAllowed = false;
           } else {

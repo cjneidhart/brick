@@ -102,7 +102,7 @@ Actual:
   @(_i++)
   _i
   @if(_i >= 5) {
-    @break()
+    @break
   }
 }
 
@@ -113,7 +113,7 @@ Actual:
 @while(_i < 10) {
   @(_i++, _j = _i * 10)
   _i
-  @if(_i % 2) { @continue() }
+  @if(_i % 2) { @continue }
   _j
 }
 

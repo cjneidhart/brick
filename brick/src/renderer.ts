@@ -1,5 +1,5 @@
 import Config from "./config";
-import { constants, storyVariables, tempVariables } from "./engine";
+import { constants, storyVariables } from "./engine";
 import { BrickError, DynamicAttributeError, ExprError, MacroError } from "./error";
 import { BreakSignal, BRICK_MACRO_SYMBOL, isMacro, Macro, MacroContext } from "./macros";
 import { ElementTemplate, Expr, NodeTemplate, Parser, PostscriptCall } from "./parser";
@@ -84,11 +84,15 @@ function renderError(error: BrickError): HTMLSpanElement {
   return makeElement("span", { class: "brick-error" }, stringify(error));
 }
 
-export function renderPassage(target: HTMLElement, passage: string | Passage): boolean {
+export function renderPassage(
+  target: HTMLElement,
+  scope: Record<string, unknown>,
+  passage: string | Passage,
+): boolean {
   if (typeof passage === "string") {
     const psg = getPassage(passage);
     if (psg) {
-      return renderPassage(target, psg);
+      return renderPassage(target, scope, psg);
     } else {
       target.innerHTML = "";
       target.append(
@@ -103,7 +107,7 @@ export function renderPassage(target: HTMLElement, passage: string | Passage): b
   target.dataset.name = passage.name;
   target.dataset.tags = passage.tags.join(" ");
 
-  return render(target, passage);
+  return render(target, scope, passage);
 }
 
 let recursionCount = 1000;
@@ -111,6 +115,7 @@ let recursionRecoveryMode = false;
 
 export function render(
   target: ParentNode,
+  scope: Record<string, unknown>,
   input: NodeTemplate[] | Passage | BrickError,
   parentContext?: MacroContext,
 ): boolean {
@@ -130,7 +135,7 @@ export function render(
   let returnValue;
   try {
     recursionCount--;
-    returnValue = renderRaw(target, input, parentContext);
+    returnValue = renderRaw(target, scope, input, parentContext);
   } finally {
     recursionCount++;
     if (recursionCount >= 1000) {
@@ -143,6 +148,7 @@ export function render(
 /** Render the given Brick markup and append it to an element. */
 function renderRaw(
   target: ParentNode,
+  scope: Record<string, unknown>,
   input: NodeTemplate[] | Passage | BrickError,
   parentContext?: MacroContext,
 ): boolean {
@@ -153,7 +159,7 @@ function renderRaw(
       throw new TypeError(`Config.preProcessText returned a ${typeof text}, expected a string`);
     }
     const parser = new Parser(text, input.name);
-    return render(target, parser.parse(), parentContext);
+    return render(target, scope, parser.parse(), parentContext);
   }
 
   if (input instanceof BrickError) {
@@ -187,23 +193,30 @@ function renderRaw(
         }
       }
     } else if (nt.type === "expr") {
-      noErrors = renderExpr(target, nt, parentContext) && noErrors;
+      noErrors = renderExpr(target, scope, nt, parentContext) && noErrors;
     } else if (nt.type === "chain") {
       const name = nt.segments[0].name;
       const macro = constants[name];
       if (!isMacro(macro)) {
         throw new Error("chain macro not a macro");
       }
-      const context = new MacroContext(name, nt.passageName, nt.lineNumber, parentContext, []);
+      const context = new MacroContext(
+        name,
+        nt.passageName,
+        nt.lineNumber,
+        scope,
+        parentContext,
+        [],
+      );
       renderMacro(target, macro, context, nt.segments);
     } else if (nt.type === "element") {
-      noErrors = renderElement(nt, target, parentContext) && noErrors;
+      noErrors = renderElement(nt, target, scope, parentContext) && noErrors;
     } else if (nt.type === "linkBox") {
       const linkMacro = constants.link;
       if (!isMacro(linkMacro)) {
         throw "link is not link";
       }
-      const context = new MacroContext("link", nt.passageName, nt.lineNumber);
+      const context = new MacroContext("link", nt.passageName, nt.lineNumber, scope);
       renderMacro(target, linkMacro, context, [nt.text, nt.link]);
     } else if (nt.type === "error") {
       noErrors = false;
@@ -219,13 +232,14 @@ function renderRaw(
   return noErrors;
 }
 
-function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext): boolean {
+function renderExpr(
+  target: ParentNode,
+  tempVarScope: Record<string, unknown>,
+  expr: Expr,
+  parentContext?: MacroContext,
+): boolean {
   const store =
-    expr.store === "constants"
-      ? constants
-      : expr.store === "story"
-        ? storyVariables
-        : tempVariables;
+    expr.store === "constants" ? constants : expr.store === "story" ? storyVariables : tempVarScope;
   const storeChar = { constants: "@", story: "$", temp: "_" }[expr.store];
   let value: unknown;
   try {
@@ -253,7 +267,7 @@ function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext
       case "index": {
         let index;
         try {
-          index = op.needsEval ? evalExpression(op.key) : op.key;
+          index = op.needsEval ? evalExpression(op.key.trim(), tempVarScope) : op.key;
         } catch (error) {
           const brickError = new ExprError(
             error,
@@ -286,7 +300,7 @@ function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext
         const args: unknown[] = [];
         for (const argStr of op.args) {
           try {
-            args.push(evalExpression(argStr));
+            args.push(evalExpression(argStr, tempVarScope));
           } catch (error) {
             const brickError = new ExprError(error, argStr, expr.passageName, expr.lineNumber);
             target.append(renderError(brickError));
@@ -321,27 +335,25 @@ function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext
   }
 
   if (isMacro(value)) {
-    const args: unknown[] = lastOpAsCall?.args || [];
+    let args: unknown[] = lastOpAsCall?.args || [];
     const context = new MacroContext(
       valueStr,
       expr.passageName,
       expr.lineNumber,
+      tempVarScope,
       parentContext,
       expr.content,
     );
     const opts = value[BRICK_MACRO_SYMBOL];
     const skipArgs = typeof opts === "object" && opts.skipArgs;
     if (!skipArgs) {
-      for (let i = 0; i < args.length; i++) {
+      const argStrings = args as string[];
+      args = [];
+      for (const arg of argStrings) {
         try {
-          args[i] = evalExpression(args[i] as string);
+          args.push(evalExpression(arg, tempVarScope));
         } catch (error) {
-          const brickError = new ExprError(
-            error,
-            args[i] as string,
-            expr.passageName,
-            expr.lineNumber,
-          );
+          const brickError = new ExprError(error, arg, expr.passageName, expr.lineNumber);
           target.append(renderError(brickError));
           return false;
         }
@@ -359,7 +371,6 @@ function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext
       return false;
     }
     if (lastOpAsCall) {
-      const args = lastOpAsCall.args.map(evalExpression);
       if (typeof value !== "function") {
         const error = new BrickError(
           `"${valueStr}" is not a function`,
@@ -368,6 +379,16 @@ function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext
         );
         target.append(renderError(error));
         return false;
+      }
+      const args: unknown[] = [];
+      for (const arg of lastOpAsCall.args) {
+        try {
+          args.push(evalExpression(arg, tempVarScope));
+        } catch (error) {
+          const brickError = new ExprError(error, arg, expr.passageName, expr.lineNumber);
+          target.append(renderError(brickError));
+          return false;
+        }
       }
       const newValue = value.apply(previousValue, args);
       previousValue = value;
@@ -382,6 +403,7 @@ function renderExpr(target: ParentNode, expr: Expr, parentContext?: MacroContext
 function renderElement(
   template: ElementTemplate,
   target: ParentNode,
+  scope: Record<string, unknown>,
   parentContext?: MacroContext,
 ): boolean {
   const element = makeElement(template.name);
@@ -390,7 +412,7 @@ function renderElement(
   }
   for (const [key, script] of template.evalAttributes) {
     try {
-      const value = evalExpression(script);
+      const value = evalExpression(script, scope);
       if (key.startsWith("on") && key.length >= 3 && typeof value === "function") {
         // TODO warning for typos such as onClick
         element.addEventListener(key.substring(2), value as EventListener);
@@ -405,7 +427,7 @@ function renderElement(
       return false;
     }
   }
-  const noErrors = render(element, template.content, parentContext);
+  const noErrors = render(element, scope, template.content, parentContext);
   target.append(element);
   return noErrors;
 }

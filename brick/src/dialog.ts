@@ -51,7 +51,8 @@ export function showPassage(passageName: string) {
   reset();
 
   titleElt.append(passageName);
-  renderPassage(modalBody, passageName);
+  // TODO: pass temp vars to a dialog?
+  renderPassage(modalBody, {}, passageName);
 
   dialogElement.showModal();
 }

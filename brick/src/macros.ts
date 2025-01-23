@@ -7,7 +7,7 @@
 
 import config from "./config";
 import * as engine from "./engine";
-import { MacroError } from "./error";
+import { BrickError, MacroError } from "./error";
 import { MacroChainSegment, NodeTemplate, Parser, PostscriptCall } from "./parser";
 import { render, renderPassage } from "./renderer";
 import { evalAssign, evalExpression, evalJavaScript } from "./scripting";
@@ -28,11 +28,6 @@ export function isMacro(maybeMacro: unknown): maybeMacro is Macro {
     }
   }
   return false;
-}
-
-interface CapturedVar {
-  name: string;
-  value: unknown;
 }
 
 export class BreakSignal {
@@ -110,95 +105,52 @@ export class MacroContext {
   name: string;
   /** The nearest ancestor macro's context */
   parent?: MacroContext;
-  /** Any captured variables this macro must be aware of */
-  captures?: CapturedVar[];
   /** The name of the passage containing this macro */
   passageName: string;
   /** The line number on which this macro is called */
   lineNumber: number;
+  /** The scope of temporary variables this macro was called in */
+  tempVars: Record<string, unknown>;
 
   constructor(
     name: string,
     passageName: string,
     lineNumber: number,
+    tempVars: Record<string, unknown>,
     parent?: MacroContext,
     content?: NodeTemplate[],
   ) {
     this.name = name;
-    // this.loopStatus = parent?.loopStatus || LoopStatus.OUTSIDE_LOOP;
     this.content = content;
+    this.tempVars = tempVars;
     this.passageName = passageName;
     this.lineNumber = lineNumber;
-    if (parent?.captures) {
-      this.captures = parent.captures;
-    }
-  }
-
-  /** Create a callback that will properly respect this macro's captured variables. */
-  createCallback<F extends Function>(func: F): F {
-    const context = this;
-    const wrapped = function (this: unknown, ...args: unknown[]) {
-      if (!context.captures) {
-        return func.apply(this, args);
-      }
-      const oldVals: Record<string, unknown> = {};
-      for (const capture of context.captures) {
-        // In case of repeats, avoid overwriting existing old value
-        if (!(capture.name in oldVals)) {
-          oldVals[capture.name] = engine.tempVariables[capture.name];
-        }
-        engine.tempVariables[capture.name] = capture.value;
-      }
-
-      let returnValue: unknown;
-      try {
-        returnValue = func.apply(this, args);
-      } finally {
-        Object.assign(engine.tempVariables, oldVals);
-      }
-
-      return returnValue;
-    };
-
-    return wrapped as unknown as F;
+    this.parent = parent;
   }
 
   get [Symbol.toStringTag]() {
     return this.constructor.name;
   }
+
+  createTempVariableScope(): Record<string, unknown> {
+    const parentScope = this.tempVars;
+    const childScopeUnproxied = Object.create(parentScope);
+    return new Proxy(childScopeUnproxied, {
+      set(target, p, newValue, receiver) {
+        if (!(p in receiver) || Object.prototype.hasOwnProperty.call(receiver, p)) {
+          return Reflect.set(target, p, newValue, receiver);
+        }
+        return Reflect.set(parentScope, p, newValue, parentScope);
+      },
+    });
+  }
+
+  render(target: ParentNode, input: NodeTemplate[] | BrickError, scope?: Record<string, unknown>) {
+    return render(target, scope || this.createTempVariableScope(), input, this);
+  }
 }
 
-// const macros = new Map<string, MacroOpts>();
-
-/** Add a new macro */
-// export function add(name: string, macro: MacroOpts) {
-//   if (macros.has(name)) {
-//     console.warn(`Replacing an existing macro: "${name}"`);
-//   }
-//   macros.set(name, macro);
-// }
-
-/** Add a new macro, identical to another.
- * If the older macro is later removed, the newer macro will be unaffected. */
-// export function alias(oldName: string, newName: string) {
-//   const m = macros.get(oldName);
-//   if (!m) {
-//     throw new Error(`No macro "${oldName}" found`);
-//   }
-//   macros.set(newName, m);
-// }
-
-// /** Get a macro definition */
-// export function get(name: string): MacroOpts | null {
-//   return macros.get(name) || null;
-// }
-
-// /** Remove a macro definition */
-// export function remove(name: string): boolean {
-//   return macros.delete(name);
-// }
-
-const include: Macro = (_context, ...args) => {
+const include: Macro = (context, ...args) => {
   if (args.length < 1 || args.length > 2) {
     throw new Error("must be called with 1 argument");
   }
@@ -216,14 +168,15 @@ const include: Macro = (_context, ...args) => {
 
   const elt = makeElement(actualEltName);
   // TODO should break/continue work through include boundaries?
-  renderPassage(elt, passageName);
+  const childScope = context.createTempVariableScope();
+  renderPassage(elt, childScope, passageName);
 
   return elt;
 };
 include[BRICK_MACRO_SYMBOL] = true;
 
-const unnamed: Macro = (_ctx, ...args) => {
-  evalJavaScript(args.join(", "));
+const unnamed: Macro = (context, ...args) => {
+  evalJavaScript(args.join(", "), context.tempVars);
   return document.createDocumentFragment();
 };
 unnamed[BRICK_MACRO_SYMBOL] = { skipArgs: true };
@@ -255,12 +208,12 @@ const renderMacro: Macro = (context, ...args: unknown[]) => {
   const frag = document.createDocumentFragment();
   // TODO prevent infinite recursion
   const parser = new Parser(args[0], context.passageName, context.lineNumber);
-  render(frag, parser.parse());
+  context.render(frag, parser.parse());
   return frag;
 };
 renderMacro[BRICK_MACRO_SYMBOL] = true;
 
-const link: Macro = (context, ...args) => {
+const link: Macro = (_context, ...args) => {
   if (args.length < 1 || args.length > 3) {
     throw new Error("requires 1, 2 or 3 arguments");
   }
@@ -304,19 +257,16 @@ const link: Macro = (context, ...args) => {
   if (psgName) {
     button.dataset.linkDestination = psgName;
   }
-  button.addEventListener(
-    "click",
-    context.createCallback(function (this: HTMLButtonElement, mouseEvent) {
-      if (onClick) {
-        // TODO errors thrown here will be propagated to window's error handler.
-        // Would it be better to render them inline?
-        onClick.call(this, mouseEvent);
-      }
-      if (button.dataset.linkDestination) {
-        engine.navigate(button.dataset.linkDestination);
-      }
-    }),
-  );
+  button.addEventListener("click", (mouseEvent) => {
+    if (onClick) {
+      // TODO errors thrown here will be propagated to window's error handler.
+      // Would it be better to render them inline?
+      onClick.call(button, mouseEvent);
+    }
+    if (button.dataset.linkDestination) {
+      engine.navigate(button.dataset.linkDestination);
+    }
+  });
 
   return button;
 };
@@ -337,7 +287,7 @@ const linkReplace: Macro = (context, ...args) => {
   button.addEventListener("click", () => {
     const span = makeElement("span", { class: "brick-linkReplace brick-transparent" });
     if (context.content) {
-      render(span, context.content, context);
+      context.render(span, context.content);
     }
     button.replaceWith(span);
     setTimeout(() => span.classList.remove("brick-transparent"), 40);
@@ -356,7 +306,7 @@ const whileMacro: Macro = (context, ...args) => {
   const frag = document.createDocumentFragment();
   const { content } = context;
   let iterations = 1;
-  while (evalExpression(conditionStr)) {
+  while (evalExpression(conditionStr, context.tempVars)) {
     if (iterations > config.maxLoopIterations) {
       throw new Error(
         `Too many iterations (Config.maxLoopIterations = ${config.maxLoopIterations})`,
@@ -364,7 +314,7 @@ const whileMacro: Macro = (context, ...args) => {
     }
     iterations++;
     try {
-      const noErrors = content ? render(frag, content, context) : true;
+      const noErrors = content ? context.render(frag, content) : true;
       if (!noErrors) {
         break;
       }
@@ -408,15 +358,13 @@ const forMacro: Macro = (context, ...args) => {
     throw new Error("loop variable must be a temp variable");
   }
   const varName = varStr.substring(1);
-  const place = `Engine.temp.${varName}`;
-  const iterable = evalExpression(iterableStr) as Iterable<unknown>;
+  const iterable = evalExpression(iterableStr, context.tempVars) as Iterable<unknown>;
   if (typeof iterable[Symbol.iterator] !== "function") {
     throw new Error("Right-hand side must be an iterable value, such as an array");
   }
 
   const frag = document.createDocumentFragment();
   const { content } = context;
-  const priorCaptures = context.captures || [];
   let iterations = 1;
   for (const loopVal of iterable) {
     if (iterations > config.maxLoopIterations) {
@@ -425,10 +373,10 @@ const forMacro: Macro = (context, ...args) => {
       );
     }
     iterations++;
-    evalAssign(place, loopVal);
-    context.captures = [...priorCaptures, { name: varName, value: loopVal }];
+    const childScope = context.createTempVariableScope();
+    childScope[varName] = loopVal;
     try {
-      const noErrors = content ? render(frag, content, context) : true;
+      const noErrors = content ? context.render(frag, content, childScope) : true;
       if (!noErrors) {
         break;
       }
@@ -444,13 +392,12 @@ const forMacro: Macro = (context, ...args) => {
       }
     }
   }
-  context.captures = priorCaptures;
 
   return frag;
 };
 forMacro[BRICK_MACRO_SYMBOL] = { isForMacro: true, skipArgs: true };
 
-const checkBox: Macro = (_context, ...args) => {
+const checkBox: Macro = (context, ...args) => {
   if (args.length !== 2) {
     throw new Error("requires 2 arguments");
   }
@@ -459,19 +406,19 @@ const checkBox: Macro = (_context, ...args) => {
   }
 
   const [place, labelExpr] = args as string[];
-  const labelText = evalExpression(labelExpr);
+  const labelText = evalExpression(labelExpr, context.tempVars);
   if (typeof labelText !== "string" && !(labelText instanceof Node)) {
     throw new Error("label must be a string or Node");
   }
 
-  const initValue = evalExpression(place);
+  const initValue = evalExpression(place, context.tempVars);
 
   const input = makeElement("input", {
     type: "checkbox",
     id: uniqueId(),
   });
   input.checked = !!initValue;
-  input.addEventListener("change", () => evalAssign(place, input.checked));
+  input.addEventListener("change", () => evalAssign(place, input.checked, context.tempVars));
 
   const labelElt = makeElement("label", { for: input.id }, labelText);
 
@@ -481,7 +428,7 @@ const checkBox: Macro = (_context, ...args) => {
 };
 checkBox[BRICK_MACRO_SYMBOL] = { skipArgs: true };
 
-const textBox: Macro = (_context, ...args) => {
+const textBox: Macro = (context, ...args) => {
   if (args.length !== 2) {
     throw new Error("requires 2 arguments");
   }
@@ -490,19 +437,19 @@ const textBox: Macro = (_context, ...args) => {
   }
 
   const [place, labelExpr] = args;
-  const labelText = evalExpression(labelExpr);
+  const labelText = evalExpression(labelExpr, context.tempVars);
   if (typeof labelText !== "string" && !(labelText instanceof Node)) {
     throw new Error("label must be a string or Node");
   }
 
-  const initValue = stringify(evalExpression(place) || "");
+  const initValue = stringify(evalExpression(place, context.tempVars) || "");
 
   const input = makeElement("input", {
     id: uniqueId(),
     type: "text",
     value: initValue,
   });
-  input.addEventListener("keyup", () => evalAssign(place, input.value));
+  input.addEventListener("keyup", () => evalAssign(place, input.value, context.tempVars));
 
   const labelElt = makeElement("label", { for: input.id }, labelText);
 
@@ -515,9 +462,9 @@ textBox[BRICK_MACRO_SYMBOL] = { skipArgs: true };
 const ifMacro: Macro = (context, ...args) => {
   const segments = args as MacroChainSegment[];
   for (const segment of segments) {
-    if (!segment.name.includes("if") || evalExpression(segment.args.join(", "))) {
+    if (!segment.name.includes("if") || evalExpression(segment.args.join(", "), context.tempVars)) {
       const frag = document.createDocumentFragment();
-      render(frag, segment.body, context);
+      context.render(frag, segment.body);
       return frag;
     }
   }
@@ -577,15 +524,15 @@ const switchMacro: Macro = (context, ...args) => {
   for (const child of children) {
     if (child.base === "default") {
       if (child.content) {
-        render(output, child.content, context);
+        context.render(output, child.content);
       }
       return output;
     }
     for (const arg of (child.ops[0] as PostscriptCall).args) {
-      const other = evalExpression(arg);
+      const other = evalExpression(arg, context.tempVars);
       if (value === other) {
         if (child.content) {
-          render(output, child.content, context);
+          context.render(output, child.content);
         }
         return output;
       }
@@ -604,7 +551,7 @@ const redoable: Macro = (context, ..._args) => {
   const span = makeElement("span", { class: "brick-macro-redoable" });
   try {
     if (context.content) {
-      render(span, context.content, context);
+      context.render(span, context.content);
     }
   } catch (error) {
     if (error instanceof BreakSignal) {
@@ -617,7 +564,7 @@ const redoable: Macro = (context, ..._args) => {
   span.addEventListener("brick-redo", () => {
     span.innerHTML = "";
     if (context.content) {
-      render(span, context.content, context);
+      context.render(span, context.content);
     }
   });
 
@@ -645,14 +592,11 @@ const later: Macro = (context, ...args) => {
 
   const span = makeElement("span", { class: "brick-macro-later", hidden: "" });
 
-  setTimeout(
-    context.createCallback(() => {
-      const frag = document.createDocumentFragment();
-      render(frag, content);
-      span.replaceWith(frag);
-    }),
-    delay,
-  );
+  setTimeout(() => {
+    const frag = document.createDocumentFragment();
+    context.render(frag, content);
+    span.replaceWith(frag);
+  }, delay);
 
   return span;
 };
@@ -674,7 +618,7 @@ function makeReplaceMacro(mode: "append" | "prepend" | "replace"): Macro {
 
     const frag = document.createDocumentFragment();
     if (context.content) {
-      render(frag, context.content, context);
+      context.render(frag, context.content);
     } else if (context.name !== "replace") {
       throw new Error('no content provided. Use "{}" to provide content.');
     }
@@ -711,12 +655,12 @@ const punt: Macro = (context, ...args) => {
     throw new Error("received a non-string arg");
   }
 
-  if (!args.every((arg) => arg.startsWith("Engine.temp."))) {
+  if (!args.every((arg) => arg.startsWith("brickTempVarScope."))) {
     throw new Error("only temp variables can be punted");
   }
 
   for (const arg of args) {
-    engine.punt(arg.slice(12));
+    engine.punt(arg.slice(18));
   }
 
   return "";

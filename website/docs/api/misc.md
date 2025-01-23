@@ -179,6 +179,7 @@ Any pre-existing children of `target` will be left alone.
 ```ts
 function render(
   target: Element | DocumentFragment,
+  tempVars: Record<string, unknown>,
   input: AST | Passage,
   parentContext?: MacroContext,
 ): boolean;
@@ -194,7 +195,7 @@ The target's contents will be cleared before rendering the passage.
 
 - The element gains a new class, which is the passage's name slugified, prefixed by `psg-`.
 - `data-name` is set to the passage's name, not slugified.
-- `data-tags` is seto to the passage's tags, separated by spaces.
+- `data-tags` is set to the passage's tags, separated by spaces.
 
 If the passage does not exist, an error indicating as such will be rendered onto the element.
 If the passage does not exist or any errors occurred while rendering, `renderPassage` will return `false`.
@@ -203,7 +204,11 @@ Else, it returns `true`.
 #### Signature
 
 ```ts
-function renderPassage(target: HTMLElement, passage: string | Passage): boolean;
+function renderPassage(
+  target: HTMLElement,
+  tempVars: Record<string, unknown>,
+  passage: string | Passage,
+): boolean;
 ```
 
 ### `tags`

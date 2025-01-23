@@ -225,19 +225,19 @@ function renderActive() {
   const article = makeElement("article", {
     class: "brick-passage brick-active-passage brick-transparent",
   });
-  renderPassage(article, passageName);
+  renderPassage(article, tempVariables, passageName);
 
   const storyHeader = passages.get("StoryHeader");
   const storyFooter = passages.get("StoryFooter");
 
   if (storyHeader) {
     const header = makeElement("header");
-    renderPassage(header, storyHeader);
+    renderPassage(header, tempVariables, storyHeader);
     article.prepend(header);
   }
   if (storyFooter) {
     const footer = makeElement("footer");
-    renderPassage(footer, storyFooter);
+    renderPassage(footer, tempVariables, storyFooter);
     article.append(footer);
   }
 

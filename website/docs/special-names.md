@@ -64,7 +64,7 @@ it must start with a letter and contain only letters, numbers, and underscores.
 For a passage named `myMacro`, using it as `@myMacro` is effectively the same as using `@include("myMacro")`.
 The only difference is the slightly shorter syntax.
 
-For now, there is no way for `macro`-tagged passages to access their arguments or children.
+For now, there is no way for `macro`-tagged passages to receive arguments or children.
 This may change in the future.
 
 ## Story Variables

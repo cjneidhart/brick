@@ -77,7 +77,7 @@ async function init() {
         );
       }
       const div = makeElement("div");
-      renderPassage(div, psg);
+      renderPassage(div, engine.tempVariables, psg);
       return div;
     };
     macro[macros.BRICK_MACRO_SYMBOL] = true;
@@ -85,13 +85,13 @@ async function init() {
   }
 
   for (const script of scripts) {
-    scripting.evalJavaScript(script.textContent);
+    scripting.evalJavaScript(script.textContent, engine.tempVariables);
   }
 
   const storyInit = passages.get("StoryInit");
   if (storyInit) {
     const div = makeElement("div");
-    renderPassage(div, storyInit);
+    renderPassage(div, engine.tempVariables, storyInit);
     div.normalize();
     const trimmed = div.textContent.trim();
     if (trimmed) {

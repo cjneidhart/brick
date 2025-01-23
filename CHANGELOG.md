@@ -20,6 +20,8 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
 ### Changed
 
+- Temporary variables are now lexically scoped.
+  New scopes are created with each `{ }` pair.
 - Parse errors are now "loud";
   encountering a parse error causes Brick to not render anything except the error message.
 - Passage names starting with `Story` are banned, like the documentation says.
@@ -29,6 +31,10 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
 - Errors that occur while evaluating a macro's arguments are properly caught and rendered,
   instead of being handled by an `alert()`.
+
+### Removed
+
+- The `capturedVars` and `createCallback` properties of `MacroContext` have been removed.
 
 ## [0.3.1] - 2024-12-23
 

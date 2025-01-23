@@ -34,16 +34,19 @@ class MacroContext {
   passageName: string;
   /** The line number of this invocation (The first line is 1) */
   lineNumber: number;
+  /** The scope of temporary variables this macro was called in */
+  tempVars: Record<string, unknown>;
 
-  /** Create a callback function which will respect any captured temporary variables */
-  createCallback<F extends Function>(callback: F): F;
+  /** Create a new scope for temporary variables that inherits from this macro's scope */
+  createTempVariableScope(): Record<string, unknown>;
+
+  /** Render an AST, using a newly created variable scope */
+  render(target: Element | DocumentFragment, input: AST): boolean;
 }
 ```
 
 If present, the `content` property is an opaque type, called an AST.
-It can be safely passed to [`render`].
+It can be safely passed to `render`.
 
 The `name` property is present to provide better error messages.
 Macros should generally exhibit the same behavior regardless of the name used to invoke them.
-
-[`render`]: ./misc#render

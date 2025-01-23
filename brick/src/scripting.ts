@@ -126,16 +126,20 @@ export function init() {
   window.Brick = BrickPublic;
 }
 
-export function evalJavaScript(js: string): unknown {
-  const fn = new Function(...envKeys, `'use strict';${js}`);
-  return fn(...envValues);
+export function evalJavaScript(js: string, tempVars: Record<string, unknown>): unknown {
+  const fn = new Function(...envKeys, "brickTempVarScope", `'use strict';${js}`);
+  return fn(...envValues, tempVars);
 }
 
-export function evalExpression(js: string): unknown {
-  return evalJavaScript("return " + js);
+export function evalExpression(js: string, tempVars: Record<string, unknown>): unknown {
+  return evalJavaScript("return " + js, tempVars);
 }
 
-export function evalAssign(place: string, value: unknown) {
-  const fn = new Function(...envKeys, `"use strict"; ${place} = arguments[arguments.length - 1]`);
-  fn(...envValues, value);
+export function evalAssign(place: string, value: unknown, tempVars: Record<string, unknown>) {
+  const fn = new Function(
+    ...envKeys,
+    "brickTempVarScope",
+    `"use strict"; ${place} = arguments[arguments.length - 1]`,
+  );
+  fn(...envValues, tempVars, value);
 }

@@ -15,7 +15,9 @@ Even if it's already listed in this file, creating an Issue helps me decide what
 
 ## Planned Features
 
-- A new-user tutorial. This would start with the very basics, like links between passages, and eventually get to advanced JavaScript features.
+- A new-user tutorial.
+  This would start with the very basics, like links between passages,
+  and eventually get to advanced JavaScript features.
 - A way for users to add macros via markup, like `<<widget>>` in SugarCube or `(macro: )` in Harlowe.
   I'll probably call it `@macro`.
 - A way to add metadata to passages, typically to enable storylets.
@@ -53,7 +55,9 @@ Even if it's already listed in this file, creating an Issue helps me decide what
 - Alternative ways of newline handling.
 - A date/time system, so authors don't use JavaScript's `Date`.
   Might be built-in or an official extension.
-- Lexical scoping of temporary variables.
+- Change `@link` and similar macros to automatically remove spaces and brackets (`[[..]]`) from passage names.
+- do-while macro?
+
 
 ## Very long-term goal
 

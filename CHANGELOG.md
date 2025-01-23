@@ -24,6 +24,9 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
   New scopes are created with each `{ }` pair.
 - Parse errors are now "loud";
   encountering a parse error causes Brick to not render anything except the error message.
+- Leading and trailing whitespace in a wiki-style link is now trimmed,
+  to match the behavior of passage initialization.
+  Whitespace around the link/text separator (`|`, `->`, or `<-`) is also trimmed.
 - Passage names starting with `Story` are banned, like the documentation says.
 - Passage tags starting with `brick` are banned.
 

@@ -874,16 +874,16 @@ export class Parser {
         type: "linkBox",
         passageName: this.passageName,
         lineNumber: this.lineNumber,
-        link: split[0],
-        text: split[1],
+        link: split[0].trim(),
+        text: split[1].trim(),
       };
     } else {
       return {
         type: "linkBox",
         passageName: this.passageName,
         lineNumber: this.lineNumber,
-        link: split[1],
-        text: split[0],
+        link: split[1].trim(),
+        text: split[0].trim(),
       };
     }
   }

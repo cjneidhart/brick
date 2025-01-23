@@ -15,7 +15,7 @@ function createPassage(name: string, tags = "", body?: string): HTMLElement {
   const passage = document.createElement("tw-passagedata");
   passage.setAttribute("name", name);
   passage.setAttribute("tags", tags);
-  passage.append(body || `Test passage "${name}". Please ignore.`);
+  passage.append(body || `Test passage "${name}"`);
   return passage;
 }
 
@@ -39,6 +39,12 @@ function getActivePassage(): HTMLElement {
   expect(element).to.have.class("brick-active-passage");
 
   return element as HTMLElement;
+}
+
+async function sleep(ms: number) {
+  await new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 const { brickInit, brickFinish } = window;
@@ -179,6 +185,83 @@ describe("Basic Functionality", function () {
     expect(active.childNodes[2]).to.be.instanceOf(HTMLBRElement);
     expect(active.childNodes[3]).to.be.instanceOf(Text);
     expect(active.childNodes[3]).to.have.text("World!");
+  });
+});
+
+describe("Wiki-style links", function () {
+  it("creates a basic link", async function () {
+    startPassage.textContent = `[[banana]]`;
+    storyData.append(createPassage("banana"));
+    await brickInit();
+    let active = getActivePassage();
+    expect(active).to.have.length(1);
+    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
+    expect(active.children[0]).to.have.text("banana");
+    (active.children[0] as HTMLElement).click();
+    await sleep(5);
+    active = getActivePassage();
+    expect(active).to.have.length(0);
+    expect(active).to.have.text(`Test passage "banana"`);
+  });
+
+  it("creates a right-arrow link", async function () {
+    startPassage.textContent = `[[daisy->eagle]]`;
+    storyData.append(createPassage("eagle"));
+    await brickInit();
+    let active = getActivePassage();
+    expect(active).to.have.length(1);
+    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
+    expect(active.children[0]).to.have.text("daisy");
+    (active.children[0] as HTMLElement).click();
+    await sleep(5);
+    active = getActivePassage();
+    expect(active).to.have.length(0);
+    expect(active).to.have.text(`Test passage "eagle"`);
+  });
+
+  it("creates a left-arrow link", async function () {
+    startPassage.textContent = `[[fallacy<-glob]]`;
+    storyData.append(createPassage("fallacy"));
+    await brickInit();
+    let active = getActivePassage();
+    expect(active).to.have.length(1);
+    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
+    expect(active.children[0]).to.have.text("glob");
+    (active.children[0] as HTMLElement).click();
+    await sleep(5);
+    active = getActivePassage();
+    expect(active).to.have.length(0);
+    expect(active).to.have.text(`Test passage "fallacy"`);
+  });
+
+  it("creates a pipe link", async function () {
+    startPassage.textContent = `[[holiday|iguana]]`;
+    storyData.append(createPassage("iguana"));
+    await brickInit();
+    let active = getActivePassage();
+    expect(active).to.have.length(1);
+    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
+    expect(active.children[0]).to.have.text("holiday");
+    (active.children[0] as HTMLElement).click();
+    await sleep(5);
+    active = getActivePassage();
+    expect(active).to.have.length(0);
+    expect(active).to.have.text(`Test passage "iguana"`);
+  });
+
+  it("removes extra spaces", async function () {
+    startPassage.textContent = `[[ Juniper ->  kilometer]]`;
+    storyData.append(createPassage("kilometer"));
+    await brickInit();
+    let active = getActivePassage();
+    expect(active).to.have.length(1);
+    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
+    expect(active.children[0]).to.have.text("Juniper");
+    (active.children[0] as HTMLElement).click();
+    await sleep(5);
+    active = getActivePassage();
+    expect(active).to.have.length(0);
+    expect(active).to.have.text(`Test passage "kilometer"`);
   });
 });
 

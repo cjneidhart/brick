@@ -80,12 +80,12 @@ function createMacro(macroFunc: (ctx: MacroContext, ...args: unknown[]) => strin
 
 #### Example
 
-```ts
+```js
 // This is a very simplified version of the built-in "@replace" macro
 constants.replace = createMacro((ctx, selector) => {
   let elt = document.querySelector(selector);
   elt.innerHTML = "";
-  render(elt, ctx.content, ctx);
+  ctx.render(elt, ctx.content);
   return "";
 });
 ```

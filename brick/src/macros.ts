@@ -23,7 +23,7 @@ export interface Macro {
 export function isMacro(maybeMacro: unknown): maybeMacro is Macro {
   if (typeof maybeMacro === "function" && BRICK_MACRO_SYMBOL in maybeMacro) {
     const opts = maybeMacro[BRICK_MACRO_SYMBOL];
-    if (typeof opts === "object" || opts === true) {
+    if ((typeof opts === "object" && opts !== null) || opts === true) {
       return true;
     }
   }
@@ -84,6 +84,7 @@ export function installBuiltins(constants: Record<string, unknown>) {
     later,
     link,
     linkReplace,
+    macro: macroMacro,
     prepend: makeReplaceMacro("prepend"),
     print,
     punt,
@@ -666,3 +667,59 @@ const punt: Macro = (context, ...args) => {
   return "";
 };
 punt[BRICK_MACRO_SYMBOL] = { skipArgs: true };
+
+const macroMacro: Macro = (outerContext, ...outerArgs) => {
+  if (!outerArgs.every((arg) => typeof arg === "string")) {
+    throw new Error("received a non-string arg");
+  }
+  if (outerArgs.length < 1) {
+    throw new Error("macro name required");
+  }
+  if (!outerContext.content) {
+    throw new Error("children (body) required");
+  }
+  const content = outerContext.content;
+
+  const [macroName, ...prefixedParamNames] = outerArgs;
+  const paramNames = prefixedParamNames.map((prefixed) => {
+    const trimmed = prefixed.trim();
+    console.log(trimmed);
+    const match = /^brickTempVarScope.(\p{ID_Start}\p{ID_Continue}*)$/u.exec(trimmed);
+    if (!match) {
+      if (!trimmed.startsWith("_")) {
+        throw new Error("Parameter names must start with '_'");
+      }
+      throw new Error(
+        `"${trimmed.replace("brickTempVarScope.", "_")}" is an invalid parameter name`,
+      );
+    }
+    return match[1];
+  });
+
+  const newMacro = createMacro((context, ...args) => {
+    if (context.content) {
+      throw new Error("This macro was created with @macro and cannot receive children");
+    }
+
+    const childScope = outerContext.createTempVariableScope();
+    for (const [i, paramName] of paramNames.entries()) {
+      // Use defineProperty to make sure it shadows any existing variable
+      Object.defineProperty(childScope, paramName, {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: args[i],
+      });
+    }
+
+    const frag = document.createDocumentFragment();
+    context.render(frag, content, childScope);
+
+    return frag;
+  });
+
+  evalAssign(macroName, newMacro, outerContext.tempVars);
+
+  return "";
+};
+macroMacro[BRICK_MACRO_SYMBOL] = { skipArgs: true };

@@ -3,6 +3,12 @@
 This project follows semantic versioning.
 Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
+## Unreleased
+
+### Added
+
+- The `@macro` macro.
+
 ## [0.4.0] - 2025-01-23
 
 ### Added

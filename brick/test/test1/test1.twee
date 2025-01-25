@@ -8,6 +8,7 @@ Test 1
   "format-version": "0.0.1"
 }
 
+
 :: Start
 @($name = "Chris")
 @(_food = "Banana")
@@ -62,6 +63,8 @@ Now let's try a link: @link('Passage 2', 'Passage 2') or maybe [[Passage 2]]
 [[Append Test]]
 
 [[Punt Test]]
+
+[[@macro test]]
 
 Here's a big block:
 <div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
@@ -288,3 +291,15 @@ This page sets <code>\_x</code> to <code>5</code>.
 <code>\_x</code> is now: <code>_x</code>
 
 [[Start]]
+
+
+:: @macro test
+[[Start]]
+@macro(_speechBubble, _speaker, _text) {
+  <div class="speech-bubble">
+    <strong>_speaker</strong>
+    <p>_text</p>
+  </div>
+}
+
+_speechBubble("Guard", "Come with me. The King requests your presence.")

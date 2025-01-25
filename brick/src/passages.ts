@@ -63,7 +63,7 @@ function checkBannedTags(tags: readonly string[], passageName: string) {
   }
 }
 
-let byName: Map<string, Passage>;
+let passagesByName: Map<string, Passage>;
 let startPassage: Passage;
 
 /** @param storyData The `<tw-storydata>` element */
@@ -85,7 +85,7 @@ export function init(storyData: Element) {
       return a.name < b.name ? -1 : 1;
     }
   });
-  byName = new Map();
+  passagesByName = new Map();
 
   for (const passage of passageArray) {
     const { name } = passage;
@@ -99,7 +99,7 @@ export function init(storyData: Element) {
 
     checkBannedTags(passage.tags, name);
 
-    if (byName.has(name)) {
+    if (passagesByName.has(name)) {
       throw new Error(`Duplicate passage name ${name}`);
     }
 
@@ -107,14 +107,14 @@ export function init(storyData: Element) {
       console.warn(`Passage ${name} has no text.`);
     }
 
-    byName.set(name, passage);
+    passagesByName.set(name, passage);
   }
 
   if (newStart) {
     startPassage = newStart;
   } else {
     // Twine and Tweego always set the `startnode` attribute, but we may as well include this just in case
-    const maybeStart = byName.get("Start");
+    const maybeStart = passagesByName.get("Start");
     if (!maybeStart) {
       throw new Error(`Could not find a passage named "Start"`);
     }
@@ -125,7 +125,7 @@ export function init(storyData: Element) {
 /** @returns all passages for which `predicate` returned truthy */
 export function filter(predicate: (passage: Passage) => unknown): Passage[] {
   const result = [];
-  for (const passage of byName.values()) {
+  for (const passage of passagesByName.values()) {
     if (predicate(passage)) {
       result.push(passage);
     }
@@ -135,7 +135,7 @@ export function filter(predicate: (passage: Passage) => unknown): Passage[] {
 
 /** @returns a passage for which `predicate` returned truthy */
 export function find(predicate: (passage: Passage) => unknown): Passage | undefined {
-  for (const passage of byName.values()) {
+  for (const passage of passagesByName.values()) {
     if (predicate(passage)) {
       return passage;
     }
@@ -145,7 +145,7 @@ export function find(predicate: (passage: Passage) => unknown): Passage | undefi
 
 /** @returns the passage with the given name */
 export function get(name: string): Passage | undefined {
-  return byName.get(name.trim());
+  return passagesByName.get(name.trim());
 }
 
 /** @returns the passage that should be used as the story start */

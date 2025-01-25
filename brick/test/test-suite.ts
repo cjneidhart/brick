@@ -265,6 +265,38 @@ describe("Wiki-style links", function () {
   });
 });
 
+describe("HTML markup", function () {
+  it("renders a basic <span>", async function () {
+    startPassage.textContent = `<span>Basic Span</span>`;
+    await brickInit();
+    const active = getActivePassage();
+    expect(active).to.have.length(1);
+    expect(active.firstChild).to.be.instanceOf(HTMLSpanElement);
+    expect(active.firstChild).to.have.text("Basic Span");
+  });
+
+  it("supports normal attributes", async function () {
+    startPassage.textContent = `<input type="button" value="Test Button">`
+    await brickInit();
+    const active = getActivePassage();
+    expect(active).to.have.length(1);
+    expect(active.firstChild).to.be.instanceOf(HTMLInputElement);
+    expect(active.firstChild).to.have.attr("type", "button");
+    expect(active.firstChild).to.have.attr("value", "Test Button");
+  });
+
+  it("supports dynamic attributes", async function () {
+    startPassage.textContent = `@(_title = "Zebra")<em title=(_title)>Yankee</em>`;
+    await brickInit();
+    const active = getActivePassage();
+    expect(active).to.have.length(1);
+    expect(active.firstChild).to.be.instanceOf(HTMLElement);
+    expect((active.firstChild as Element).tagName).to.equal("EM");
+    expect(active.firstChild).to.have.attr("title", "Zebra");
+    expect(active.firstChild).to.have.text("Yankee");
+  });
+});
+
 describe("Misc. Functions", function () {
   describe("passageName()", function () {
     it("returns the name of the active passage", async function () {

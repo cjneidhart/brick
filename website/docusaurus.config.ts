@@ -4,7 +4,8 @@ import type * as Preset from "@docusaurus/preset-classic";
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
 const fullUrl = URL.parse(
-  process.env.READTHEDOCS_CANONICAL_URL || "https://brick-if.readthedocs.io/en/latest"
+  process.env.READTHEDOCS_CANONICAL_URL ||
+    "https://brick-if.readthedocs.io/en/latest"
 );
 
 import { version as brickVersion } from "brick/package.json";
@@ -136,7 +137,9 @@ const config: Config = {
           ],
         },
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} Chris Neidhart. Built with Docusaurus.`,
+      copyright:
+        `Copyright © ${new Date().getFullYear()} Chris Neidhart. Built with Docusaurus.<br>` +
+        `🏳️‍⚧️ Trans Rights are Human Rights`,
     },
   } satisfies Preset.ThemeConfig,
   customFields: {

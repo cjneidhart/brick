@@ -9,6 +9,10 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
 - The `@macro` macro.
 
+### Fixed
+
+- JavaScript strings cannot contain newlines.
+
 ## [0.4.0] - 2025-01-23
 
 ### Added

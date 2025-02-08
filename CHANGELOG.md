@@ -11,6 +11,8 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 - The `module` tag.
   Passages tagged `module` are interpreted as JavaScript modules.
   They must be imported from the Story JavaScript or another module, or they will not be executed.
+- The `@link` macro can now receive children.
+  This is mainly intended to work with the DOM macros, like `@replace`.
 
 ### Changed
 

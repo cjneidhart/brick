@@ -214,7 +214,7 @@ const renderMacro: Macro = (context, ...args: unknown[]) => {
 };
 renderMacro[BRICK_MACRO_SYMBOL] = true;
 
-const link: Macro = (_context, ...args) => {
+const link = createMacro((context, ...args) => {
   if (args.length < 1 || args.length > 3) {
     throw new Error("requires 1, 2 or 3 arguments");
   }
@@ -249,7 +249,9 @@ const link: Macro = (_context, ...args) => {
     psgName = args[1];
     onClick = args[2];
   } else {
-    console.warn(`@link received only 1 argument. This link will do nothing when clicked.`);
+    if (!context.content) {
+      console.warn(`@link received only 1 argument. This link will do nothing when clicked.`);
+    }
     psgName = undefined;
     onClick = undefined;
   }
@@ -264,15 +266,25 @@ const link: Macro = (_context, ...args) => {
       // Would it be better to render them inline?
       onClick.call(button, mouseEvent);
     }
+    if (context.content) {
+      const div = makeElement("div");
+      context.render(div, context.content);
+      const text = div.innerHTML.trim();
+      if (text) {
+        console.warn(
+          "An @link macro's children, when rendered, contained non-whitespace characters. " +
+            "This is likely an error. Its contents:\n" +
+            text,
+        );
+      }
+    }
     if (button.dataset.linkDestination) {
       engine.navigate(button.dataset.linkDestination);
     }
   });
 
   return button;
-};
-link[BRICK_MACRO_SYMBOL] = true;
-(window as unknown as Record<string, unknown>).link = link;
+});
 
 const linkReplace: Macro = (context, ...args) => {
   if (args.length !== 1) {

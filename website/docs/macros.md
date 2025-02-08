@@ -7,7 +7,8 @@ This is a list of built-in macros.
 ### `@()`, the unnamed macro {#unnamed}
 
 This macro can be used to silently execute JavaScript.
-It is mostly useful for setting story/temporary variables, or for calling other functions with side effects.
+It is mostly useful for setting story/temporary variables,
+or for calling other functions with side effects.
 
 ```brick
 // Set the story variable $name to "Brutha"
@@ -30,8 +31,10 @@ Unlike other macros, the unnamed macro can execute multiple statements:
 ### `@print()` and `@-()` {#print}
 
 `@print` can be used to insert strings into the rendered markup.
-If you just need to print the value of a variable, you can simply write that variable in markup.
-But for situations where you need to alter the variable slightly before printing, you can use `@print`.
+If you just need to print the value of a variable,
+you can simply write that variable in markup.
+But for situations where you need to alter the variable slightly before printing,
+you can use `@print`.
 
 `@-` is an alias of `@print`.
 
@@ -43,7 +46,8 @@ You need an additional @print(500 - $money) gold to afford this sword.
 
 `@render` is the supercharged version of `@print`.
 While `@print` emits `text` as-is, `@render` actually renders `text` as Brick markup.
-This means the string can contain HTML elements or additional macros and they will be processed appropriately.
+This means the string can contain HTML elements or additional
+macros and they will be processed appropriately.
 
 `@=` is an alias of `@render`.
 
@@ -62,7 +66,7 @@ When possible, use a custom macro or `@include` to re-use content.
 This macro can be used to embed one passage within another.
 Simply pass in the name of the passage you want to include.
 
-### Example
+#### Example
 
 Include the contents of the passage "Dark Alley" in the current passage.
 
@@ -114,7 +118,8 @@ Like the JavaScript keyword, `@while` renders its body repeatedly _while_ its co
 `@for` can be used to efficiently loop over the contents of a _collection_, usually an array.
 `@for` is similar to JavaScript's
 [`for...of` statement](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...of),
-except that you must use a Brick temporary variable (which starts with `_`) instead of declaring a variable with `let` or `const`.
+except that you must use a Brick temporary variable (which starts with `_`)
+instead of declaring a variable with `let` or `const`.
 
 ```brick
 // List every item in a player's inventory
@@ -169,9 +174,12 @@ and all following iterations will be skipped over.
 
 ### `@switch()`
 
-`@switch` can be used to conveniently handle situations where a variable could be one of many possible values.
-Within a `@switch` macro, multiple `@case` macros should be used to declare possible blocks of markup to render.
-The first `@case` macro that has an argument matching the initial argument to `@switch` will be rendered.
+`@switch` can be used to conveniently handle situations
+where a variable could be one of many possible values.
+Within a `@switch` macro, multiple `@case` macros should
+be used to declare possible blocks of markup to render.
+The first `@case` macro that has an argument matching the
+initial argument to `@switch` will be rendered.
 An optional `@default` macro at the end will be rendered if none of the `@case`s matched.
 
 ```brick
@@ -189,6 +197,73 @@ An optional `@default` macro at the end will be rendered if none of the `@case`s
     Huh, I haven't heard of that shape before.
   }
 }
+```
+
+## DOM Manipulation
+
+### `@append()`
+
+This macro takes one argument, a selector string,
+and finds the first element in the document that matches that selector.
+Then `@append` renders its children after that element.
+
+#### Example
+
+```brick
+// Suppose your page has a header that looks like:
+<h1>Header 1</h1>
+
+// And then you run the macro:
+@append("h1") { <h2>Header 2</h2> }
+
+// Your page will now have:
+<h1>Header 1</h1>
+<h2>Header 2</h2>
+```
+
+### `@replace()`
+
+This macro receives one argument, a selector string,
+and finds the first element in the document that matches that selector.
+Then `@replace` removes all existing children of that element,
+and renders its own children in their place.
+
+#### Example
+
+```brick
+// Suppose you have this div on your page:
+<div class="lasagna">
+  The knight stands motionless before you.
+</div>
+
+// If you run this macro:
+@replace(".lasagna") {
+  The knight raises its sword, and <em>lunges</em> at you before you can move.
+}
+
+// Your div will now be:
+<div class="lasagna">
+  The knight raises its sword, and <em>lunges</em> at you before you can move.
+</div>
+```
+
+### `@prepend`
+
+This macro takes one argument, a selector string,
+and finds the first element in the document that matches that selector.
+Then `@prepend` renders its children before that element.
+
+#### Example
+
+```brick
+// Suppose your page has a span that looks like:
+<span id="enemy-name">Zote</span>
+
+// And then you run the macro:
+@prepend("#enemy-name") { The Mighty }
+
+// Your page will now have:
+The Mighty <span id="enemy-name">Zote</span>
 ```
 
 ## Input
@@ -215,7 +290,8 @@ An optional `@default` macro at the end will be rendered if none of the `@case`s
 
 Sometimes, you need to re-render part of a passage, without re-rendering the entire passage.
 In those situations, the macro `@redoable` can designate a section of markup for re-rendering.
-After the passage is rendered, you can call `engine.redo()` to re-render all markup contained in `@redoable` macros.
+After the passage is rendered,
+you can call `engine.redo()` to re-render all markup contained in `@redoable` macros.
 
 ```brick
 // Display the player's money (purchase buttons can call `engine.redo()` to update this)
@@ -232,10 +308,13 @@ You have @redoable { $money } credits in your wallet.
 ### `@later()`
 
 `@later` renders its content after a delay.
-This is useful if you want content to appear after a delay, or if you want to manipulate the passage after it has been rendered.
+This is useful if you want content to appear after a delay,
+or if you want to manipulate the passage after it has been rendered.
 `@later` takes one optional argument: the number of milliseconds to wait.
-By default, this is `40`, which is generally long enough for the browser to finish drawing the passage.
-Note that even if you pass a delay of `0`, `@later` will still be rendered _after_ the rest of the passage.
+By default, this is `40`,
+which is generally long enough for the browser to finish drawing the passage.
+Note that even if you pass a delay of `0`,
+`@later` will still be rendered _after_ the rest of the passage.
 
 **Accessibility Note**: Everyone reads at different speeds.
 Do not use `@later` to hide content after a delay.
@@ -267,9 +346,13 @@ but then you have to double-check you're not already using that variable,
 and remember to `delete` it afterwards.
 
 Alternatively, you can _punt_ a temporary variable.
-Punting a temporary variable prevents it from being forgotten the next time you change passages. If necessary, the new passage can then punt it again, so a third passage can receive it. However, it might be easier to just use story variables at that point.
+Punting a temporary variable prevents it from being forgotten the next time you change passages.
+If necessary, the new passage can then punt it again, so a third passage can receive it.
+However, it might be easier to just use story variables at that point.
 
-It doesn't matter when in the passage you call `@punt`. You can punt multiple temporary variables at once by passing them all as arguments to `@punt`. Calling `@punt` twice or more on the same temporary variable in the same passage has no effect.
+It doesn't matter when in the passage you call `@punt`.
+You can punt multiple temporary variables at once by passing them all as arguments to `@punt`.
+Calling `@punt` twice or more on the same temporary variable in the same passage has no effect.
 
 ```brick
 :: Passage 1

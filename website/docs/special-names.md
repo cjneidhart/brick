@@ -1,6 +1,7 @@
 # Special Names
 
-Brick has various passage names and tag names that invoke special behavior. They are listed below.
+Brick has various passage names and tag names that invoke special behavior.
+They are listed below.
 
 ## Passage Names
 
@@ -27,7 +28,8 @@ If present, this passage will be rendered after the active passage.
 ### StoryHeader
 
 If present, this passage will be rendered before the active passage.
-Because it is rendered first, you may wish to use the [`@later`] macro to render it after the active passage chronologically
+Because it is rendered first, you may wish to use the [`@later`] macro
+to render it after the active passage chronologically
 (positionally, it will still be placed above the active passage).
 
 [`@later`]: ./macros#later
@@ -35,8 +37,10 @@ Because it is rendered first, you may wish to use the [`@later`] macro to render
 ### StoryInit
 
 This passage is rendered silently during the startup sequence.
-If an active history is not found, any story variables created here will carry into the Start passage.
-As such, it is recommended you initialize most of the story variables you plan to use in this passage.
+If an active history is not found, any story variables
+created here will carry into the Start passage.
+As such, it is recommended you initialize most of the
+story variables you plan to use in this passage.
 
 ### StoryInterface
 
@@ -61,7 +65,8 @@ This tag registers the passage as a macro.
 The passage's name must be a valid macro name;
 it must start with a letter and contain only letters, numbers, and underscores.
 
-For a passage named `myMacro`, using it as `@myMacro` is effectively the same as using `@include("myMacro")`.
+For a passage named `myMacro`, using it as `@myMacro`
+is effectively the same as using `@include("myMacro")`.
 The only difference is the slightly shorter syntax.
 
 For now, there is no way for `macro`-tagged passages to receive arguments or children.

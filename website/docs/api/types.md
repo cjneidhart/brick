@@ -1,4 +1,4 @@
-# Custom Types
+# Brick Classes
 
 ## Passage
 

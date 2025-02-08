@@ -604,7 +604,7 @@ const later: Macro = (context, ...args) => {
 later[BRICK_MACRO_SYMBOL] = true;
 
 function makeReplaceMacro(mode: "append" | "prepend" | "replace"): Macro {
-  const macro: Macro = (context, ...args) => {
+  return createMacro((context, ...args) => {
     if (args.length !== 1) {
       throw new Error("requires exactly one argument");
     }
@@ -620,7 +620,7 @@ function makeReplaceMacro(mode: "append" | "prepend" | "replace"): Macro {
     const frag = document.createDocumentFragment();
     if (context.content) {
       context.render(frag, context.content);
-    } else if (context.name !== "replace") {
+    } else if (mode !== "replace") {
       throw new Error('no content provided. Use "{}" to provide content.');
     }
 
@@ -638,9 +638,7 @@ function makeReplaceMacro(mode: "append" | "prepend" | "replace"): Macro {
     }
 
     return "";
-  };
-  macro[BRICK_MACRO_SYMBOL] = true;
-  return macro;
+  });
 }
 
 const punt: Macro = (context, ...args) => {

@@ -37,7 +37,8 @@ Here's some more text. This text will be printed as well.
 
 ## Variables
 
-Story variables, temporary variables, and constants can be included in markup without needing the `@print` macro.
+Story variables, temporary variables, and constants can be
+included in markup without needing the `@print` macro.
 
 ```brick
 @($appleCount = 5)
@@ -123,7 +124,8 @@ In addition to normal HTML, Brick adds a shorthand for setting an element's `id`
 | `<span.blast></span>`          | `<span class="blast"></span>`               |
 | `<span#foo.blast.bang></span>` | `<span id="foo" class="blast bang"></span>` |
 
-When using this short syntax, the id and class must consist of only ASCII letters and numbers, hyphens, and underscores.
+When using this short syntax, the id and class must consist of
+only ASCII letters and numbers, hyphens, and underscores.
 
 You can include JavaScript expressions as HTML attributes by using parentheses instead of quotes:
 

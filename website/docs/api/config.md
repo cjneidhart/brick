@@ -3,7 +3,8 @@ toc_max_heading_level: 2
 ---
 # Config
 
-The `config` object, available globally, defines a number of useful settings you can use to customize Brick.
+The `config` object, available globally,
+defines a number of useful settings you can use to customize Brick.
 
 ## `historyLength`
 
@@ -23,7 +24,8 @@ However, raising it too high can cause unnecessary clutter in the player's stora
 **Default** `1000`
 
 [`@while`] and [`@for`] include safeguards to prevent infinite loops.
-If a loop runs more than this many times, it will be cancelled and an error message will be displayed.
+If a loop runs more than this many times,
+it will be cancelled and an error message will be displayed.
 You can set this to `Infinity` to disable it.
 
 [`@while`]: ../macros#while
@@ -40,7 +42,8 @@ That string will be used in place of the passage's actual contents.
 
 ### Example
 
-This example uses a regular expression to convert every variant of "Chris" (i.e. "CHRIS", "chris", or "cHrIs") to "Chris".
+This example uses a regular expression to convert every variant of "Chris"
+(i.e. "CHRIS", "chris", or "cHrIs") to "Chris".
 
 ```js
 import { config } from "brick";
@@ -55,8 +58,11 @@ config.preProcessText = function (passage) {
 **Type** `boolean`<br/>
 **Default** `false`
 
-_Warning: `config.stream` is very experimental. A change this large has the potential to introduce a wide variety of bugs, and this feature has not been thoroughly tested._
+_Warning: `config.stream` is very experimental._
+_A change this large has the potential to introduce a wide variety of bugs,_
+_and this feature has not been thoroughly tested._
 
 This setting enables "Streaming" mode, also called "Stretch Text" or "Endless Page".
-Instead of new passages replacing the current passage, new passages are added to the screen below the old passages.
+Instead of new passages replacing the current passage,
+new passages are added to the screen below the old passages.
 Any interactive elements on old passages are disabled.

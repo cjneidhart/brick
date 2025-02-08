@@ -37,7 +37,8 @@ The `@` should change from red to blue when you type the `(`.
 
 Download the <BrickDownloadLink>latest version of Brick</BrickDownloadLink>.
 Consult [Tweego's documentation] and place the `format.js` file in an appropriate directory.
-Make sure your `StoryData` passage has `"format": "Brick"` (case-sensitive) and `"format-version": 0`.
+Make sure your `StoryData` passage has
+`"format": "Brick"` (case-sensitive) and `"format-version": 0`.
 
 [Tweego's documentation]: https://www.motoslave.net/tweego/docs/#getting-started-story-formats-search-directories
 [latest version of Brick]: https://cjneidhart.github.io/brick/v0.3.1/format.js
@@ -61,7 +62,8 @@ To keep track of the game state, you use _story variables_.
 Story variables start with a `$` character.
 A story can have any number of story variables at any time.
 You can do many things with story variables,
-but the most basic is using the [unnamed macro] to set variables and the [`@if`] macro to write conditional logic.
+but the most basic is using the [unnamed macro] to set variables
+and the [`@if`] macro to write conditional logic.
 
 [unnamed macro]: ./macros#unnamed
 [`@if`]: ./macros#if-elseif-else
@@ -74,7 +76,8 @@ Players can use the forward and backward buttons in the sidebar to navigate betw
 A sequence of connected moments forms a _history_.
 Players can use the saves menu to create, delete, and move between histories.
 There is always one "active" history.
-This history will be restored when the player returns to the page after reloading or closing the tab.
+This history will be restored when the player returns to the page after reloading
+or closing the tab.
 
 In addition to story variables, Brick also provides _temporary variables_ and _constants_.
 Temporary variables start with a `_` character.

@@ -36,9 +36,13 @@ class Point2D {
 ```
 
 To make this class compatible with Brick's save system, we need to define three new methods:
-- `clone`: An instance method that returns a new instance of this class
-- `static serialize`: A static method that takes in a `Point2D` instance and returns a plain object or array
-- `static deserialize`: A static method that takes in the plain object or array from `serialize` and constructs a new `Point2D`
+- `clone`:
+  An instance method that returns a new instance of this class
+- `static serialize`:
+  A static method that receives a `Point2D` instance and returns a plain object or array
+- `static deserialize`:
+  A static method that receives the plain object or array
+  from `serialize` and constructs a new `Point2D`
 
 The exact implementations of these methods can vary.
 Here is a basic example for `Point2D`:

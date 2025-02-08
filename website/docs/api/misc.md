@@ -69,7 +69,8 @@ Your full name is John Smith.
 
 `createMacro` is the most powerful way to create macros.
 It returns a macro object, which can be assigned to a property on `constants` and used as a macro.
-When the macro is called, it will call `func`. The first argument will be a special [`MacroContext`] object.
+When the macro is called, it will call `func`.
+The first argument will be a special [`MacroContext`] object.
 All additional arguments will be the arguments received by the macro.
 
 [`MacroContext`]: ./types#macro-context
@@ -82,13 +83,17 @@ function createMacro(macroFunc: (context: MacroContext, ...args: unknown[]) => s
 
 #### Example
 
+This is a very simplified version of the built-in [`@replace`] macro.
+
+[`@replace`]: ../macros#replace
+
 ```js
 import { constants, createMacro } from "brick";
-// This is a very simplified version of the built-in "@replace" macro
+
 constants.replace = createMacro((context, selector) => {
   let element = document.querySelector(selector);
   element.innerHTML = "";
-  context.render(elt, context.content);
+  context.render(element, context.content);
   return "";
 });
 ```
@@ -136,8 +141,10 @@ let exampleAnchor = makeElement("a", { href: "https://example.com" }, "Example L
 
 ### `numberRange`
 
-`numberRange`, inspired by Python's `range()` function, lets you iterate over number sequences in `for...of` loops.
-It yields each number, starting at `start` (which defaults to `0` if not given), incrementing by `step` (default `1`)
+`numberRange`, inspired by Python's `range()` function,
+lets you iterate over number sequences in `for...of` loops.
+It yields each number, starting at `start` (which defaults to `0` if not given),
+incrementing by `step` (default `1`)
 until it reaches or passes `stop`. Notably, it does not yield `stop`.
 
 #### Signature
@@ -201,7 +208,8 @@ The target's contents will be cleared before rendering the passage.
 - `data-tags` is set to the passage's tags, separated by spaces.
 
 If the passage does not exist, an error indicating as such will be rendered onto the element.
-If the passage does not exist or any errors occurred while rendering, `renderPassage` will return `false`.
+If the passage does not exist or any errors occurred while rendering,
+`renderPassage` will return `false`.
 Else, it returns `true`.
 
 #### Signature

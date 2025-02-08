@@ -67,6 +67,47 @@ The only difference is the slightly shorter syntax.
 For now, there is no way for `macro`-tagged passages to receive arguments or children.
 This may change in the future.
 
+### `module`
+
+This tag marks the passage as a JavaScript module.
+JavaScript modules can `export` values;
+these values can then be `import`ed by other modules or the Story JavaScript.
+
+To improve syntax highlighting in Twine, a module's body may be surrounded by `@(` and `)`.
+These characters will be removed by Brick.
+
+Because modules are considered code, not markup,
+they cannot be linked to and cannot be retrieved by functions like
+[`passages.get`](./api/passages.md#get).
+
+#### Example
+
+Suppose you have the following passage named `soup`, with a `module` tag:
+
+```js
+:: soup [module]
+export function add(x, y) {
+  return x + y;
+}
+```
+
+Then, you can do the following in your Story JavaScript:
+
+```js
+import { constants } from "brick";
+import { add } from "soup";
+
+constants.add = add;
+```
+
+Now, the `add` function from the `soup` module is exposed on `constants`,
+so you can use it in a passage as `@add`.
+
+```brick
+The total is @add(5, 7) dollars.
+// The total is 12 dollars.
+```
+
 ## Story Variables
 
 Brick reserves any story variables beginning with `-brick`.

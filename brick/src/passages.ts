@@ -70,7 +70,9 @@ let startPassage: Passage;
 export function init(storyData: Element) {
   let newStart: Passage | undefined = undefined;
   const startPid = storyData.getAttribute("startnode");
-  const passageElements = Array.from(storyData.getElementsByTagName("tw-passagedata"));
+  const passageElements = Array.from(
+    storyData.querySelectorAll(`tw-passagedata:not([tags~="module"])`),
+  );
   const passageArray = passageElements.map((elt) => {
     const passage = new Passage(elt);
     if (elt.getAttribute("pid") === startPid) {

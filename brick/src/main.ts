@@ -1,6 +1,7 @@
 import * as dialog from "./dialog";
 import * as engine from "./engine";
 import * as macros from "./macros";
+import * as modules from "./modules";
 import * as passages from "./passages";
 import { renderPassage } from "./renderer";
 import * as saves from "./saves";
@@ -84,8 +85,11 @@ async function init() {
     engine.constants[psg.name] = macro;
   }
 
+  await modules.init(storyData);
   for (const script of scripts) {
-    scripting.evalJavaScript(script.textContent, engine.tempVariables);
+    const url = URL.createObjectURL(new Blob([script.textContent], { type: "text/javascript" }));
+    await import(url);
+    URL.revokeObjectURL(url);
   }
 
   const storyInit = passages.get("StoryInit");

@@ -276,7 +276,7 @@ describe("HTML markup", function () {
   });
 
   it("supports normal attributes", async function () {
-    startPassage.textContent = `<input type="button" value="Test Button">`
+    startPassage.textContent = `<input type="button" value="Test Button">`;
     await brickInit();
     const active = getActivePassage();
     expect(active).to.have.length(1);

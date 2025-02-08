@@ -8,10 +8,28 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 ### Added
 
 - The `@macro` macro.
+- The `module` tag.
+  Passages tagged `module` are interpreted as JavaScript modules.
+  They must be imported from the Story JavaScript or another module, or they will not be executed.
+
+### Changed
+
+- Story JavaScript is now run as a module.
+  `import` statements can now be used to import values from `module`-tagged passages
+  (`import { someFunction } from "somePassage";`),
+  and from Brick itself
+  (`import { makeElement, passages } from "brick";`).
+- `Engine` and `Dialog` have been renamed to `engine` and `dialog`.
 
 ### Fixed
 
-- JavaScript strings cannot contain newlines.
+- JavaScript strings cannot contain unescaped newlines (U+0D CARRIAGE RETURN or U+0A LINE FEED).
+
+### Removed
+
+- Story JavaScript no longer has direct access to properties of the global `Brick` variable;
+  they must be imported like `import { engine, makeElement, clone } from "brick";`.
+  JavaScript run from within a passage still has direct access to these values.
 
 ## [0.4.0] - 2025-01-23
 

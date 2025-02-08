@@ -139,7 +139,7 @@ Text box:
 :: Modal Test
 
 @linkReplace("Show a modal") {
-  @(Dialog.showPassage("Sample Modal"))
+  @(dialog.showPassage("Sample Modal"))
   @link("return", "Start")
 }
 
@@ -186,7 +186,7 @@ Counter: @redoable { _counter }
 
 @link("Click this to increment the counter, then call redo()", () => {
   _counter++;
-  Engine.redo();
+  engine.redo();
 })
 
 @link("return", "Start")

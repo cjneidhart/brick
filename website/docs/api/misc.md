@@ -48,8 +48,9 @@ function createGetter(name: string, getter: () => unknown);
 Story JS:
 
 ```js
+import { createGetter, engine } from "brick";
 createGetter("fullName", () => {
-  const { firstName, lastName } = Engine.vars;
+  const { firstName, lastName } = engine.vars;
   return `${firstName} ${lastName}`;
 });
 ```
@@ -60,7 +61,8 @@ In a passage:
 @($firstName = "John")
 @($lastName = "Smith")
 Your full name is @fullName.
-// Your full name is John Smith
+// Result:
+Your full name is John Smith.
 ```
 
 ### `createMacro`
@@ -75,17 +77,18 @@ All additional arguments will be the arguments received by the macro.
 #### Signature
 
 ```ts
-function createMacro(macroFunc: (ctx: MacroContext, ...args: unknown[]) => string | Node): Macro;
+function createMacro(macroFunc: (context: MacroContext, ...args: unknown[]) => string | Node): Macro;
 ```
 
 #### Example
 
 ```js
+import { constants, createMacro } from "brick";
 // This is a very simplified version of the built-in "@replace" macro
-constants.replace = createMacro((ctx, selector) => {
-  let elt = document.querySelector(selector);
-  elt.innerHTML = "";
-  ctx.render(elt, ctx.content);
+constants.replace = createMacro((context, selector) => {
+  let element = document.querySelector(selector);
+  element.innerHTML = "";
+  context.render(elt, context.content);
   return "";
 });
 ```

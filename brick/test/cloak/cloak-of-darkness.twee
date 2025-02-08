@@ -30,7 +30,7 @@ A handsome cloak, of velvet trimmed with satin, and slightly spattered with rain
 :: Foyer
 @(_previousRoom = $room; $room = "Foyer")
 @if (_previousRoom === "Outside") {
-  Shaking the rain from your @link("cloak", () => Dialog.showPassage("Cloak")), you step gratefully inside.
+  Shaking the rain from your @link("cloak", () => dialog.showPassage("Cloak")), you step gratefully inside.
 
 }
 You are standing in a spacious hall, splendidly decorated in red and gold, with glittering chandeliers overhead. The entrance from the street is to the [[north->Outside]], and there are doorways [[south->Bar]] and [[west->Cloakroom]].
@@ -41,7 +41,7 @@ You are standing in a spacious hall, splendidly decorated in red and gold, with 
 The walls of this small room were clearly once lined with hooks, though now [[only one remains->Cloakroom Hook]].
 
 @if (!$hasCloak) {
-  It holds your @link("cloak", () => Dialog.showPassage("Cloak")).
+  It holds your @link("cloak", () => dialog.showPassage("Cloak")).
 
 }
 The exit is a door to the [[east->Foyer]].
@@ -51,7 +51,7 @@ The exit is a door to the [[east->Foyer]].
 It's just a small brass hook, screwed to the wall.
 
 @if ($hasCloak) {
-  You could [[hang->hang cloak]] your @link("cloak", () => Dialog.showPassage("Cloak")) here.
+  You could [[hang->hang cloak]] your @link("cloak", () => dialog.showPassage("Cloak")) here.
 } @else {
   You could [[pick up your cloak and wear it]], if you like, or simply turn back to the [[cloak room->Cloakroom]].
 }

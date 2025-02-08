@@ -65,6 +65,8 @@ Now that the class has these three methods, we can call `registerClass`.
 It's best to do this in the same place you store the class on the `constants` object.
 
 ```js
+import { constants, saves } from "brick";
+
 class Point2D {
   // ...
 }
@@ -78,6 +80,6 @@ With all that complete, we can now store `Point2D` instances in story variables.
 ```brick
 @($playerLocation = new @Point2D(4, 20))
 You are $playerLocation.x miles east and $playerLocation.y miles north of your home.
-You are $playerLocation.magnitude miles from home.
+You are $playerLocation.magnitude() miles from home.
 ```
 

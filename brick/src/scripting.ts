@@ -24,7 +24,7 @@ export const BrickPublic = {
   get constants() {
     return engine.constants;
   },
-  Engine: {
+  engine: {
     forward: engine.forward,
     backward: engine.backward,
     redo: engine.redo,
@@ -36,7 +36,7 @@ export const BrickPublic = {
     },
   },
   config,
-  Dialog: {
+  dialog: {
     showPassage,
   },
   passages: {

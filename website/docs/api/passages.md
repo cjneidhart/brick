@@ -23,6 +23,7 @@ function filter(predicate: (Passage) => boolean): Passage[];
 #### Example
 
 ```js
+import { passages } from "brick";
 let woodsOrLakePassages = passages.filter((passage) => {
   return passage.tags.includes("woods") || passage.tags.includes("lake");
 });
@@ -51,6 +52,7 @@ function get(name: string): Passage | undefined;
 #### Example
 
 ```js
+import { passages } from "brick";
 let alley = passages.get("A Dark Alley");
 ```
 
@@ -68,5 +70,6 @@ function withTag(tag: string): Passage[]
 #### Example
 
 ```js
+import { passages } from "brick";
 let woodsPassages = passages.withTag("woods");
 ```

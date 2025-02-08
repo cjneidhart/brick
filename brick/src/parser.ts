@@ -19,8 +19,8 @@ const RE = {
     number: /[0-9][0-9_]*/y,
     operator: /[!%&*+-<=>^|~]+/y,
     regexp: /(?:[^\\[/]|\\[^]|\[(?:[^\\\]]|\\[^])*\])*\/(?:$|\p{ID_Continue})*/uy,
-    stringDouble: /"(?:[^\\"\r\n]|\\[^\r\n])*"/y,
-    stringSingle: /'(?:[^\\'\r\n]|\\[^\r\n])*'/y,
+    stringDouble: /"(?:[^\\"\r\n]|\\[^])*"/y,
+    stringSingle: /'(?:[^\\'\r\n]|\\[^])*'/y,
     normalInTemplateString: /(?:[^`$\\]|\\[^]|\$(?!\{))*/y,
   },
   macroArgsStart: / *\(/y,
@@ -707,7 +707,7 @@ export class Parser {
           match = this.consume(RE.js.identifier);
           if (match) {
             const prefix =
-              c === "$" ? "Engine.vars." : c === "_" ? "brickTempVarScope." : "constants.";
+              c === "$" ? "engine.vars." : c === "_" ? "brickTempVarScope." : "constants.";
             output.push(prefix, match[0]);
             regexpAllowed = false;
           } else {

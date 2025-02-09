@@ -4,6 +4,45 @@ These functions are available globally in JavaScript expressions and statements
 
 ## Functions
 
+### `brickImport`
+
+This function can be used within the Story JavaScript and `module` passages to import modules.
+It returns a `Promise` which resolves to that module's exports.
+As a special case, the `Brick` global variable is available as a module named `"brick"`.
+
+#### Signature
+
+```ts
+function brickImport(moduleName: string): Promise<Record<string, unknown>>;
+```
+
+#### Example
+
+Suppose you have the following `module` tagged passage, named `soup`.
+
+```js
+:: soup [module]
+export function add(x, y) {
+  return x + y;
+}
+```
+
+Then, you can do the following in your Story JavaScript:
+
+```js
+const { constants } = Brick;
+const { add } = await brickImport("soup");
+constants.add = add;
+```
+
+Now, the `add` function from the `soup` module is exposed on `constants`,
+so you can use it in a passage as `@add`.
+
+```brick
+The total is @add(5, 7) dollars.
+// The total is 12 dollars.
+```
+
 ### `clone`
 
 `clone` returns a deep copy of a given value.
@@ -48,7 +87,7 @@ function createGetter(name: string, getter: () => unknown);
 Story JS:
 
 ```js
-import { createGetter, engine } from "brick";
+const { createGetter, engine } = Brick;
 createGetter("fullName", () => {
   const { firstName, lastName } = engine.vars;
   return `${firstName} ${lastName}`;
@@ -88,7 +127,7 @@ This is a very simplified version of the built-in [`@replace`] macro.
 [`@replace`]: ../macros#replace
 
 ```js
-import { constants, createMacro } from "brick";
+const { constants, createMacro } = Brick;
 
 constants.replace = createMacro((context, selector) => {
   let element = document.querySelector(selector);
@@ -111,7 +150,7 @@ function either<T>(arr: T[]): T;
 #### Example
 
 ```brick
-@(_weekday = either(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]))
+@(_randomWeekday = either(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]))
 ```
 
 ### `makeElement`

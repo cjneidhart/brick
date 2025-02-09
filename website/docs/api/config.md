@@ -46,7 +46,7 @@ This example uses a regular expression to convert every variant of "Chris"
 (i.e. "CHRIS", "chris", or "cHrIs") to "Chris".
 
 ```js
-import { config } from "brick";
+const { config } = Brick;
 
 config.preProcessText = function (passage) {
   return passage.contents.replace(/\bchris\b/ig, "Chris");

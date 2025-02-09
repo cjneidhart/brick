@@ -46,9 +46,8 @@ const baseContext = {
   define: { BRICK_VERSION: JSON.stringify(version) },
   minify: !debug,
   sourcemap: debug ? "inline" : false,
-  // These are the oldest versions which support Unicode character classes
-  // (\p{...} or \P{...}) in regular expressions.
-  target: ["firefox78", "chrome64", "safari12"],
+  // These are the oldest versions which support import maps
+  target: ["firefox108", "chrome89", "safari16.4"],
   write: false,
 };
 const buildContexts = await Promise.all([

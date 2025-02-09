@@ -69,7 +69,7 @@ Now that the class has these three methods, we can call `registerClass`.
 It's best to do this in the same place you store the class on the `constants` object.
 
 ```js
-import { constants, saves } from "brick";
+const { constants, saves } = Brick;
 
 class Point2D {
   // ...

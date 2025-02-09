@@ -4,8 +4,6 @@
  * This module manages all "module"-tagged passages.
  */
 
-import { makeElement } from "./util";
-
 let moduleUrls: Record<string, string>;
 
 export async function init(storyData: Element) {
@@ -31,16 +29,24 @@ export async function init(storyData: Element) {
   const brickUrl = URL.createObjectURL(blob);
   moduleUrls.brick = brickUrl;
 
-  // Create the importmap
-  const importMap = makeElement(
-    "script",
-    { type: "importmap" },
-    JSON.stringify({ imports: moduleUrls }),
-  );
-  document.head.append(importMap);
+  // // Create the importmap
+  // const importMap = makeElement(
+  //   "script",
+  //   { type: "importmap" },
+  //   JSON.stringify({ imports: moduleUrls }),
+  // );
+  // document.head.append(importMap);
 
   // Import "brick" now, to ensure it runs before any other modules
   await import(brickUrl);
+}
+
+export function brickImport(moduleName: string): Promise<Record<string, unknown>> {
+  const url = moduleUrls[moduleName];
+  if (!url) {
+    throw new Error(`No module named "${moduleName}" found.`);
+  }
+  return import(url);
 }
 
 function initModulePassage(element: Element): { name: string; url: string } {

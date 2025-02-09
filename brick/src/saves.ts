@@ -402,11 +402,10 @@ function reviveSpecialObject(tag: string, data: unknown): unknown {
     case "nan":
       return NaN;
     case "bigint":
-      if ("BigInt" in window && typeof window.BigInt === "function") {
-        return window.BigInt(data);
-      } else {
-        throw new Error("This browser does not support BigInts");
+      if (typeof data !== "string") {
+        throw new Error(`Could not revive a BigInt. Payload was ${data}`);
       }
+      return BigInt(data);
     case "null-proto":
       return Object.assign(Object.create(null), data);
     case "boxed":

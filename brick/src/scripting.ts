@@ -9,6 +9,7 @@ import config from "./config";
 import { showPassage } from "./dialog";
 import * as engine from "./engine";
 import { createGetter, createMacro } from "./macros";
+import { brickImport } from "./modules";
 import * as passages from "./passages";
 import * as renderer from "./renderer";
 import * as saves from "./saves";
@@ -16,6 +17,13 @@ import * as util from "./util";
 
 /** This is defined in `build.js` */
 declare const BRICK_VERSION: Record<string, unknown>;
+
+declare global {
+  interface Window {
+    Brick: typeof BrickPublic;
+    brickImport: (moduleName: unknown) => Promise<Record<string, unknown>>;
+  }
+}
 
 /** The public API available to authors */
 // TODO: type-checking
@@ -67,6 +75,15 @@ export const BrickPublic = {
   },
   saves: {
     registerClass: saves.registerClass,
+  },
+  brickImport: function (moduleName: unknown): Promise<Record<string, unknown>> {
+    if (arguments.length !== 1) {
+      throw new TypeError("brickImport: must receive exactly one argument");
+    }
+    if (typeof moduleName !== "string") {
+      throw new TypeError("brickImport: string expected");
+    }
+    return brickImport(moduleName);
   },
   clone: util.clone,
   createMacro,
@@ -124,6 +141,7 @@ export function init() {
   envKeys = Object.keys(BrickPublic);
   envValues = Object.values(BrickPublic);
   window.Brick = BrickPublic;
+  window.brickImport = BrickPublic.brickImport;
 }
 
 export function evalJavaScript(js: string, tempVars: Record<string, unknown>): unknown {

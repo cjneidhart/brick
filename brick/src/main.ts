@@ -10,8 +10,6 @@ import { getElementById, makeElement, slugify, stringify } from "./util";
 
 declare global {
   interface Window {
-    Brick: typeof scripting.BrickPublic;
-
     brickInit: typeof init;
     brickFinish: typeof finish;
   }

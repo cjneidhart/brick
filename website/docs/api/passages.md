@@ -52,7 +52,7 @@ function get(name: string): Passage | undefined;
 #### Example
 
 ```js
-import { passages } from "brick";
+const { passages } = Brick;
 let alley = passages.get("A Dark Alley");
 ```
 
@@ -70,6 +70,6 @@ function withTag(tag: string): Passage[]
 #### Example
 
 ```js
-import { passages } from "brick";
+const { passages } = Brick;
 let woodsPassages = passages.withTag("woods");
 ```

@@ -1,6 +1,6 @@
 {
   "name": "brick",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A modern story format for Twine/Tweego",
   "author": "Chris Neidhart",
   "private": true,

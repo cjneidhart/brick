@@ -3,7 +3,7 @@
 This project follows semantic versioning.
 Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
-## Unreleased
+## [0.4.1] - 2025-02-13
 
 ### Added
 
@@ -137,6 +137,7 @@ Initial release.
   - `@textBox`
   - `@while`
 
+[0.4.1]: https://github.com/cjneidhart/brick/releases/tag/v0.4.1
 [0.4.0]: https://github.com/cjneidhart/brick/releases/tag/v0.4.0
 [0.3.1]: https://github.com/cjneidhart/brick/releases/tag/v0.3.1
 [0.3.0]: https://github.com/cjneidhart/brick/releases/tag/v0.3.0

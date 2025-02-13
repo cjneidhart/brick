@@ -76,9 +76,9 @@ This may change in the future.
 
 This tag marks the passage as a JavaScript module.
 JavaScript modules can `export` values;
-these values can then be accessed through the [`brickImport`] function.
+these values can then be accessed through `import` statements and the [`importPassage`] function.
 
-[`brickImport`]: ./api/misc#brickimport
+[`importPassage`]: ./api/misc#importpassage
 
 To improve syntax highlighting in Twine, a module's body may be surrounded by `@(` and `)`.
 These characters will be removed by Brick.

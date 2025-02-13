@@ -4,7 +4,7 @@ These functions are available globally in JavaScript expressions and statements
 
 ## Functions
 
-### `brickImport`
+### `importPassage`
 
 This function can be used within the Story JavaScript and `module` passages to import modules.
 It returns a `Promise` which resolves to that module's exports.
@@ -13,7 +13,7 @@ As a special case, the `Brick` global variable is available as a module named `"
 #### Signature
 
 ```ts
-function brickImport(moduleName: string): Promise<Record<string, unknown>>;
+function importPassage(moduleName: string): Promise<Record<string, unknown>>;
 ```
 
 #### Example
@@ -31,7 +31,7 @@ Then, you can do the following in your Story JavaScript:
 
 ```js
 const { constants } = Brick;
-const { add } = await brickImport("soup");
+const { add } = await importPassage("soup");
 constants.add = add;
 ```
 

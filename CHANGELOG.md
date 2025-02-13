@@ -11,7 +11,7 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 - The `module` tag.
   Passages tagged `module` are interpreted as JavaScript modules.
   They must be imported from the Story JavaScript or another module, or they will not be executed.
-- The `brickImport` function.
+- The `importPassage` function.
   Given a module passage name, this returns a `Promise` that resolves with the module's exports.
 - The `@link` macro can now receive children.
   This is mainly intended to work with the DOM macros, like `@replace`.
@@ -20,6 +20,8 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
 - Story JavaScript is now run as a module.
   This means you can now use `await` at the top-level and it will work as expected.
+  You can also use `import` statements to import values from `module` passages,
+  or from `brick` itself.
 - `Engine` and `Dialog` have been renamed to `engine` and `dialog`.
 
 ### Fixed

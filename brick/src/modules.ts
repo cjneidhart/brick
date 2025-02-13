@@ -4,6 +4,8 @@
  * This module manages all "module"-tagged passages.
  */
 
+import { makeElement } from "./util";
+
 let moduleUrls: Record<string, string>;
 
 export async function init(storyData: Element) {
@@ -29,22 +31,30 @@ export async function init(storyData: Element) {
   const brickUrl = URL.createObjectURL(blob);
   moduleUrls.brick = brickUrl;
 
-  // // Create the importmap
-  // const importMap = makeElement(
-  //   "script",
-  //   { type: "importmap" },
-  //   JSON.stringify({ imports: moduleUrls }),
-  // );
-  // document.head.append(importMap);
+  // Create the importmap
+  const importMap = makeElement(
+    "script",
+    { type: "importmap" },
+    JSON.stringify({ imports: moduleUrls }),
+  );
+  document.head.append(importMap);
+
+  // Issue warning for web twine
+  if (elements.length > 0 && location.hostname === "twinery.org") {
+    console.warn(
+      "When using modules with web Twine, `import` statements might not work. " +
+        "Use `await importPassage(PASSAGE_NAME)` instead if you have any issues.",
+    );
+  }
 
   // Import "brick" now, to ensure it runs before any other modules
   await import(brickUrl);
 }
 
-export function brickImport(moduleName: string): Promise<Record<string, unknown>> {
+export function importPassage(moduleName: string): Promise<Record<string, unknown>> {
   const url = moduleUrls[moduleName];
   if (!url) {
-    throw new Error(`No module named "${moduleName}" found.`);
+    throw new Error(`No module passage named "${moduleName}" found.`);
   }
   return import(url);
 }

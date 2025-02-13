@@ -9,7 +9,7 @@ import config from "./config";
 import { showPassage } from "./dialog";
 import * as engine from "./engine";
 import { createGetter, createMacro } from "./macros";
-import { brickImport } from "./modules";
+import { importPassage } from "./modules";
 import * as passages from "./passages";
 import * as renderer from "./renderer";
 import * as saves from "./saves";
@@ -21,7 +21,7 @@ declare const BRICK_VERSION: Record<string, unknown>;
 declare global {
   interface Window {
     Brick: typeof BrickPublic;
-    brickImport: (moduleName: unknown) => Promise<Record<string, unknown>>;
+    importPassage: (moduleName: unknown) => Promise<Record<string, unknown>>;
   }
 }
 
@@ -76,14 +76,14 @@ export const BrickPublic = {
   saves: {
     registerClass: saves.registerClass,
   },
-  brickImport: function (moduleName: unknown): Promise<Record<string, unknown>> {
+  importPassage: function (moduleName: unknown): Promise<Record<string, unknown>> {
     if (arguments.length !== 1) {
-      throw new TypeError("brickImport: must receive exactly one argument");
+      throw new TypeError("importPassage: must receive exactly one argument");
     }
     if (typeof moduleName !== "string") {
-      throw new TypeError("brickImport: string expected");
+      throw new TypeError("importPassage: string expected");
     }
-    return brickImport(moduleName);
+    return importPassage(moduleName);
   },
   clone: util.clone,
   createMacro,
@@ -141,7 +141,7 @@ export function init() {
   envKeys = Object.keys(BrickPublic);
   envValues = Object.values(BrickPublic);
   window.Brick = BrickPublic;
-  window.brickImport = BrickPublic.brickImport;
+  window.importPassage = BrickPublic.importPassage;
 }
 
 export function evalJavaScript(js: string, tempVars: Record<string, unknown>): unknown {

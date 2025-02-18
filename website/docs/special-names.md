@@ -21,6 +21,18 @@ A full description of its properties is provided by the [IF Tech Foundation].
 
 [IF Tech Foundation]: https://github.com/iftechfoundation/twine-specs/blob/74b3d895651a29aa47d0ce9244eddf3ba4478058/twee-3-specification.md#storydata
 
+Here's a basic `StoryData`.
+The IFID has been omitted; both Tweego and Twine can generate an IFID for you.
+
+```json
+{
+  "ifid": "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+  "format": "Brick",
+  "format-version": "0",
+  "start": "Introduction"
+}
+```
+
 ### StoryFooter
 
 If present, this passage will be rendered after the active passage.

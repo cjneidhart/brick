@@ -13,51 +13,31 @@ Even if it's already listed in this file, creating an Issue helps me decide what
   Examples: `{ $foo: 4 }`, `{ __proto__: null }`, `$myObject._length = 4`.
 - The Twine highlighter does not support RegExp literals.
 
-## Planned Features
+## Prerequisites for 1.0
 
+- Finish writing automated tests (as of writing this, I'm about 10% done).
 - A new-user tutorial.
-  This would start with the very basics, like links between passages,
-  and eventually get to advanced JavaScript features.
-- A way for users to add macros via markup, like `<<widget>>` in SugarCube or `(macro: )` in Harlowe.
-  I'll probably call it `@macro`.
-- A way to add metadata to passages, typically to enable storylets.
-  - Should this be enabled by a macro to be parsed at startup, or would that be too expensive?
-    It could be faster if such passages had an opt-in tag.
-  - Probably, this would let users define properties on a `.meta` field on each passage,
-    or maybe it would let them define properties directly on the passage object.
-- A `state` enum for the engine, to track what state it is currently in, and what operations are allowed.
-- A redirection system. Similar to `Config.navigation.override` in SugarCube or `(redirect: )` in Harlowe.
-- An internal PseudoRandom Number Generator, so users can provide a seed and get consistent results.
-- Change the parser and/or renderer to automatically produce `<p>` when appropriate.
-- Ways for users to query history.
-  Other formats expose functionality like `hasVisited()` in SugarCube or the `visits` keyword in Harlowe.
-  But this is not as easy in Brick because of IndexedDB;
-  only the current moment is loaded from storage, and other moments cannot be obtained synchronously.
-  Some potential alternatives are:
-  - A `previous` field on each moment, storing the name of the previous passage.
-    This is pretty likely, since it has nearly no performance cost.
-  - Store a way to query history on each moment.
-    This would likely be a map, where each key is a passage name,
-    and each value is the number of times that passage has been played and the last turn on which it was played.
-    It could also just be an array of every turn's passage name.
-    This is potentially expensive;
-    even with a map, the total size of a moment is now much bigger.
-    If I do this, it will at least have a config flag to opt-out.
-- Automated benchmarks.
-- Persistent storage, similar to `memorize()` and `recall()` in SugarCube.
-- Author-defined settings, which have a nice UI and persist between saves.
-- Debug mode, which is really two separate features:
-  - debug view, which highlights each macro's output and shows their context
-  - variable watcher
-- lifecyle events and/or hooks.
-- `@for` macro: for-in syntax and C-style syntax.
-- Multiple layouts?
-- Alternative ways of newline handling.
-- A date/time system, so authors don't use JavaScript's `Date`.
-  Might be built-in or an official extension.
-- Change `@link` and similar macros to automatically remove spaces and brackets (`[[..]]`) from passage names.
-- do-while macro?
+- A `@parentMacro` macro to compliment `@macro`.
+- Alternate newline modes:
+  - Markdown-style (default): 2 or more newlines create a paragraph break
+  - SC/Harlowe style: each newline becomes a `<br>`
+  - verbatim: newlines are passed through (and thus ignored by HTML's whitespace treatment)
+- Add a `previous` field to `Moment`
+- Add an opt-in way to track history synchronously.
+- A "Hooks" system for authors to interrupt and/or alter default Brick behavior.
+- Overhaul default UI if I'm going to.
+- A redirection system, similar to `Config.navigation.override` in SugarCube or `(redirect: )` in Harlowe.
 
+# After 1.0
+
+- `for...in` loops and C-style `for` loops as macros.
+- A way to add metadata to passages, mainly to enable storylets.
+- A way to persist data between saves.
+- A settings API and UI.
+- Debug mode.
+- An internal pseudorandom number generator (PRNG).
+- A simplified date/time system, so authors don't use `Date` when it's not appropriate.
+- `do...while` macro.
 
 ## Very long-term goal
 

@@ -38,6 +38,16 @@ you can use `@print`.
 
 `@-` is an alias of `@print`.
 
+#### Signature
+
+_Children_: **Never**
+
+```ts
+function print(value: unknown);
+```
+
+#### Example
+
 ```brick
 You need an additional @print(500 - $money) gold to afford this sword.
 ```
@@ -56,6 +66,16 @@ Using `@render` hurts Brick's ability to generate helpful error messages when so
 When possible, use a custom macro or `@include` to re-use content.
 :::
 
+#### Signature
+
+_Children_: **Never**
+
+```ts
+function render(markup: string);
+```
+
+#### Example
+
 ```brick
 // Contrived example: Use string interpolation to set a custom attribute key on a <span>
 @render(`<span ${$key}="someValue">This is a span</span>`)
@@ -65,6 +85,14 @@ When possible, use a custom macro or `@include` to re-use content.
 
 This macro can be used to embed one passage within another.
 Simply pass in the name of the passage you want to include.
+
+#### Signature
+
+_Children_: **Never**
+
+```ts
+function include(passageName: string);
+```
 
 #### Example
 
@@ -89,6 +117,19 @@ Each `@if` and `@elseif` will have its condition tested, in order.
 The first true condition will have its body displayed.
 If none of the conditions are true, and an `@else` macro is present, its body will be displayed.
 
+#### Signature
+
+_Children_: **Always**
+
+```ts
+// These function names have an extra underscore to make the syntax highlighting work
+function if_(condition: boolean);
+function elseif_(condition: boolean);
+function else_();
+```
+
+#### Example
+
 ```brick
 @if ($strength >= 10) {
   You take a deep breath.
@@ -103,6 +144,16 @@ If none of the conditions are true, and an `@else` macro is present, its body wi
 ### `@while()`
 
 Like the JavaScript keyword, `@while` renders its body repeatedly _while_ its condition is true.
+
+#### Signature
+
+_Children_: **Always**
+
+```ts
+function while_(condition: boolean);
+```
+
+#### Example
 
 ```brick
 @(_rocks = 10)
@@ -141,6 +192,16 @@ instead of declaring a variable with `let` or `const`.
 `@continue` can only be used within `@for` and `@while` loops.
 It stops the current loop iteration, and _continues_ from the next iteration.
 
+#### Signature
+
+_Children_: **Never**
+
+```ts
+function continue_();
+```
+
+#### Example
+
 ```brick
 NPCs you haven't visited today:
 <ul>
@@ -160,9 +221,20 @@ It _breaks_ out of the current loop;
 no more markup from the current iteration will be rendered,
 and all following iterations will be skipped over.
 
+#### Signature
+
+_Children_: **Never**
+
+```ts
+function break_();
+```
+
+#### Example
+
+This is a simplified example of each character in a party taking turns to attack an enemy.
+We use `@break` to end the loop once the enemy is defeated.
+
 ```brick
-// This is a simplified example of each character in a party taking turns to
-// attack an enemy. We use @break to end the loop once the enemy is defeated.
 @for (_character of $partyMembers) {
   @($enemyHP -= _character.attack)
   _character.name hit the enemy for _character.attack damage!
@@ -182,6 +254,19 @@ The first `@case` macro that has an argument matching the
 initial argument to `@switch` will be rendered.
 An optional `@default` macro at the end will be rendered if none of the `@case`s matched.
 
+#### Signature
+
+_Children_: **Always** for `@switch` and `@case`, **Never** for `@default`.
+All of `@switch`'s children must be `@case` or `@default` macros.
+
+```ts
+function switch_(value: unknown);
+function case_(...values: unknown[]); // at least one argument is required
+function default_();
+```
+
+#### Example
+
 ```brick
 @switch ($houseShape) {
   @case("triangle") {
@@ -190,7 +275,7 @@ An optional `@default` macro at the end will be rendered if none of the `@case`s
   @case("square", "rectangle") {
     4 sides is mathematically the best, if you think about it.
   }
-  @case("pentagon", 'hexagon') {
+  @case("pentagon", "hexagon") {
     5 or 6? I don't know, that's a lot of sides...
   }
   @default {
@@ -201,11 +286,22 @@ An optional `@default` macro at the end will be rendered if none of the `@case`s
 
 ## DOM Manipulation
 
+All of these macros use a _selector_ to indicate what element on the page they're affecting.
+You can read more about selectors on [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_selectors).
+
 ### `@append()`
 
 This macro takes one argument, a selector string,
 and finds the first element in the document that matches that selector.
 Then `@append` renders its children after that element.
+
+#### Signature
+
+_Children_: **Always**
+
+```ts
+function append(selector: string);
+```
 
 #### Example
 
@@ -228,6 +324,14 @@ and finds the first element in the document that matches that selector.
 Then `@replace` removes all existing children of that element,
 and renders its own children in their place.
 
+#### Signature
+
+_Children_: **Always**
+
+```ts
+function replace(selector: string);
+```
+
 #### Example
 
 ```brick
@@ -247,11 +351,19 @@ and renders its own children in their place.
 </div>
 ```
 
-### `@prepend`
+### `@prepend()`
 
 This macro takes one argument, a selector string,
 and finds the first element in the document that matches that selector.
 Then `@prepend` renders its children before that element.
+
+#### Signature
+
+_Children_: **Always**
+
+```ts
+function prepend(selector: string);
+```
 
 #### Example
 
@@ -272,6 +384,16 @@ The Mighty <span id="enemy-name">Zote</span>
 
 `@checkBox` creates a basic checkbox which the user can toggle between `true` and `false`.
 
+#### Signature
+
+_Children_: **Never**
+
+```ts
+function checkBox(variable: Variable, label: string);
+```
+
+#### Example
+
 ```brick
 @checkBox($coat, "Put your coat on before leaving")
 ```
@@ -279,6 +401,16 @@ The Mighty <span id="enemy-name">Zote</span>
 ### `@textBox()`
 
 `@textBox` creates a single-line text field the user can enter text in.
+
+#### Signature
+
+_Children_: **Never**
+
+```ts
+function textBox(variable: Variable, label: string);
+```
+
+#### Example
 
 ```brick
 @textBox($name, "Enter your name")
@@ -293,11 +425,22 @@ In those situations, the macro `@redoable` can designate a section of markup for
 After the passage is rendered,
 you can call `engine.redo()` to re-render all markup contained in `@redoable` macros.
 
+#### Signature
+
+_Children_: **Always**
+
+```ts
+function redoable();
+```
+
+#### Example
+
 ```brick
-// Display the player's money (purchase buttons can call `engine.redo()` to update this)
+// Display the player's money (purchase buttons can call `engine.redo()` to update this).
 You have @redoable { $money } credits in your wallet.
 
-// Example purchase link (very basic, test this carefully before using it)
+// Very basic purchase link.
+// This assumes $inventory is an array of strings.
 @button("Buy a soda", () => {
   $inventory.push("soda");
   $money -= 10;
@@ -320,6 +463,16 @@ Note that even if you pass a delay of `0`,
 Do not use `@later` to hide content after a delay.
 
 <!-- TODO add note about letting users skip delays -->
+
+#### Signature
+
+_Children_: **Always**
+
+```ts
+function later(delay?: number);
+```
+
+#### Example
 
 ```brick
 // Simple example: render some content after a delay.
@@ -354,6 +507,16 @@ It doesn't matter when in the passage you call `@punt`.
 You can punt multiple temporary variables at once by passing them all as arguments to `@punt`.
 Calling `@punt` twice or more on the same temporary variable in the same passage has no effect.
 
+#### Signature
+
+_Children_: **Never**
+
+```ts
+function punt(...variables: Variable[]); // At least one argument is required
+```
+
+#### Example
+
 ```brick
 :: Passage 1
 @(_x = 5)
@@ -372,10 +535,8 @@ Temp variable \_x is now: _x
 
 ### `@link()`
 
-**Syntax**: `@link(label, [passageName], [onClick])`
-
 This creates a hyperlink the user can interact with.
-When the link is clicked, two things will happen:
+When the link is clicked, three things will happen:
 
 1. If `onClick` was given, it will be called.
    It will receive one argument, the
@@ -383,6 +544,18 @@ When the link is clicked, two things will happen:
    that the button just received.
 2. If `destinationPassage` was given, it must be a passage name.
    Brick will navigate to that passage, creating a new moment in history.
+3. If any children markup was given, it will be rendered silently.
+
+#### Signature
+
+_Children_: **Optional**
+
+```ts
+function link(label: string, onClick?: Function);
+function link(label: string, passageName?: string, onClick?: Function);
+```
+
+#### Example
 
 ```brick
 // These are both equivalent
@@ -414,6 +587,14 @@ which must be temporary variables (prefixed with `_`).
 The new macro will not be able to receive a body; for that, use `@parentMacro`.
 When invoked, the new macro will assign its arguments to the names given to `@macro`,
 then render the body given to `@macro`.
+
+#### Signature
+
+_Children_: **Always**
+
+```ts
+function macro(location: VariableOrProperty, ...paramNames: Variable[]);
+```
 
 #### Example
 

@@ -216,8 +216,6 @@ function insertParagraphs(templates: NodeTemplate[]): NodeTemplate[] {
         passageName: "",
         lineNumber: 0,
         name: "p",
-        attributes: new Map(),
-        evalAttributes: new Map(),
         content: templates.slice(i, nextBreakIndex),
       };
       output.push(paragraphTemplate);

@@ -18,6 +18,12 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 ### Changed
 
 - Wiki-style links cannot contain newlines.
+- A `/` character is not allowed after a `}` token unless it starts a comment.
+  This is because whether the `/` starts a RegExp literal or is a division operator
+  depends on whether the `}` closed an object initializer or a block statement,
+  which is currently outside the parser's capabilities.
+  To avoid this ambiguity, either wrap the object initializer in parentheses
+  or place a semicolon after the block statement.
 
 ### Fixed
 

@@ -520,8 +520,7 @@ const switchMacro: Macro = (context, ...args) => {
     }
   }
 
-  for (let i = 0; i < children.length; i++) {
-    const child = children[i];
+  for (const [i, child] of children.entries()) {
     const ops = child.ops[0] as PostscriptCall;
     if (child.base === "default") {
       if (i !== children.length - 1) {

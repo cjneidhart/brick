@@ -767,7 +767,7 @@ export class Parser {
   parseJsExpression(): string | ErrorMessage {
     const nesting = [];
     const output = [];
-    let regexpAllowed = true;
+    let regexpAllowed: boolean | null = true;
     let match;
     let lastIndex = 0;
     outer: while (this.index < this.input.length) {
@@ -945,6 +945,12 @@ export class Parser {
             if (match[0].includes("\n")) {
               output.push("\n");
             }
+          } else if (regexpAllowed === null) {
+            this.error(
+              `"/" is not allowed after "}". ` +
+                `If the bracket is part of an object initializer, wrap it in parentheses "({ })". ` +
+                `If the bracket is part of a block statement, place a semicolon ";" after it.`,
+            );
           } else if (regexpAllowed) {
             output.push(c);
             match = this.consume(RE.js.regexp);
@@ -964,6 +970,7 @@ export class Parser {
             this.index++;
             output.push(c);
             nesting.pop();
+            regexpAllowed = c === "}" ? null : false;
             break;
           }
 

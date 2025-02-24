@@ -24,9 +24,14 @@ Even if it's already listed in this file, creating an Issue helps me decide what
 - Overhaul default UI if I'm going to.
 - A redirection system, similar to `Config.navigation.override` in SugarCube or `(redirect: )` in Harlowe.
 
-# After 1.0
+## Maybe in 1.0
 
-- `for...in` loops and C-style `for` loops as macros.
+- `for...in` and C-style for syntax in the `@for` macro.
+- Audio library (potentially as an official extension).
+- `list` macro to more easily create `<ul>` and `<table>` elements.
+
+## After 1.0
+
 - A way to add metadata to passages, mainly to enable storylets.
 - A way to persist data between saves.
 - A settings API and UI.

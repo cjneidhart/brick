@@ -1,13 +1,13 @@
-import Config from "./config";
+import config from "./config";
 import { constants, storyVariables } from "./engine";
 import { BrickError, DynamicAttributeError, ExprError, MacroError } from "./error";
 import { BreakSignal, BRICK_MACRO_SYMBOL, isMacro, Macro, MacroContext } from "./macros";
 import { ElementTemplate, Expr, NodeTemplate, Parser, PostscriptCall } from "./parser";
 import { Passage, get as getPassage } from "./passages";
 import { evalExpression } from "./scripting";
-import { makeElement, stringify } from "./util";
+import { countSubstrings, makeElement, numberRange, stringify } from "./util";
 
-const PHRASING_TAGS = [
+const PHRASING_TAGS = new Set([
   "abbr",
   "audio",
   "b",
@@ -57,48 +57,38 @@ const PHRASING_TAGS = [
   "var",
   "video",
   "wbr",
-];
+]);
+const SWITCH_TO_PHRASING_TAGS = new Set(["ol", "p", "table", "tbody", "td", "thead", "tr", "ul"]);
 
-const SOMETIMES_PHRASING_TAGS = ["a", "del", "ins", "map"];
+/** How to handle newlines */
+export type NewlineBehavior = "md-block" | "md-inline" | "allBreaks" | "noBreaks";
 
-function _isPhrasingNode(node: string | Element): boolean {
-  // TODO:
-  // <link> and <meta> if the `itemprop` attribute is present
-  // <area> if it is a descendant of a <map> element
-  if (typeof node === "string" || PHRASING_TAGS.includes(node.tagName.toLowerCase())) {
-    return true;
-  } else if (SOMETIMES_PHRASING_TAGS.includes(node.tagName.toLowerCase())) {
-    return Array.from(node.childNodes).every(
-      (n) =>
-        n.nodeType === Node.TEXT_NODE ||
-        (n.nodeType === Node.ELEMENT_NODE && _isPhrasingNode(n as Element)),
-    );
-  } else {
-    return false;
+function renderError(target: ParentNode, error: BrickError): never {
+  if (!error.displayed) {
+    error.displayed = true;
+    console.error(error);
+    const span = makeElement("span", { class: "brick-error" }, stringify(error));
+    target.append(span);
   }
-}
-
-/** Return a `<span>` describing the error, and log the error to the console */
-function renderError(error: BrickError): HTMLSpanElement {
-  console.error(error);
-  return makeElement("span", { class: "brick-error" }, stringify(error));
+  throw error;
 }
 
 export function renderPassage(
   target: HTMLElement,
   scope: Record<string, unknown>,
   passage: string | Passage,
-): boolean {
+): void {
   if (typeof passage === "string") {
     const psg = getPassage(passage);
     if (psg) {
-      return renderPassage(target, scope, psg);
+      renderPassage(target, scope, psg);
+      return;
     } else {
       target.innerHTML = "";
       target.append(
         makeElement("span", { class: "brick-error" }, `No passage named "${passage}" found`),
       );
-      return false;
+      throw new Error(`No passage named "${passage}" found`);
     }
   }
 
@@ -107,7 +97,7 @@ export function renderPassage(
   target.dataset.name = passage.name;
   target.dataset.tags = passage.tags.join(" ");
 
-  return render(target, scope, passage);
+  render(target, scope, passage);
 }
 
 let recursionCount = 1000;
@@ -116,11 +106,12 @@ let recursionRecoveryMode = false;
 export function render(
   target: ParentNode,
   scope: Record<string, unknown>,
-  input: NodeTemplate[] | Passage | BrickError,
+  input: NodeTemplate[] | Passage,
+  newlineMode?: NewlineBehavior,
   parentContext?: MacroContext,
-): boolean {
+): void {
   if (recursionRecoveryMode) {
-    return false;
+    return;
   }
   if (recursionCount <= 0) {
     // passage and line# probably aren't much help here, but we'll provide them anyway
@@ -128,116 +119,248 @@ export function render(
       parentContext?.passageName || (input instanceof Passage && input.name) || "unknown";
     const lineNumber = parentContext?.lineNumber || 0;
     const error = new BrickError("Infinite recursion detected", passageName, lineNumber);
-    target.append(renderError(error));
     recursionRecoveryMode = true;
-    return false;
+    renderError(target, error);
   }
-  let returnValue;
   try {
     recursionCount--;
-    returnValue = renderRaw(target, scope, input, parentContext);
+    const newlines =
+      newlineMode || (config.newlineMode === "markdown" ? "md-block" : config.newlineMode);
+    renderRaw(
+      target,
+      scope,
+      input,
+      newlines,
+      parentContext,
+    );
   } finally {
     recursionCount++;
     if (recursionCount >= 1000) {
       recursionRecoveryMode = false;
     }
   }
-  return returnValue;
 }
 
 /** Render the given Brick markup and append it to an element. */
 function renderRaw(
   target: ParentNode,
   scope: Record<string, unknown>,
-  input: NodeTemplate[] | Passage | BrickError,
+  input: NodeTemplate[] | Passage,
+  newlines: NewlineBehavior,
   parentContext?: MacroContext,
-): boolean {
-  let noErrors = true;
+): void {
   if (input instanceof Passage) {
-    const text = Config.preProcessText ? Config.preProcessText(input) : input.content;
+    // TODO rewrite this once there's a `passage.getOrThrow` function
+    const text = config.preProcessText ? config.preProcessText(input) : input.content;
     if (typeof text !== "string") {
       throw new TypeError(`Config.preProcessText returned a ${typeof text}, expected a string`);
     }
     const parser = new Parser(text, input.name);
-    return render(target, scope, parser.parse(), parentContext);
+    let templates: NodeTemplate[];
+    try {
+      templates = parser.parse();
+    } catch (error) {
+      if (!(error instanceof BrickError)) {
+        throw error;
+      }
+
+      target.append(
+        makeElement("span", { class: "brick-error" }, stringify(error)),
+        makeElement("br"),
+      );
+      const lines = parser.input.split("\n").map((line) => makeElement("span", {}, line));
+      lines[error.lineNumber - 1].classList.add("brick-error");
+      const codeElt = makeElement("code");
+      for (const line of lines) {
+        codeElt.append(line, makeElement("br"));
+      }
+      target.append(makeElement("pre", {}, codeElt));
+      return;
+    }
+    render(target, scope, templates, newlines, parentContext);
+    return;
   }
 
-  if (input instanceof BrickError) {
-    const passage = getPassage(input.passage);
-    if (!passage) {
-      throw new Error(`Can't render a parse error that occurred in ${input.passage}`);
-    }
-    target.append(renderError(input), makeElement("br"));
-    const lines = passage.content.split("\n").map((line) => makeElement("span", {}, line));
-    lines[input.lineNumber - 1].classList.add("brick-error");
-    const codeElt = makeElement("code");
-    for (const line of lines) {
-      codeElt.append(line, makeElement("br"));
-    }
-    target.append(makeElement("pre", {}, codeElt));
-
-    return false;
+  if (newlines === "md-block") {
+    input = insertParagraphs(input);
   }
 
   // let pBuffer: (string | Element)[] = [];
-  for (const nt of input) {
-    if (typeof nt === "string") {
-      const paragraphs = nt.split("\n\n");
-      let p = paragraphs.shift();
-      if (typeof p === "string") {
-        target.append(p);
-        while (typeof (p = paragraphs.shift()) === "string") {
-          target.append(makeElement("br"));
-          target.append(makeElement("br"));
-          target.append(p);
-        }
+  // const nodes = input.map((template) => {
+  //   return renderTemplate(template, scope, newlines, errorRef, parentContext);
+  // });
+  for (const template of input) {
+    renderTemplate(target, template, scope, newlines, parentContext);
+  }
+}
+
+function insertParagraphs(templates: NodeTemplate[]): NodeTemplate[] {
+  const output = [];
+
+  for (let i = 0; i < templates.length; i++) {
+    const template = templates[i];
+    let startsParagraph = false;
+    if (typeof template === "string" || template.type === "linkBox") {
+      startsParagraph = true;
+    } else if (template.type === "expr" || template.type === "chain") {
+      const nextTemplate = templates[i + 1];
+      if (
+        typeof nextTemplate === "string" ||
+        (typeof nextTemplate === "object" && nextTemplate.type !== "paragraph-break")
+      ) {
+        startsParagraph = true;
       }
-    } else if (nt.type === "expr") {
-      noErrors = renderExpr(target, scope, nt, parentContext) && noErrors;
-    } else if (nt.type === "chain") {
-      const name = nt.segments[0].name;
-      const macro = constants[name];
-      if (!isMacro(macro)) {
-        throw new Error("chain macro not a macro");
+    } else if (template.type === "element" && PHRASING_TAGS.has(template.name)) {
+      startsParagraph = true;
+    }
+
+    if (startsParagraph) {
+      let nextBreakIndex = findNextBreak(templates, i + 1);
+      if (nextBreakIndex === -1) {
+        nextBreakIndex = templates.length;
       }
-      const context = new MacroContext(
-        name,
-        nt.passageName,
-        nt.lineNumber,
-        scope,
-        parentContext,
-        [],
-      );
-      renderMacro(target, macro, context, nt.segments);
-    } else if (nt.type === "element") {
-      noErrors = renderElement(nt, target, scope, parentContext) && noErrors;
-    } else if (nt.type === "linkBox") {
-      const linkMacro = constants.link;
-      if (!isMacro(linkMacro)) {
-        throw "link is not link";
-      }
-      const context = new MacroContext("link", nt.passageName, nt.lineNumber, scope);
-      renderMacro(target, linkMacro, context, [nt.text, nt.link]);
-    } else if (nt.type === "error") {
-      noErrors = false;
-      // const br = makeElement("br");
-      // const loc = makeElement("code", {}, nt.locationSample);
-      // const span = makeElement("span", { class: "brick-error" }, `ERROR: ${nt.message}`, br, loc);
-      target.append(renderError(new BrickError(nt.message, nt.passageName, nt.lineNumber)));
+      const paragraphTemplate: ElementTemplate = {
+        type: "element",
+        passageName: "",
+        lineNumber: 0,
+        name: "p",
+        attributes: new Map(),
+        evalAttributes: new Map(),
+        content: templates.slice(i, nextBreakIndex),
+      };
+      output.push(paragraphTemplate);
+      i = nextBreakIndex;
     } else {
-      throw new Error(`Unknown NodeTemplate type: ${(nt as Expr).type}`);
+      output.push(template);
     }
   }
 
-  return noErrors;
+  return output;
+}
+
+function renderTemplate(
+  target: ParentNode,
+  template: NodeTemplate,
+  scope: Record<string, unknown>,
+  newlines: NewlineBehavior,
+  parentContext?: MacroContext,
+): void {
+  if (typeof template === "string") {
+    if (newlines === "allBreaks") {
+      const lines = template.split("\n");
+      const lastLine = lines.pop();
+      if (typeof lastLine === "string") {
+        for (const line of lines) {
+          target.append(line, makeElement("br"));
+        }
+        target.append(lastLine);
+      }
+    } else {
+      target.append(template);
+    }
+  } else if (template.type === "paragraph-break") {
+    switch (newlines) {
+      case "allBreaks": {
+        const count = countSubstrings(template.raw, "\n");
+        for (const _ of numberRange(count)) {
+          target.append(makeElement("br"));
+        }
+        break;
+      }
+
+      case "md-block":
+        break;
+
+      case "md-inline": {
+        target.append(makeElement("br"), makeElement("br"));
+      }
+
+      case "noBreaks":
+        target.append(template.raw);
+    }
+  } else if (template.type === "chain") {
+    const name = template.segments[0].name;
+    const macro = constants[name];
+    if (!isMacro(macro)) {
+      throw new Error("chain macro not a macro");
+    }
+    const context = new MacroContext(
+      name,
+      template.passageName,
+      template.lineNumber,
+      scope,
+      newlines,
+      parentContext,
+      [],
+    );
+    renderMacro(target, macro, context, template.segments);
+  } else if (template.type === "expr") {
+    const exprRendered = document.createDocumentFragment();
+    try {
+      renderExpr(exprRendered, scope, template, newlines, parentContext);
+    } finally {
+      target.append(newlines === "md-block" ? maybeWrap(exprRendered) : exprRendered);
+    }
+  } else if (template.type === "linkBox") {
+    const linkMacro = constants.link;
+    if (!isMacro(linkMacro)) {
+      throw "link is not link";
+    }
+    const context = new MacroContext(
+      "link",
+      template.passageName,
+      template.lineNumber,
+      scope,
+      newlines,
+    );
+    renderMacro(target, linkMacro, context, [template.text, template.link]);
+  } else if (template.type === "element") {
+    const childNewlines =
+      SWITCH_TO_PHRASING_TAGS.has(template.name.toLowerCase()) && newlines === "md-block"
+        ? "md-inline"
+        : newlines;
+    renderElement(target, template, scope, childNewlines, parentContext);
+  } else if (template.type === "error") {
+    renderError(
+      target,
+      new BrickError(template.message, template.passageName, template.lineNumber),
+    );
+  } else {
+    throw new Error(`Unknown NodeTemplate type: ${(template as Expr).type}`);
+  }
+}
+
+function maybeWrap(fragment: DocumentFragment): Node {
+  const output = document.createDocumentFragment();
+  let currentParagraph: HTMLParagraphElement | null = null;
+  for (const child of Array.from(fragment.childNodes)) {
+    if (
+      child instanceof Text ||
+      (child instanceof Element && PHRASING_TAGS.has(child.tagName.toLowerCase()))
+    ) {
+      currentParagraph ??= makeElement("p");
+      currentParagraph.append(child);
+    } else {
+      if (currentParagraph) {
+        output.append(currentParagraph);
+        currentParagraph = null;
+      }
+      output.append(child);
+    }
+  }
+  if (currentParagraph) {
+    output.append(currentParagraph);
+  }
+  return output;
 }
 
 function renderExpr(
   target: ParentNode,
   tempVarScope: Record<string, unknown>,
   expr: Expr,
+  newlines: NewlineBehavior,
   parentContext?: MacroContext,
-): boolean {
+): void {
   const store =
     expr.store === "constants" ? constants : expr.store === "story" ? storyVariables : tempVarScope;
   const storeChar = { constants: "@", story: "$", temp: "_" }[expr.store];
@@ -251,8 +374,7 @@ function renderExpr(
       expr.passageName,
       expr.lineNumber,
     );
-    target.append(renderError(brickError));
-    return false;
+    renderError(target, brickError);
   }
 
   let previousValue: unknown = null;
@@ -275,8 +397,7 @@ function renderExpr(
             expr.passageName,
             expr.lineNumber,
           );
-          target.append(renderError(brickError));
-          return false;
+          renderError(target, brickError);
         }
         previousValue = value;
         try {
@@ -288,8 +409,7 @@ function renderExpr(
             expr.passageName,
             expr.lineNumber,
           );
-          target.append(renderError(brickError));
-          return false;
+          renderError(target, brickError);
         }
         valueStr += op.raw;
         break;
@@ -303,8 +423,7 @@ function renderExpr(
             args.push(evalExpression(argStr, tempVarScope));
           } catch (error) {
             const brickError = new ExprError(error, argStr, expr.passageName, expr.lineNumber);
-            target.append(renderError(brickError));
-            return false;
+            renderError(target, brickError);
           }
         }
         if (typeof value !== "function") {
@@ -313,8 +432,7 @@ function renderExpr(
             expr.passageName,
             expr.lineNumber,
           );
-          target.append(renderError(error));
-          return false;
+          renderError(target, error);
         }
         let newValue;
         try {
@@ -326,7 +444,7 @@ function renderExpr(
             expr.passageName,
             expr.lineNumber,
           );
-          target.append(renderError(brickError));
+          return renderError(target, brickError);
         }
         previousValue = value;
         value = newValue;
@@ -341,6 +459,7 @@ function renderExpr(
       expr.passageName,
       expr.lineNumber,
       tempVarScope,
+      newlines,
       parentContext,
       expr.content,
     );
@@ -354,12 +473,11 @@ function renderExpr(
           args.push(evalExpression(arg, tempVarScope));
         } catch (error) {
           const brickError = new ExprError(error, arg, expr.passageName, expr.lineNumber);
-          target.append(renderError(brickError));
-          return false;
+          renderError(target, brickError);
         }
       }
     }
-    return renderMacro(target, value, context, args);
+    renderMacro(target, value, context, args);
   } else {
     if (expr.content) {
       const brickError = new BrickError(
@@ -367,8 +485,7 @@ function renderExpr(
         expr.passageName,
         expr.lineNumber,
       );
-      target.append(renderError(brickError));
-      return false;
+      renderError(target, brickError);
     }
     if (lastOpAsCall) {
       if (typeof value !== "function") {
@@ -377,8 +494,7 @@ function renderExpr(
           expr.passageName,
           expr.lineNumber,
         );
-        target.append(renderError(error));
-        return false;
+        renderError(target, error);
       }
       const args: unknown[] = [];
       for (const arg of lastOpAsCall.args) {
@@ -386,26 +502,24 @@ function renderExpr(
           args.push(evalExpression(arg, tempVarScope));
         } catch (error) {
           const brickError = new ExprError(error, arg, expr.passageName, expr.lineNumber);
-          target.append(renderError(brickError));
-          return false;
+          renderError(target, brickError);
         }
       }
       const newValue = value.apply(previousValue, args);
       previousValue = value;
       value = newValue;
     }
-    target.append(value instanceof Node ? value : String(value));
+    target.append(value instanceof Node ? value : stringify(value));
   }
-
-  return true;
 }
 
 function renderElement(
-  template: ElementTemplate,
   target: ParentNode,
+  template: ElementTemplate,
   scope: Record<string, unknown>,
+  newlines: NewlineBehavior,
   parentContext?: MacroContext,
-): boolean {
+): void {
   const element = makeElement(template.name);
   for (const [key, value] of template.attributes) {
     element.setAttribute(key, value);
@@ -423,13 +537,16 @@ function renderElement(
       if (error instanceof BreakSignal) {
         throw error;
       }
-      target.append(renderError(new DynamicAttributeError(error, key, template)));
-      return false;
+      const wrapped = new DynamicAttributeError(error, key, template);
+      renderError(target, wrapped);
+      throw wrapped;
     }
   }
-  const noErrors = render(element, scope, template.content, parentContext);
-  target.append(element);
-  return noErrors;
+  try {
+    render(element, scope, template.content, newlines, parentContext);
+  } finally {
+    target.append(element);
+  }
 }
 
 function renderMacro(
@@ -437,18 +554,45 @@ function renderMacro(
   macro: Macro,
   context: MacroContext,
   args: unknown[],
-): boolean {
+): void {
+  const { output } = context;
+  let returned: unknown;
   try {
-    const macroOutput = macro.call(null, context, ...args);
-    target.append(macroOutput);
-    return true;
+    returned = macro.call(null, context, ...args);
+    if (macro.name.includes("for")) {
+      for (const child of (returned as DocumentFragment).childNodes) {
+        console.log(child);
+      }
+    }
   } catch (error: unknown) {
+    target.append(output);
     if (error instanceof BreakSignal) {
       throw error;
     }
 
     const wrapped = error instanceof MacroError ? error : new MacroError(context, error);
-    target.append(renderError(wrapped));
-    return false;
+    renderError(target, wrapped);
   }
+
+  target.append(output);
+  if (typeof returned === "string" || returned instanceof Node) {
+    target.append(returned);
+  } else if (typeof returned !== "undefined") {
+    const error = new BrickError(
+      `Macros must return a string, a Node, or undefined.`,
+      context.passageName,
+      context.lineNumber,
+    );
+    renderError(target, error);
+  }
+}
+
+function findNextBreak(input: NodeTemplate[], from: number): number {
+  for (let i = from; i < input.length; i++) {
+    const nodeTemplate = input[i];
+    if (typeof nodeTemplate === "object" && nodeTemplate.type === "paragraph-break") {
+      return i;
+    }
+  }
+  return -1;
 }

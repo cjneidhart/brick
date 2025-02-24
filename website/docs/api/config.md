@@ -31,6 +31,25 @@ You can set this to `Infinity` to disable it.
 [`@while`]: ../macros#while
 [`@for`]: ../macros#for
 
+## `newlineMode`
+
+**Type** `"markdown"`, `"allBreaks"`, or `"noBreaks"`<br />
+**Default** `"markdown"`
+
+This controls how newlines are translated by Brick into HTML:
+
+- `"markdown"` (default):
+  Text is placed inside `<p>` (paragraph) elements.
+  Two or more consecutive newlines indicate a break between paragraphs.
+- `"allBreaks"`:
+  Every newline becomes a `<br>` (break) element.
+  This mode is close to how SugarCube and Harlowe treat newlines.
+- `"noBreaks"`:
+  All newlines are passed as-is into HTML,
+  and thus [HTML's whitespace rules] treat them as spaces.
+
+[HTML's whitespace rules]: https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Whitespace
+
 ## `preProcessText`
 
 **Type** `undefined` or `function (passage) -> string`<br/>

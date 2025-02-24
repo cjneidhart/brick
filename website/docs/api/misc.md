@@ -112,6 +112,9 @@ When the macro is called, it will call `func`.
 The first argument will be a special [`MacroContext`] object.
 All additional arguments will be the arguments received by the macro.
 
+To output content from within a macro,
+either return the output or append it to the context's `output` property.
+
 [`MacroContext`]: ./types#macro-context
 
 #### Signature
@@ -133,7 +136,6 @@ constants.replace = createMacro((context, selector) => {
   let element = document.querySelector(selector);
   element.innerHTML = "";
   context.render(element, context.content);
-  return "";
 });
 ```
 

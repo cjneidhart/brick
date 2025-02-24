@@ -16,6 +16,9 @@ and those methods take precedence over this passage.
 
 ### StoryData
 
+_This passage is hidden when using Twine._
+_To change a story's format in Twine, select "Story" -> "Details" at the top._
+
 This passage must be a JSON object.
 A full description of its properties is provided by the [IF Tech Foundation].
 
@@ -63,6 +66,9 @@ This element will be where Brick renders the active passage.
 
 ### StoryTitle
 
+_This passage is hidden when using Twine._
+_To change a story's title in Twine, click "Story" -> "Rename" at the top._
+
 This passage contains the title of the story.
 It must not be empty.
 Any markup in this passage will be ignored and considered plain text.
@@ -104,4 +110,3 @@ they cannot be linked to and cannot be retrieved by functions like
 Brick reserves any story variables beginning with `-brick`.
 Because of the leading hyphen, these variables are not accessible with the `$variable` syntax,
 so you generally do not have to worry about them.
-

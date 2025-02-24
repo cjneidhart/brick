@@ -86,23 +86,26 @@ You've @=("@print('included')") a passage.
 :: Loop Test
 Test \@while:
 @($i = 0)
+
 <ul>@while($i <= 10) {
   <li>List Item Number $i</li>
   @($i++)
 }</ul>
-\
+
 Test \@for:
+
 @($a = ["apple", "orange", "banana"])
 <ol>@for(_food of $a) {
   <li>_food</li>
 }</ol>
-\
+
 Test \@break:<br>
 Expected: 1 2 3 4 5<br>
 Actual:
 @(_i = 0)
 @while(true) {
   @(_i++)
+  @(console.log(_i))
   _i
   @if(_i >= 5) {
     @break

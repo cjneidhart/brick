@@ -36,6 +36,8 @@ class MacroContext {
   lineNumber: number;
   /** The scope of temporary variables this macro was called in */
   tempVars: Record<string, unknown>;
+  /** The macro's output */
+  output: DocumentFragment;
 
   /** Create a new scope for temporary variables that inherits from this macro's scope */
   createTempVariableScope(): Record<string, unknown>;

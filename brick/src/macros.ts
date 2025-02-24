@@ -9,14 +9,14 @@ import config from "./config";
 import * as engine from "./engine";
 import { BrickError, MacroError } from "./error";
 import { MacroChainSegment, NodeTemplate, Parser, PostscriptCall } from "./parser";
-import { render, renderPassage } from "./renderer";
+import { NewlineBehavior, render, renderPassage } from "./renderer";
 import { evalAssign, evalExpression, evalJavaScript } from "./scripting";
 import { makeElement, stringify, uniqueId } from "./util";
 
 export const BRICK_MACRO_SYMBOL = Symbol.for("BRICK_MACRO");
 
 export interface Macro {
-  (context: MacroContext, ...args: unknown[]): string | Node;
+  (context: MacroContext, ...args: unknown[]): string | Node | void;
   [BRICK_MACRO_SYMBOL]: true | { chainWith?: RegExp; isForMacro?: boolean; skipArgs?: boolean };
 }
 
@@ -112,12 +112,17 @@ export class MacroContext {
   lineNumber: number;
   /** The scope of temporary variables this macro was called in */
   tempVars: Record<string, unknown>;
+  /** How the renderer should handle newlines */
+  newlineMode: NewlineBehavior;
+  /** Output from calling the macro */
+  output: DocumentFragment;
 
   constructor(
     name: string,
     passageName: string,
     lineNumber: number,
     tempVars: Record<string, unknown>,
+    newlineMode: NewlineBehavior,
     parent?: MacroContext,
     content?: NodeTemplate[],
   ) {
@@ -127,6 +132,8 @@ export class MacroContext {
     this.passageName = passageName;
     this.lineNumber = lineNumber;
     this.parent = parent;
+    this.newlineMode = newlineMode;
+    this.output = document.createDocumentFragment();
   }
 
   get [Symbol.toStringTag]() {
@@ -146,8 +153,8 @@ export class MacroContext {
     });
   }
 
-  render(target: ParentNode, input: NodeTemplate[] | BrickError, scope?: Record<string, unknown>) {
-    return render(target, scope || this.createTempVariableScope(), input, this);
+  render(target: ParentNode, input: NodeTemplate[], scope?: Record<string, unknown>) {
+    return render(target, scope || this.createTempVariableScope(), input, this.newlineMode, this);
   }
 }
 
@@ -327,10 +334,7 @@ const whileMacro: Macro = (context, ...args) => {
     }
     iterations++;
     try {
-      const noErrors = content ? context.render(frag, content) : true;
-      if (!noErrors) {
-        break;
-      }
+      context.render(frag, content || []);
     } catch (error) {
       if (error instanceof BreakSignal) {
         if (error.type === "break") {
@@ -389,10 +393,7 @@ const forMacro: Macro = (context, ...args) => {
     const childScope = context.createTempVariableScope();
     childScope[varName] = loopVal;
     try {
-      const noErrors = content ? context.render(frag, content, childScope) : true;
-      if (!noErrors) {
-        break;
-      }
+      context.render(frag, content || [], childScope);
     } catch (error) {
       if (error instanceof BreakSignal) {
         if (error.type === "break") {
@@ -426,18 +427,18 @@ const checkBox: Macro = (context, ...args) => {
 
   const initValue = evalExpression(place, context.tempVars);
 
-  const input = makeElement("input", {
+  const inputElement = makeElement("input", {
     type: "checkbox",
     id: uniqueId(),
   });
-  input.checked = !!initValue;
-  input.addEventListener("change", () => evalAssign(place, input.checked, context.tempVars));
+  inputElement.checked = !!initValue;
+  inputElement.addEventListener("change", () => evalAssign(place, inputElement.checked, context.tempVars));
+  context.output.append(inputElement);
 
-  const labelElt = makeElement("label", { for: input.id }, labelText);
+  context.output.append(" ");
 
-  const div = makeElement("div", {}, input, " ", labelElt);
-
-  return div;
+  const labelElement = makeElement("label", { for: inputElement.id }, labelText);
+  context.output.append(labelElement);
 };
 checkBox[BRICK_MACRO_SYMBOL] = { skipArgs: true };
 
@@ -693,7 +694,6 @@ const macroMacro: Macro = (outerContext, ...outerArgs) => {
   const [macroName, ...prefixedParamNames] = outerArgs;
   const paramNames = prefixedParamNames.map((prefixed) => {
     const trimmed = prefixed.trim();
-    console.log(trimmed);
     const match = /^brickTempVarScope.(\p{ID_Start}\p{ID_Continue}*)$/u.exec(trimmed);
     if (!match) {
       if (!trimmed.startsWith("_")) {

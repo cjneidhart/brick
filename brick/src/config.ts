@@ -5,14 +5,19 @@
  * behavior.
  */
 
+/** How to handle newlines */
+export type NewlineMode = "markdown" | "allBreaks" | "noBreaks";
+
 const config: {
   historyLength: number;
   maxLoopIterations: number;
+  newlineMode: NewlineMode;
   preProcessText?: Function;
   stream: boolean;
 } = {
   historyLength: 100,
   maxLoopIterations: 1000,
+  newlineMode: "markdown",
   preProcessText: undefined,
   stream: false,
 };
@@ -42,6 +47,18 @@ export default {
       throw new TypeError("Config.maxLoopIterations must be a positive integer");
     }
     config.maxLoopIterations = value;
+  },
+
+  get newlineMode(): NewlineMode {
+    return config.newlineMode;
+  },
+
+  set newlineMode(value: unknown) {
+    if (value === "markdown" || value === "allBreaks" || value === "noBreaks") {
+      config.newlineMode = value;
+    } else {
+      throwTypeError("config.newlineMode", `"markdown", "allBreaks", or "noBreaks"`, value);
+    }
   },
 
   get preProcessText(): Function | undefined {

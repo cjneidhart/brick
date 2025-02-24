@@ -3,6 +3,24 @@
 This project follows semantic versioning.
 Since it has not yet reached `1.0.0`, any version may contain breaking changes.
 
+## Unreleased
+
+### Added
+
+- `config.newlineMode` allows users to change how newlines are translated into HTML:
+  - `markdown` (default): Text is placed inside `<p>` elements.
+    Two or more consecutive newlines separates paragraphs.
+  - `allBreaks`: All newlines are converted into `<br>` elements.
+  - `noBreaks`: Newlines are passed straight to HTML, which treats them as spaces.
+
+### Changed
+
+- Wiki-style links cannot contain newlines.
+
+### Fixed
+
+- RegExp literals cannot contain newlines.
+
 ## [0.4.1] - 2025-02-13
 
 ### Added

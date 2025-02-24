@@ -6,10 +6,14 @@ export class BrickError extends Error {
   passage: string;
   /** The line number of that passage */
   lineNumber: number;
+  /** True if the error has already been displayed */
+  displayed: boolean;
+
   constructor(message: string, passage: string, lineNumber: number) {
     super(`in “${passage}” at line ${lineNumber}: ${message}`);
     this.passage = passage;
     this.lineNumber = lineNumber;
+    this.displayed = false;
   }
 }
 

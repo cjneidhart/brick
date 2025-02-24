@@ -18,7 +18,7 @@ const RE = {
     identifier: /\p{ID_Start}[$\p{ID_Continue}]*/uy,
     number: /[0-9][0-9_]*/y,
     operator: /[!%&*+-<=>^|~]+/y,
-    regexp: /(?:[^\\[/]|\\[^]|\[(?:[^\\\]]|\\[^])*\])*\/(?:$|\p{ID_Continue})*/uy,
+    regexp: /(?:[^\\[/]|\\.|\[(?:[^\\\]]|\\.)*\])*\/\p{ID_Continue}*/uy,
     stringDouble: /"(?:[^\\"\r\n]|\\[^])*"/y,
     stringSingle: /'(?:[^\\'\r\n]|\\[^])*'/y,
     normalInTemplateString: /(?:[^`$\\]|\\[^]|\$(?!\{))*/y,
@@ -27,11 +27,12 @@ const RE = {
   macroBodyStart: /\s*\{/y,
   macroName: /[-\p{ID_Start}][-\p{ID_Continue}]*|=/uy,
   maybeElementClose: /\/[-\p{ID_Continue}]+(?: *>)?/uy,
-  normalChars: /[^[\\$_?<@/}]+/y,
+  newlines: /\s*[\r\n]\s*/y,
+  normalChars: /[^[\\$_?<@/}\r\n]+/y,
   singleChar: /[^]/y,
   styleElement: /([^]*?)<\/style>/y,
   whitespace: /\s*/y,
-  wikiLink: /((?:[^\\\]]|\\.)*)\]\]/y,
+  wikiLink: /((?:[^\\\]\r\n]|\\.)*)\]\]/y,
 };
 
 /** Tags which are not allowed to be descended from `<body>` */
@@ -58,6 +59,11 @@ const VOID_TAGS = [
 interface NodeTemplateBase {
   passageName: string;
   lineNumber: number;
+}
+
+export interface ParagraphBreak extends NodeTemplateBase {
+  type: "paragraph-break";
+  raw: string;
 }
 
 export interface ElementTemplate extends NodeTemplateBase {
@@ -118,7 +124,14 @@ export interface MacroChainSegment {
   body: NodeTemplate[];
 }
 
-export type NodeTemplate = string | ElementTemplate | Expr | MacroChain | LinkBox | ErrorMessage;
+export type NodeTemplate =
+  | string
+  | ParagraphBreak
+  | ElementTemplate
+  | Expr
+  | MacroChain
+  | LinkBox
+  | ErrorMessage;
 
 export class Parser {
   input: string;
@@ -127,7 +140,13 @@ export class Parser {
   lineNumber: number;
 
   constructor(source: string, passageName: string, lineNumber?: number) {
-    this.input = source;
+    // Convert all line breaks to \n and remove trailing whitespace
+    this.input = source
+      .replaceAll("\r\n", "\n")
+      .replaceAll("\r", "\n")
+      // EcmaScript whitespace definition
+      // U+0020 (SPACE) and U+00A0 (NO-BREAK SPACE) are part of "Space_Separator"
+      .replaceAll(/[\t\v\f\ufeff\p{Space_Separator}]+\n/ug, "\n");
     this.index = 0;
     this.passageName = passageName;
     this.lineNumber = lineNumber || 1;
@@ -170,18 +189,7 @@ export class Parser {
     throw new BrickError(message, this.passageName, this.lineNumber);
   }
 
-  parse(): NodeTemplate[] | BrickError {
-    try {
-      return this.parseUnsafe();
-    } catch (error) {
-      if (!(error instanceof BrickError)) {
-        throw error;
-      }
-      return error;
-    }
-  }
-
-  parseUnsafe(closer?: RegExp): NodeTemplate[] {
+  parse(closer?: RegExp): NodeTemplate[] {
     const output: NodeTemplate[] = [];
 
     let prevIndex = -1;
@@ -234,15 +242,13 @@ export class Parser {
           }
           break;
 
-        case "$": {
+        case "$":
           output.push(this.parseExpr("story"));
           break;
-        }
 
-        case "_": {
+        case "_":
           output.push(this.parseExpr("temp"));
           break;
-        }
 
         case "[":
           if (this.lookahead() === "[") {
@@ -278,6 +284,23 @@ export class Parser {
         case "}":
           output.push("}");
           break;
+
+        case "\r":
+        case "\n": {
+          const lineNumber = this.lineNumber + (c === "\n" ? -1 : 0);
+          const match = this.consume(RE.newlines);
+          if (match) {
+            output.push({
+              type: "paragraph-break",
+              lineNumber,
+              passageName: this.passageName,
+              raw: c + match[0],
+            });
+          } else {
+            output.push(c);
+          }
+          break;
+        }
 
         case undefined:
           // end of input
@@ -381,7 +404,7 @@ export class Parser {
       }
     }
 
-    const content = this.consume(RE.macroBodyStart) ? this.parseUnsafe(/\}/y) : undefined;
+    const content = this.consume(RE.macroBodyStart) ? this.parse(/\}/y) : undefined;
 
     return {
       type: "expr",
@@ -407,7 +430,7 @@ export class Parser {
     if (!this.consume(RE.macroBodyStart)) {
       throw "error";
     }
-    const firstBody = this.parseUnsafe(/\}/y);
+    const firstBody = this.parse(/\}/y);
     let indexAfterRBrace = this.index;
 
     const blocks = [{ name: firstName, args: firstArgs, body: firstBody }];
@@ -433,7 +456,7 @@ export class Parser {
 
       let body: NodeTemplate[] = [];
       if (this.consume(RE.macroBodyStart)) {
-        body = this.parseUnsafe(/\}/y);
+        body = this.parse(/\}/y);
         indexAfterRBrace = this.index;
       }
 
@@ -462,7 +485,7 @@ export class Parser {
     }
     const raw = this.input.slice(argsStartIdx, this.index);
 
-    const body = this.consume(RE.macroBodyStart) ? this.parseUnsafe(/\}/y) : undefined;
+    const body = this.consume(RE.macroBodyStart) ? this.parse(/\}/y) : undefined;
 
     return {
       type: "expr",
@@ -489,7 +512,8 @@ export class Parser {
       );
     }
 
-    const [, name, id, className] = longName;
+    let [, name, id, className] = longName;
+    name = name.toLowerCase();
 
     const attributes = new Map<string, string>();
     const evalAttributes = new Map<string, string>();
@@ -546,7 +570,7 @@ export class Parser {
     } else if (VOID_TAGS.includes(name)) {
       content = [];
     } else {
-      content = this.parseUnsafe(new RegExp(`</${name}>`, "y"));
+      content = this.parse(new RegExp(`</${name}>`, "y"));
     }
 
     if (BANNED_TAGS.includes(name)) {

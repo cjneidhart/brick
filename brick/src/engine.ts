@@ -1,4 +1,5 @@
 import config from "./config";
+import { BrickError } from "./error";
 import { Passage } from "./passages";
 import * as passages from "./passages";
 import { renderPassage } from "./renderer";
@@ -225,7 +226,13 @@ function renderActive() {
   const article = makeElement("article", {
     class: "brick-passage brick-active-passage brick-transparent",
   });
-  renderPassage(article, tempVariables, passageName);
+  try {
+    renderPassage(article, tempVariables, passageName);
+  } catch (error) {
+    if (!(error instanceof BrickError && error.displayed)) {
+      throw error;
+    }
+  }
 
   const storyHeader = passages.get("StoryHeader");
   const storyFooter = passages.get("StoryFooter");

@@ -3,7 +3,8 @@ import { constants, storyVariables } from "./engine";
 import { BrickError, DynamicAttributeError, ExprError, MacroError } from "./error";
 import { BreakSignal, BRICK_MACRO_SYMBOL, isMacro, Macro, MacroContext } from "./macros";
 import { ElementTemplate, Expr, NodeTemplate, Parser, PostscriptCall } from "./parser";
-import { Passage, get as getPassage } from "./passages";
+import * as passages from "./passages";
+import { Passage } from "./passages";
 import { evalExpression } from "./scripting";
 import { countSubstrings, makeElement, numberRange, stringify } from "./util";
 
@@ -79,25 +80,23 @@ export function renderPassage(
   passage: string | Passage,
 ): void {
   if (typeof passage === "string") {
-    const psg = getPassage(passage);
-    if (psg) {
-      renderPassage(target, scope, psg);
-      return;
-    } else {
+    let psg: Passage;
+    try {
+      psg = passages.getOrThrow(passage);
+    } catch (error) {
       target.innerHTML = "";
-      target.append(
-        makeElement("span", { class: "brick-error" }, `No passage named "${passage}" found`),
-      );
-      throw new Error(`No passage named "${passage}" found`);
+      target.append(makeElement("span", { class: "brick-error" }, stringify(error)));
+      throw error;
     }
+    renderPassage(target, scope, psg);
+  } else {
+    target.innerHTML = "";
+    target.classList.add(`psg-${passage.slug}`);
+    target.dataset.name = passage.name;
+    target.dataset.tags = passage.tags.join(" ");
+
+    render(target, scope, passage);
   }
-
-  target.innerHTML = "";
-  target.classList.add(`psg-${passage.slug}`);
-  target.dataset.name = passage.name;
-  target.dataset.tags = passage.tags.join(" ");
-
-  render(target, scope, passage);
 }
 
 let recursionCount = 1000;
@@ -144,7 +143,6 @@ function renderRaw(
   parentContext?: MacroContext,
 ): void {
   if (input instanceof Passage) {
-    // TODO rewrite this once there's a `passage.getOrThrow` function
     const text = config.preProcessText ? config.preProcessText(input) : input.content;
     if (typeof text !== "string") {
       throw new TypeError(`Config.preProcessText returned a ${typeof text}, expected a string`);

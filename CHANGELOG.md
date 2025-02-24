@@ -13,6 +13,7 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
   - `allBreaks`: All newlines are converted into `<br>` elements.
   - `noBreaks`: Newlines are passed straight to HTML, which treats them as spaces.
 - `*` and `**` can be used to create `<em>` and `<strong>` respectively, like in Markdown.
+- `passages.getOrThrow`, to generate a helpful error message when a passage can't be found.
 
 ### Changed
 

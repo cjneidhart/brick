@@ -227,6 +227,20 @@ export function stringify(value?: unknown): string {
   return String(value);
 }
 
+export function closestString(target: string, guesses: string[], threshold?: number) {
+  threshold ??= target.length * 0.4;
+  let bestDistance = Infinity;
+  let bestGuess: string | undefined = undefined;
+  for (const guess of guesses) {
+    const distance = levenshtein(target, guess);
+    if (distance < threshold && distance < bestDistance) {
+      bestDistance = distance;
+      bestGuess = guess;
+    }
+  }
+  return bestGuess;
+}
+
 /** Return a Proxy around `obj`. When an unknown property of `obj` is read
  * a warning will be issued. */
 export function addTypoChecking<T extends object>(
@@ -250,16 +264,8 @@ export function addTypoChecking<T extends object>(
         prototype = Object.getPrototypeOf(prototype);
       }
 
-      const distances = allKeys.map((name) => ({ name, distance: levenshtein(prop, name) }));
-      const { name: bestGuess } = distances.reduce(
-        (record, current) => {
-          return current.distance <= prop.length * 0.4 && current.distance < record.distance
-            ? current
-            : record;
-        },
-        { name: undefined as string | undefined, distance: Infinity },
-      );
-      if (distances.length > 0) {
+      const bestGuess = closestString(prop, allKeys);
+      if (bestGuess) {
         console.warn(messageGenerator(prop, bestGuess));
       }
 

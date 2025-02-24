@@ -1,4 +1,4 @@
-import { slugify } from "./util";
+import { closestString, slugify } from "./util";
 
 export class Passage {
   readonly name: string;
@@ -148,6 +148,19 @@ export function find(predicate: (passage: Passage) => unknown): Passage | undefi
 /** @returns the passage with the given name */
 export function get(name: string): Passage | undefined {
   return passagesByName.get(name.trim());
+}
+
+export function getOrThrow(name: string): Passage {
+  const passage = get(name);
+  if (passage) {
+    return passage;
+  } else {
+    const bestGuess = closestString(name, Array.from(passagesByName.keys()));
+    const message = bestGuess
+      ? `No passage named "${name}" found. Did you mean "${bestGuess}"?`
+      : `No passage named "${name}" found.`;
+    throw new Error(message);
+  }
 }
 
 /** @returns the passage that should be used as the story start */

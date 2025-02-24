@@ -56,6 +56,17 @@ const { passages } = Brick;
 let alley = passages.get("A Dark Alley");
 ```
 
+### `getOrThrow`
+
+Returns the passage with the given name.
+If the passage does not exist, throws an error with a similarly-named passage.
+
+#### Signature
+
+```ts
+function getOrThrow(name: string): Passage;
+```
+
 ### `withTag`
 
 Given a tag name, returns all passages with the given tag.

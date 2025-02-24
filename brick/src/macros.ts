@@ -7,7 +7,7 @@
 
 import config from "./config";
 import * as engine from "./engine";
-import { BrickError, MacroError } from "./error";
+import { MacroError } from "./error";
 import { MacroChainSegment, NodeTemplate, Parser, PostscriptCall } from "./parser";
 import { NewlineBehavior, render, renderPassage } from "./renderer";
 import { evalAssign, evalExpression, evalJavaScript } from "./scripting";
@@ -16,7 +16,7 @@ import { makeElement, stringify, uniqueId } from "./util";
 export const BRICK_MACRO_SYMBOL = Symbol.for("BRICK_MACRO");
 
 export interface Macro {
-  (context: MacroContext, ...args: unknown[]): string | Node | void;
+  (context: MacroContext, ...args: unknown[]): string | Node | undefined;
   [BRICK_MACRO_SYMBOL]: true | { chainWith?: RegExp; isForMacro?: boolean; skipArgs?: boolean };
 }
 
@@ -432,13 +432,16 @@ const checkBox: Macro = (context, ...args) => {
     id: uniqueId(),
   });
   inputElement.checked = !!initValue;
-  inputElement.addEventListener("change", () => evalAssign(place, inputElement.checked, context.tempVars));
+  inputElement.addEventListener("change", () => {
+    evalAssign(place, inputElement.checked, context.tempVars);
+  });
   context.output.append(inputElement);
 
   context.output.append(" ");
 
   const labelElement = makeElement("label", { for: inputElement.id }, labelText);
   context.output.append(labelElement);
+  return undefined;
 };
 checkBox[BRICK_MACRO_SYMBOL] = { skipArgs: true };
 

@@ -66,6 +66,8 @@ Now let's try a link: @link('Passage 2', 'Passage 2') or maybe [[Passage 2]]
 
 [[@macro test]]
 
+[[Markdown em/strong test]]
+
 Here's a big block:
 <div style="height: 1000px; background-color: green; width: 100px;">HELLO</div>
 
@@ -306,3 +308,11 @@ This page sets <code>\_x</code> to <code>5</code>.
 }
 
 _speechBubble("Guard", "Come with me. The King requests your presence.")
+
+
+:: Markdown em/strong test
+[[Start]]
+
+go*italic**strong**notstrong*
+
+thisline*plain**

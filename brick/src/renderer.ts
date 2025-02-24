@@ -126,13 +126,7 @@ export function render(
     recursionCount--;
     const newlines =
       newlineMode || (config.newlineMode === "markdown" ? "md-block" : config.newlineMode);
-    renderRaw(
-      target,
-      scope,
-      input,
-      newlines,
-      parentContext,
-    );
+    renderRaw(target, scope, input, newlines, parentContext);
   } finally {
     recursionCount++;
     if (recursionCount >= 1000) {
@@ -271,9 +265,9 @@ function renderTemplate(
       case "md-block":
         break;
 
-      case "md-inline": {
+      case "md-inline":
         target.append(makeElement("br"), makeElement("br"));
-      }
+        break;
 
       case "noBreaks":
         target.append(template.raw);
@@ -521,10 +515,10 @@ function renderElement(
   parentContext?: MacroContext,
 ): void {
   const element = makeElement(template.name);
-  for (const [key, value] of template.attributes) {
+  for (const [key, value] of template.attributes ?? []) {
     element.setAttribute(key, value);
   }
-  for (const [key, script] of template.evalAttributes) {
+  for (const [key, script] of template.evalAttributes ?? []) {
     try {
       const value = evalExpression(script, scope);
       if (key.startsWith("on") && key.length >= 3 && typeof value === "function") {
@@ -539,7 +533,6 @@ function renderElement(
       }
       const wrapped = new DynamicAttributeError(error, key, template);
       renderError(target, wrapped);
-      throw wrapped;
     }
   }
   try {
@@ -559,11 +552,6 @@ function renderMacro(
   let returned: unknown;
   try {
     returned = macro.call(null, context, ...args);
-    if (macro.name.includes("for")) {
-      for (const child of (returned as DocumentFragment).childNodes) {
-        console.log(child);
-      }
-    }
   } catch (error: unknown) {
     target.append(output);
     if (error instanceof BreakSignal) {

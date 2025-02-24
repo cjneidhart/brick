@@ -26,10 +26,16 @@ const RE = {
   macroArgsStart: / *\(/y,
   macroBodyStart: /\s*\{/y,
   macroName: /[-\p{ID_Start}][-\p{ID_Continue}]*|=/uy,
+  markdown: {
+    whitespace: /[\p{gc=Zs}\t\n\f\r]/uy,
+    punctuation: /[\p{gc=P}\p{gc=S}]/uy,
+    punctuationOrWhitespace: /[\p{gc=P}\p{gc=S}\p{gc=Zs}\t\n\f\r]/uy,
+  },
   maybeElementClose: /\/[-\p{ID_Continue}]+(?: *>)?/uy,
   newlines: /\s*[\r\n]\s*/y,
-  normalChars: /[^[\\$_?<@/}\r\n]+/y,
+  normalChars: /[^[\\$_?<@/}\r\n*]+/y,
   singleChar: /[^]/y,
+  stars: /\**/y,
   styleElement: /([^]*?)<\/style>/y,
   whitespace: /\s*/y,
   wikiLink: /((?:[^\\\]\r\n]|\\.)*)\]\]/y,
@@ -69,8 +75,8 @@ export interface ParagraphBreak extends NodeTemplateBase {
 export interface ElementTemplate extends NodeTemplateBase {
   type: "element";
   name: string;
-  attributes: Map<string, string>;
-  evalAttributes: Map<string, string>;
+  attributes?: Map<string, string>;
+  evalAttributes?: Map<string, string>;
   content: NodeTemplate[];
 }
 
@@ -133,6 +139,16 @@ export type NodeTemplate =
   | LinkBox
   | ErrorMessage;
 
+interface Delimiter {
+  length: number;
+  originalLength: number;
+  canOpen: boolean;
+  canClose: boolean;
+  originalCanClose: boolean;
+  /** Index into the output array */
+  index: number;
+}
+
 export class Parser {
   input: string;
   index: number;
@@ -146,7 +162,7 @@ export class Parser {
       .replaceAll("\r", "\n")
       // EcmaScript whitespace definition
       // U+0020 (SPACE) and U+00A0 (NO-BREAK SPACE) are part of "Space_Separator"
-      .replaceAll(/[\t\v\f\ufeff\p{Space_Separator}]+\n/ug, "\n");
+      .replaceAll(/[\t\v\f\ufeff\p{Space_Separator}]+\n/gu, "\n");
     this.index = 0;
     this.passageName = passageName;
     this.lineNumber = lineNumber || 1;
@@ -191,6 +207,7 @@ export class Parser {
 
   parse(closer?: RegExp): NodeTemplate[] {
     const output: NodeTemplate[] = [];
+    const delimiters: Delimiter[] = [];
 
     let prevIndex = -1;
     outer: while (this.index < this.input.length) {
@@ -285,6 +302,13 @@ export class Parser {
           output.push("}");
           break;
 
+        case "*": {
+          const delimiter = this.createDelimiter(output.length);
+          delimiters.push(delimiter);
+          output.push("*".repeat(delimiter.length));
+          break;
+        }
+
         case "\r":
         case "\n": {
           const lineNumber = this.lineNumber + (c === "\n" ? -1 : 0);
@@ -315,7 +339,111 @@ export class Parser {
       this.error(`Failed to match regex "${closer.source}"`);
     }
 
+    // Transform "*" delimiters into <em> and <strong>
+    while (true) {
+      // Find the first closer in the list
+      const closerIndex = delimiters.findIndex((delimiter) => {
+        return delimiter.canClose && delimiter.length > 0;
+      });
+      if (closerIndex === -1) {
+        // If we don't find any closers, we're done
+        break;
+      }
+      const closer = delimiters[closerIndex];
+
+      // `openerIndex` and `closerIndex` are indices into `delimiters`
+      // `opener.index` and `closer.index` are indices into `output`
+      // Sorry :)
+
+      // Search backwards for an opener
+      let openerIndex = closerIndex - 1;
+      let opener;
+      while (openerIndex >= 0) {
+        opener = delimiters[openerIndex];
+        if (opener.canOpen && opener.length > 0) {
+          const isOddMatch =
+            (opener.originalCanClose || closer.canOpen) &&
+            closer.originalLength % 3 !== 0 &&
+            (opener.originalLength + closer.originalLength) % 3 === 0;
+          if (!isOddMatch) {
+            break;
+          }
+        }
+        openerIndex--;
+      }
+      if (!opener || openerIndex === -1) {
+        // If an opener isn't found, we know this delimiter is not a closer
+        closer.canClose = false;
+        continue;
+      }
+
+      const isStrong = closer.length >= 2 && opener.length >= 2;
+      const delimiterLength = isStrong ? 2 : 1;
+
+      // Shorten the delimiters and their corresponding strings in the output
+      opener.length -= delimiterLength;
+      closer.length -= delimiterLength;
+      output[opener.index] = (output[opener.index] as string).slice(delimiterLength);
+      output[closer.index] = (output[closer.index] as string).slice(delimiterLength);
+
+      // Wrap all templates between the delimiter in an <em> or <strong>
+      const children = output.slice(opener.index + 1, closer.index);
+      const template: ElementTemplate = {
+        type: "element",
+        content: children,
+        lineNumber: 0,
+        passageName: this.passageName,
+        name: isStrong ? "strong" : "em",
+      };
+      output.splice(opener.index + 1, children.length, template);
+
+      // Adjust the indices for any delimiters after the opener, since output's length has changed
+      for (const delimiter of delimiters.slice(openerIndex + 1)) {
+        delimiter.index -= children.length - 1;
+      }
+    }
+
     return output;
+  }
+
+  createDelimiter(indexIntoOutput: number): Delimiter {
+    const beforeIndex = this.index - 2;
+    const length = 1 + (this.consume(RE.stars)?.[0].length ?? 0);
+    const afterIndex = this.index;
+    let charBefore = this.input[beforeIndex] ?? " ";
+    const charBeforeCodePoint = charBefore.codePointAt(0);
+    // If the prior character is a surrogate, retrieve the whole pair
+    if (
+      typeof charBeforeCodePoint === "number" &&
+      charBeforeCodePoint >= 0xd800 &&
+      charBeforeCodePoint <= 0xdfff
+    ) {
+      charBefore = this.input.slice(beforeIndex - 1, beforeIndex + 1);
+    }
+
+    const codePointAfter = this.input.codePointAt(afterIndex);
+    const charAfter =
+      typeof codePointAfter === "number" ? String.fromCodePoint(codePointAfter) : " ";
+
+    const { whitespace, punctuation, punctuationOrWhitespace } = RE.markdown;
+
+    const canOpen =
+      !whitespace.test(charAfter) &&
+      (!punctuation.test(charAfter) ||
+        (punctuation.test(charAfter) && punctuationOrWhitespace.test(charBefore)));
+    const canClose =
+      !whitespace.test(charBefore) &&
+      (!punctuation.test(charBefore) ||
+        (punctuation.test(charBefore) && punctuationOrWhitespace.test(charAfter)));
+
+    return {
+      index: indexIntoOutput,
+      canClose,
+      canOpen,
+      length,
+      originalLength: length,
+      originalCanClose: canClose,
+    };
   }
 
   parseExpr(store: "constants" | "story" | "temp"): Expr | MacroChain {
@@ -512,15 +640,17 @@ export class Parser {
       );
     }
 
-    let [, name, id, className] = longName;
-    name = name.toLowerCase();
+    const [, casedName, id, className] = longName;
+    const name = casedName.toLowerCase();
 
-    const attributes = new Map<string, string>();
-    const evalAttributes = new Map<string, string>();
+    let attributes: Map<string, string> | undefined = undefined;
+    let evalAttributes: Map<string, string> | undefined = undefined;
     if (id) {
+      attributes ??= new Map();
       attributes.set("id", id.slice(1));
     }
     if (className.length) {
+      attributes ??= new Map();
       attributes.set("class", className.replace(".", " ").trim());
     }
 
@@ -529,9 +659,10 @@ export class Parser {
       let match = this.consume(RE.htmlAttr);
       if (match) {
         const [_, key, value] = match;
-        if (attributes.has(key) || evalAttributes.has(key)) {
+        if (attributes?.has(key) || evalAttributes?.has(key)) {
           console.warn(`Ignoring duplicate attribute '${key}`);
         } else {
+          attributes ??= new Map();
           attributes.set(key, value);
         }
       } else {
@@ -549,9 +680,10 @@ export class Parser {
             this.error(`No closing paren on dynamic attribute "${key}"`);
           }
           this.index++;
-          if (attributes.has(key) || evalAttributes.has(key)) {
+          if (attributes?.has(key) || evalAttributes?.has(key)) {
             console.warn(`Ignoring duplicate attribute '${key}`);
           } else {
+            evalAttributes ??= new Map();
             evalAttributes.set(key, value);
           }
         } else {

@@ -12,6 +12,7 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
     Two or more consecutive newlines separates paragraphs.
   - `allBreaks`: All newlines are converted into `<br>` elements.
   - `noBreaks`: Newlines are passed straight to HTML, which treats them as spaces.
+- `*` and `**` can be used to create `<em>` and `<strong>` respectively, like in Markdown.
 
 ### Changed
 

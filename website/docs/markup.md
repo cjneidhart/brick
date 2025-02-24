@@ -55,6 +55,18 @@ Your weapons are a _weapons[0] and a _weapons[1].
 Your Strength is $player.strength.
 ```
 
+## Emphasis
+
+`*` and `**` can be used to create italic or bold text, respectively.
+
+```brick
+*This text will be italicized.*
+
+**This line will be bold.**
+
+***This line will be bold and italic.***
+```
+
 ## Links (Wiki-style)
 
 Links to other passages can be created using `[[Double Brackets]]`.

@@ -16,7 +16,8 @@ import { makeElement, stringify, uniqueId } from "./util";
 export const BRICK_MACRO_SYMBOL = Symbol.for("BRICK_MACRO");
 
 export interface Macro {
-  (context: MacroContext, ...args: unknown[]): string | Node | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
+  (context: MacroContext, ...args: unknown[]): string | Node | void;
   [BRICK_MACRO_SYMBOL]: true | { chainWith?: RegExp; isForMacro?: boolean; skipArgs?: boolean };
 }
 
@@ -45,7 +46,7 @@ export class BreakSignal {
 }
 
 export function createMacro(
-  macroFunc: (context: MacroContext, ...args: unknown[]) => string | Node,
+  macroFunc: (...args: Parameters<Macro>) => ReturnType<Macro>,
   options?: { chainWith?: RegExp; isForMacro?: boolean; skipArgs?: boolean },
 ): Macro {
   const m: Macro = (ctx, ...args) => macroFunc(ctx, ...args);
@@ -724,14 +725,23 @@ const macroMacro: Macro = (outerContext, ...outerArgs) => {
       });
     }
 
-    const frag = document.createDocumentFragment();
-    context.render(frag, content, childScope);
-
-    return frag;
+    try {
+      context.render(context.output, content, childScope);
+    } finally {
+      // Trim whitespace from the output.
+      // Whitespace inside Element nodes will be ignored by HTML,
+      // so only remove whitespace inside top-level Text nodes.
+      context.output.normalize();
+      const { firstChild, lastChild } = context.output;
+      if (firstChild instanceof Text) {
+        firstChild.textContent = firstChild.textContent.trimStart();
+      }
+      if (lastChild instanceof Text) {
+        lastChild.textContent = lastChild.textContent.trimEnd();
+      }
+    }
   });
 
   evalAssign(macroName, newMacro, outerContext.tempVars);
-
-  return "";
 };
 macroMacro[BRICK_MACRO_SYMBOL] = { skipArgs: true };

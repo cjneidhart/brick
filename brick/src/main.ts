@@ -18,6 +18,9 @@ declare global {
   interface Element {
     textContent: string;
   }
+  interface Text {
+    textContent: string;
+  }
 }
 
 async function init() {

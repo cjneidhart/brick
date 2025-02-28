@@ -24,6 +24,7 @@ Since it has not yet reached `1.0.0`, any version may contain breaking changes.
   which is currently outside the parser's capabilities.
   To avoid this ambiguity, either wrap the object initializer in parentheses
   or place a semicolon after the block statement.
+- Macros created by `@macro` now remove leading and trailing whitespace from their output.
 
 ### Fixed
 

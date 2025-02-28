@@ -66,6 +66,12 @@ export const BrickPublic = {
       }
       return passages.get(name);
     },
+    getOrThrow(name: unknown): passages.Passage {
+      if (typeof name !== "string") {
+        throw new Error("passages.get: expected a string");
+      }
+      return passages.getOrThrow(name);
+    },
     withTag(tag: unknown): passages.Passage[] {
       if (typeof tag !== "string") {
         throw new Error("passages.withTag: expected a string");

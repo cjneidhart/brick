@@ -150,6 +150,10 @@ export function get(name: string): Passage | undefined {
   return passagesByName.get(name.trim());
 }
 
+/**
+ * Return the passage with the given name.
+ * If such a passage does not exist, throw an error.
+ */
 export function getOrThrow(name: string): Passage {
   const passage = get(name);
   if (passage) {

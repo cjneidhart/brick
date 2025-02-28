@@ -162,29 +162,38 @@ describe("Basic Functionality", function () {
     await brickInit();
     const active = getActivePassage();
     expect(active).to.have.class("psg-test-start");
-    expect(active).to.have.length(0);
-    expect(active).to.have.text("Hello World!");
+    expect(active).to.have.length(1);
+    const paragraph = active.children[0];
+    expect(paragraph.tagName).to.be.equal("P");
+    expect(paragraph).to.have.length(0);
+    expect(paragraph).to.have.text("Hello World!");
   });
 
   it("leaves single newlines in the HTML", async function () {
     startPassage.textContent = "Hello\nWorld!";
     await brickInit();
     const active = getActivePassage();
-    expect(active).to.have.length(0);
-    expect(active).to.have.text("Hello\nWorld!");
+    expect(active).to.have.length(1);
+    const paragraph = active.children[0];
+    expect(paragraph.tagName).to.be.equal("P");
+    expect(paragraph).to.have.length(0);
+    expect(paragraph).to.have.text("Hello\nWorld!");
   });
 
-  it("replaces adjacent newlines with <br><br>", async function () {
+  it("replaces adjacent newlines with paragraph breaks", async function () {
     startPassage.textContent = "Hello\n\nWorld!";
     await brickInit();
     const active = getActivePassage();
     expect(active).to.have.length(2);
-    expect(active.childNodes[0]).to.be.instanceOf(Text);
-    expect(active.childNodes[0]).to.have.text("Hello");
-    expect(active.childNodes[1]).to.be.instanceOf(HTMLBRElement);
-    expect(active.childNodes[2]).to.be.instanceOf(HTMLBRElement);
-    expect(active.childNodes[3]).to.be.instanceOf(Text);
-    expect(active.childNodes[3]).to.have.text("World!");
+    const [firstParagraph, secondParagraph] = active.children;
+
+    expect(firstParagraph.tagName).to.be.equal("P");
+    expect(firstParagraph).to.have.length(0);
+    expect(firstParagraph).to.have.text("Hello");
+
+    expect(secondParagraph.tagName).to.be.equal("P");
+    expect(secondParagraph).to.have.length(0);
+    expect(secondParagraph).to.have.text("World!");
   });
 });
 
@@ -193,14 +202,20 @@ describe("Wiki-style links", function () {
     startPassage.textContent = `[[banana]]`;
     storyData.append(createPassage("banana"));
     await brickInit();
+
     let active = getActivePassage();
     expect(active).to.have.length(1);
-    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
-    expect(active.children[0]).to.have.text("banana");
-    (active.children[0] as HTMLElement).click();
+    let paragraph = active.children[0];
+    expect(paragraph.tagName).to.be.equal("P");
+    expect(paragraph).to.have.length(1);
+    const button = paragraph.children[0];
+    expect(button).to.be.instanceOf(HTMLButtonElement);
+    expect(button).to.have.text("banana");
+    (button as HTMLElement).click();
     await sleep(5);
+
     active = getActivePassage();
-    expect(active).to.have.length(0);
+    expect(active).to.have.length(1);
     expect(active).to.have.text(`Test passage "banana"`);
   });
 
@@ -208,14 +223,20 @@ describe("Wiki-style links", function () {
     startPassage.textContent = `[[daisy->eagle]]`;
     storyData.append(createPassage("eagle"));
     await brickInit();
+
     let active = getActivePassage();
     expect(active).to.have.length(1);
-    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
-    expect(active.children[0]).to.have.text("daisy");
-    (active.children[0] as HTMLElement).click();
+    let paragraph = active.children[0];
+    expect(paragraph.tagName).to.be.equal("P");
+    expect(paragraph).to.have.length(1);
+    const button = paragraph.children[0];
+    expect(button).to.be.instanceOf(HTMLButtonElement);
+    expect(button).to.have.text("daisy");
+    (button as HTMLElement).click();
     await sleep(5);
+
     active = getActivePassage();
-    expect(active).to.have.length(0);
+    expect(active).to.have.length(1);
     expect(active).to.have.text(`Test passage "eagle"`);
   });
 
@@ -223,14 +244,20 @@ describe("Wiki-style links", function () {
     startPassage.textContent = `[[fallacy<-glob]]`;
     storyData.append(createPassage("fallacy"));
     await brickInit();
+
     let active = getActivePassage();
     expect(active).to.have.length(1);
-    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
-    expect(active.children[0]).to.have.text("glob");
-    (active.children[0] as HTMLElement).click();
+    let paragraph = active.children[0];
+    expect(paragraph.tagName).to.be.equal("P");
+    expect(paragraph).to.have.length(1);
+    const button = paragraph.children[0];
+    expect(button).to.be.instanceOf(HTMLButtonElement);
+    expect(button).to.have.text("glob");
+    (button as HTMLElement).click();
     await sleep(5);
+
     active = getActivePassage();
-    expect(active).to.have.length(0);
+    expect(active).to.have.length(1);
     expect(active).to.have.text(`Test passage "fallacy"`);
   });
 
@@ -238,14 +265,20 @@ describe("Wiki-style links", function () {
     startPassage.textContent = `[[holiday|iguana]]`;
     storyData.append(createPassage("iguana"));
     await brickInit();
+
     let active = getActivePassage();
     expect(active).to.have.length(1);
-    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
-    expect(active.children[0]).to.have.text("holiday");
-    (active.children[0] as HTMLElement).click();
+    let paragraph = active.children[0];
+    expect(paragraph.tagName).to.be.equal("P");
+    expect(paragraph).to.have.length(1);
+    const button = paragraph.children[0];
+    expect(button).to.be.instanceOf(HTMLButtonElement);
+    expect(button).to.have.text("holiday");
+    (button as HTMLElement).click();
     await sleep(5);
+
     active = getActivePassage();
-    expect(active).to.have.length(0);
+    expect(active).to.have.length(1);
     expect(active).to.have.text(`Test passage "iguana"`);
   });
 
@@ -253,14 +286,20 @@ describe("Wiki-style links", function () {
     startPassage.textContent = `[[ Juniper ->  kilometer]]`;
     storyData.append(createPassage("kilometer"));
     await brickInit();
+
     let active = getActivePassage();
     expect(active).to.have.length(1);
-    expect(active.children[0]).to.be.instanceOf(HTMLButtonElement);
-    expect(active.children[0]).to.have.text("Juniper");
-    (active.children[0] as HTMLElement).click();
+    let paragraph = active.children[0];
+    expect(paragraph.tagName).to.be.equal("P");
+    expect(paragraph).to.have.length(1);
+    const button = paragraph.children[0];
+    expect(button).to.be.instanceOf(HTMLButtonElement);
+    expect(button).to.have.text("Juniper");
+    (button as HTMLElement).click();
     await sleep(5);
+
     active = getActivePassage();
-    expect(active).to.have.length(0);
+    expect(active).to.have.length(1);
     expect(active).to.have.text(`Test passage "kilometer"`);
   });
 });
@@ -271,8 +310,11 @@ describe("HTML markup", function () {
     await brickInit();
     const active = getActivePassage();
     expect(active).to.have.length(1);
-    expect(active.firstChild).to.be.instanceOf(HTMLSpanElement);
-    expect(active.firstChild).to.have.text("Basic Span");
+    const paragraph = active.children[0];
+    expect(paragraph.tagName).to.be.equal("P");
+    expect(paragraph).to.have.length(1);
+    expect(paragraph.firstChild).to.be.instanceOf(HTMLSpanElement);
+    expect(paragraph.firstChild).to.have.text("Basic Span");
   });
 
   it("supports normal attributes", async function () {
@@ -280,9 +322,14 @@ describe("HTML markup", function () {
     await brickInit();
     const active = getActivePassage();
     expect(active).to.have.length(1);
-    expect(active.firstChild).to.be.instanceOf(HTMLInputElement);
-    expect(active.firstChild).to.have.attr("type", "button");
-    expect(active.firstChild).to.have.attr("value", "Test Button");
+    const paragraph = active.children[0];
+    expect(paragraph).to.be.instanceOf(HTMLParagraphElement);
+    expect(paragraph).to.have.length(1);
+    const input = paragraph.children[0];
+
+    expect(input).to.be.instanceOf(HTMLInputElement);
+    expect(input).to.have.attr("type", "button");
+    expect(input).to.have.attr("value", "Test Button");
   });
 
   it("supports dynamic attributes", async function () {
@@ -290,10 +337,14 @@ describe("HTML markup", function () {
     await brickInit();
     const active = getActivePassage();
     expect(active).to.have.length(1);
-    expect(active.firstChild).to.be.instanceOf(HTMLElement);
-    expect((active.firstChild as Element).tagName).to.equal("EM");
-    expect(active.firstChild).to.have.attr("title", "Zebra");
-    expect(active.firstChild).to.have.text("Yankee");
+    const paragraph = active.children[0];
+    expect(paragraph).to.be.instanceOf(HTMLParagraphElement);
+    expect(paragraph).to.have.length(1);
+
+    const em = paragraph.children[0];
+    expect(em.tagName).to.equal("EM");
+    expect(em).to.have.attr("title", "Zebra");
+    expect(em).to.have.text("Yankee");
   });
 });
 
@@ -303,7 +354,6 @@ describe("Misc. Functions", function () {
       startPassage.textContent = `@print(passageName())`;
       await brickInit();
       const active = getActivePassage();
-      expect(active).to.have.length(0);
       expect(active).to.have.text("test start");
     });
 
@@ -312,8 +362,11 @@ describe("Misc. Functions", function () {
       await brickInit();
       const active = getActivePassage();
       expect(active).to.have.length(1);
-      expect(active.children[0]).to.have.class("brick-error");
-      expect(active.children[0]).to.contain.text("arguments");
+      const paragraph = active.children[0];
+      expect(paragraph).to.be.instanceOf(HTMLParagraphElement);
+      expect(paragraph.children[0]).to.have.class("brick-error");
+      expect(paragraph.children[0]).to.contain.text("arguments");
+      expect(paragraph.children[0]).to.contain.text("passageName");
     });
   });
 
@@ -324,7 +377,6 @@ describe("Misc. Functions", function () {
       startPassage.append(`@print(tags())`);
       await brickInit();
       const active = getActivePassage();
-      expect(active).to.have.length(0);
       expect(active).to.have.text(`[bone, broth]`);
       expect(Brick.tags()).to.deep.equal(["bone", "broth"]);
     });
@@ -334,9 +386,25 @@ describe("Misc. Functions", function () {
       await brickInit();
       const active = getActivePassage();
       expect(active).to.have.length(1);
-      expect(active.children[0]).to.have.class("brick-error");
-      expect(active.children[0]).to.contain.text("arguments");
-      expect(() => (Brick.tags as Function)(null)).to.throw;
+      const paragraph = active.children[0];
+      expect(paragraph).to.be.instanceOf(HTMLParagraphElement);
+      expect(paragraph.children[0]).to.have.class("brick-error");
+      expect(paragraph.children[0]).to.contain.text("arguments");
+      expect(paragraph.children[0]).to.contain.text("tags");
+    });
+  });
+});
+
+describe("passages module", function () {
+  describe("get()", function () {
+    it("Returns the passage with the given name", async function () {
+      storyData.append(createPassage("Yam", "lard", "Tree sap"));
+      await brickInit();
+      const passage = Brick.passages.get("Yam");
+      expect(passage).to.be.an("object");
+      expect(passage!.name).to.equal("Yam");
+      expect(passage!.tags).to.eql(["lard"]);
+      expect(passage!.content).to.equal("Tree sap");
     });
   });
 });

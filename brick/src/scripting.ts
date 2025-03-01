@@ -107,7 +107,34 @@ export const BrickPublic = {
     return util.either(values as ArrayLike<unknown>);
   },
   enumerate: util.enumerate,
-  makeElement: util.makeElement,
+  makeElement(tagName: unknown, attributes: unknown, ...childNodes: unknown[]) {
+    if (typeof tagName !== "string") {
+      throw new TypeError(`makeElement: tagName must be a string`);
+    }
+    if (typeof attributes === "object" && attributes) {
+      const allowedTypes = ["object", "string", "function"];
+      for (const key in attributes) {
+        const value = (attributes as Record<string, unknown>)[key];
+        if (!value || !allowedTypes.includes(typeof value)) {
+          throw new TypeError(
+            `makeElement: attributes.${key} must be a string, object, or function`,
+          );
+        }
+      }
+    } else if (typeof attributes !== "undefined") {
+      throw new TypeError(`makeElement: attributes must be an object or undefined`);
+    }
+    for (const childNode of childNodes) {
+      if (!(typeof childNode === "string" || childNode instanceof Node)) {
+        throw new TypeError(`makeElement: each child must be a string or Node`);
+      }
+    }
+    return util.makeElement(
+      tagName,
+      attributes as util.Attributes,
+      ...(childNodes as (string | Node)[]),
+    );
+  },
   numberRange: util.numberRange,
   passageName(): string {
     if (arguments.length !== 0) {

@@ -241,7 +241,7 @@ _sayNumber(5 + 7)
 [[Start]]
 
 @(_title = "Hello World")
-<span title=(_title + "!")>HOVER ME</span>
+<span title=(_title + "!") style=({ backgroundColor: "green" })>HOVER ME</span>
 
 
 :: RegExp Literal Test

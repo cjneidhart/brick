@@ -30,20 +30,28 @@ for (const key in builtinMacroDefaults) {
   };
 }
 
-function toolbar(_editor, _environment) {
-  const menu = {
+function makeMenu(label, macroNames) {
+  return {
     type: "menu",
-    label: "Built-in macros",
-    items: [],
+    label,
+    items: macroNames.map((macroName) => {
+      return {
+        type: "button",
+        label: macroName,
+        command: `insert_macro_${macroName}`,
+      };
+    }),
   };
-  for (const key in builtinMacroDefaults) {
-    menu.items.push({
-      type: "button",
-      label: key,
-      command: `insert_macro_${key}`,
-    });
-  }
-  return [menu];
+}
+
+function toolbar(_editor, _environment) {
+  return [
+    makeMenu("Basic Macros", ["unnamed", "print", "render", "include", "link"]),
+    makeMenu("Control Flow", ["if", "while", "for", "continue", "break", "switch"]),
+    makeMenu("DOM", ["append", "replace", "prepend"]),
+    makeMenu("Input", ["checkBox", "textBox"]),
+    makeMenu("Other Macros", ["redoable", "later", "punt", "macro"]),
+  ];
 }
 
 export const editorExtensions = {

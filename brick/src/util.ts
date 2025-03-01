@@ -133,25 +133,52 @@ export function uniqueId(): string {
   return `brick-unique-id-${idCounter++}`;
 }
 
+export type Attributes = Record<
+  string,
+  string | Partial<CSSStyleDeclaration> | ((this: HTMLElement, event: Event) => void)
+>;
+
 /** Create a new {@link HTMLElement}. */
 export function makeElement<K extends keyof HTMLElementTagNameMap>(
   tagName: K,
-  attributes?: Record<string, string>,
+  attributes?: Attributes,
   ...childNodes: (Node | string)[]
 ): HTMLElementTagNameMap[K];
 export function makeElement(
   tagName: string,
-  attributes?: Record<string, string>,
+  attributes?: Attributes,
   ...childNodes: (Node | string)[]
 ): HTMLElement;
 export function makeElement(
   tagName: string,
-  attributes: Record<string, string> = {},
+  attributes: Attributes = {},
   ...childNodes: (Node | string)[]
 ): HTMLElement {
   const element = document.createElement(tagName);
-  for (const attr in attributes) {
-    element.setAttribute(attr, attributes[attr]);
+  for (const key in attributes) {
+    const value = attributes[key];
+    switch (typeof value) {
+      case "object":
+        if (Array.isArray(value)) {
+          const valueString = value.filter((item) => item).join(" ");
+          element.setAttribute(key, valueString);
+        } else if (key !== "style") {
+          throw new Error(`makeElement: Style objects can only be passed to the "style" attribute`);
+        }
+        Object.assign(element.style, value);
+        break;
+      case "function":
+        if (!key.startsWith("on")) {
+          throw new Error(
+            `makeElement: Functions can only be passed to attributes starting with "on"`,
+          );
+        }
+        element.addEventListener(key.slice(2).toLowerCase(), value);
+        break;
+      case "string":
+        element.setAttribute(key, value);
+        break;
+    }
   }
   element.append(...childNodes);
 

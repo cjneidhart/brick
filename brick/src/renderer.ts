@@ -6,7 +6,7 @@ import { ElementTemplate, Expr, NodeTemplate, Parser, PostscriptCall } from "./p
 import * as passages from "./passages";
 import { Passage } from "./passages";
 import { evalExpression } from "./scripting";
-import { countSubstrings, makeElement, numberRange, stringify } from "./util";
+import { Attributes, countSubstrings, makeElement, numberRange, stringify } from "./util";
 
 const PHRASING_TAGS = new Set([
   "abbr",
@@ -510,19 +510,14 @@ function renderElement(
   newlines: NewlineBehavior,
   parentContext?: MacroContext,
 ): void {
-  const element = makeElement(template.name);
+  const attributes: Attributes = Object.create(null);
   for (const [key, value] of template.attributes ?? []) {
-    element.setAttribute(key, value);
+    attributes[key] = value;
   }
   for (const [key, script] of template.evalAttributes ?? []) {
+    let value: unknown;
     try {
-      const value = evalExpression(script, scope);
-      if (key.startsWith("on") && key.length >= 3 && typeof value === "function") {
-        // TODO warning for typos such as onClick
-        element.addEventListener(key.substring(2), value as EventListener);
-      } else {
-        element.setAttribute(key, stringify(value));
-      }
+      value = evalExpression(script, scope);
     } catch (error) {
       if (error instanceof BreakSignal) {
         throw error;
@@ -530,12 +525,29 @@ function renderElement(
       const wrapped = new DynamicAttributeError(error, key, template);
       renderError(target, wrapped);
     }
+    if (value === null || !["object", "string", "function"].includes(typeof value)) {
+      const error = new DynamicAttributeError(
+        `Attributes must be a string, object, or function`,
+        key,
+        template,
+      );
+      renderError(target, error);
+    }
+    attributes[key] = value as Attributes[string];
   }
+  let element: HTMLElement;
   try {
-    render(element, scope, template.content, newlines, parentContext);
-  } finally {
-    target.append(element);
+    element = makeElement(template.name, attributes);
+  } catch (error) {
+    const wrapped = new BrickError(
+      (error as TypeError).message,
+      template.passageName,
+      template.lineNumber,
+    );
+    renderError(target, wrapped);
   }
+  target.append(element);
+  render(element, scope, template.content, newlines, parentContext);
 }
 
 function renderMacro(

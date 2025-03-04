@@ -59,7 +59,7 @@ export function createGetter(name: string, func: () => unknown) {
     configurable: true,
     enumerable: true,
     get: func,
-    set(value) {
+    set(value: unknown) {
       Object.defineProperty(engine.constants, name, {
         configurable: true,
         enumerable: true,
@@ -176,17 +176,15 @@ const include: Macro = (context, ...args) => {
   const actualEltName = elementName || "div";
 
   const elt = makeElement(actualEltName);
+  context.output.append(elt);
   // TODO should break/continue work through include boundaries?
   const childScope = context.createTempVariableScope();
   renderPassage(elt, childScope, passageName);
-
-  return elt;
 };
 include[BRICK_MACRO_SYMBOL] = true;
 
 const unnamed: Macro = (context, ...args) => {
   evalJavaScript(args.join(", "), context.tempVars);
-  return document.createDocumentFragment();
 };
 unnamed[BRICK_MACRO_SYMBOL] = { skipArgs: true };
 
@@ -214,11 +212,9 @@ const renderMacro: Macro = (context, ...args: unknown[]) => {
       "argument must be a string. Use the String() constructor if you want to convert a value to a string.",
     );
   }
-  const frag = document.createDocumentFragment();
   // TODO prevent infinite recursion
   const parser = new Parser(args[0], context.passageName, context.lineNumber);
-  context.render(frag, parser.parse());
-  return frag;
+  context.render(context.output, parser.parse());
 };
 renderMacro[BRICK_MACRO_SYMBOL] = true;
 
@@ -324,7 +320,6 @@ const whileMacro: Macro = (context, ...args) => {
   }
 
   const conditionStr = (args as string[]).join(",");
-  const frag = document.createDocumentFragment();
   const { content } = context;
   let iterations = 1;
   while (evalExpression(conditionStr, context.tempVars)) {
@@ -335,7 +330,7 @@ const whileMacro: Macro = (context, ...args) => {
     }
     iterations++;
     try {
-      context.render(frag, content || []);
+      context.render(context.output, content || []);
     } catch (error) {
       if (error instanceof BreakSignal) {
         if (error.type === "break") {
@@ -348,8 +343,6 @@ const whileMacro: Macro = (context, ...args) => {
       }
     }
   }
-
-  return frag;
 };
 whileMacro[BRICK_MACRO_SYMBOL] = { skipArgs: true };
 
@@ -381,7 +374,6 @@ const forMacro: Macro = (context, ...args) => {
     throw new Error("Right-hand side must be an iterable value, such as an array");
   }
 
-  const frag = document.createDocumentFragment();
   const { content } = context;
   let iterations = 1;
   for (const loopVal of iterable) {
@@ -394,7 +386,7 @@ const forMacro: Macro = (context, ...args) => {
     const childScope = context.createTempVariableScope();
     childScope[varName] = loopVal;
     try {
-      context.render(frag, content || [], childScope);
+      context.render(context.output, content || [], childScope);
     } catch (error) {
       if (error instanceof BreakSignal) {
         if (error.type === "break") {
@@ -407,8 +399,6 @@ const forMacro: Macro = (context, ...args) => {
       }
     }
   }
-
-  return frag;
 };
 forMacro[BRICK_MACRO_SYMBOL] = { isForMacro: true, skipArgs: true };
 
@@ -442,7 +432,6 @@ const checkBox: Macro = (context, ...args) => {
 
   const labelElement = makeElement("label", { for: inputElement.id }, labelText);
   context.output.append(labelElement);
-  return undefined;
 };
 checkBox[BRICK_MACRO_SYMBOL] = { skipArgs: true };
 
@@ -481,13 +470,10 @@ const ifMacro: Macro = (context, ...args) => {
   const segments = args as MacroChainSegment[];
   for (const segment of segments) {
     if (!segment.name.includes("if") || evalExpression(segment.args.join(", "), context.tempVars)) {
-      const frag = document.createDocumentFragment();
-      context.render(frag, segment.body);
-      return frag;
+      context.render(context.output, segment.body);
+      break;
     }
   }
-
-  return "";
 };
 ifMacro[BRICK_MACRO_SYMBOL] = { skipArgs: true, chainWith: /else(?:\s+if)?\s*/y };
 
@@ -537,13 +523,13 @@ const switchMacro: Macro = (context, ...args) => {
     }
   }
 
-  const output = document.createDocumentFragment();
+  const { output } = context;
   for (const child of children) {
     if (child.base === "default") {
       if (child.content) {
         context.render(output, child.content);
       }
-      return output;
+      return;
     }
     for (const arg of (child.ops[0] as PostscriptCall).args) {
       const other = evalExpression(arg, context.tempVars);
@@ -551,12 +537,10 @@ const switchMacro: Macro = (context, ...args) => {
         if (child.content) {
           context.render(output, child.content);
         }
-        return output;
+        return;
       }
     }
   }
-
-  return output;
 };
 switchMacro[BRICK_MACRO_SYMBOL] = true;
 
@@ -566,6 +550,7 @@ const redoable: Macro = (context, ..._args) => {
     throw new Error("must be called with a body");
   }
   const span = makeElement("span", { class: "brick-macro-redoable" });
+  context.output.append(span);
   try {
     if (context.content) {
       context.render(span, context.content);
@@ -584,8 +569,6 @@ const redoable: Macro = (context, ..._args) => {
       context.render(span, context.content);
     }
   });
-
-  return span;
 };
 redoable[BRICK_MACRO_SYMBOL] = true;
 
@@ -608,14 +591,13 @@ const later: Macro = (context, ...args) => {
   }
 
   const span = makeElement("span", { class: "brick-macro-later", hidden: "" });
+  context.output.append(span);
 
   setTimeout(() => {
     const frag = document.createDocumentFragment();
     context.render(frag, content);
     span.replaceWith(frag);
   }, delay);
-
-  return span;
 };
 later[BRICK_MACRO_SYMBOL] = true;
 

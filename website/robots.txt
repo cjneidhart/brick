@@ -35,5 +35,3 @@ Disallow: /
 
 User-agent: *
 Allow: /
-
-Sitemap: https://brick-if.readthedocs.io/sitemap.xml

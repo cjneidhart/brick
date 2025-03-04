@@ -168,7 +168,7 @@ export function makeElement(
         Object.assign(element.style, value);
         break;
       case "function":
-        if (!key.startsWith("on")) {
+        if (!/^on[^]+/.test(key)) {
           throw new Error(
             `makeElement: Functions can only be passed to attributes starting with "on"`,
           );

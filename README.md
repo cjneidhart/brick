@@ -7,15 +7,15 @@ but with a syntax that resembles JavaScript instead of HTML.
 
 For a full reference of Brick's syntax, macros, and API, consult the [documentation](https://brick-if.readthedocs.io).
 
-## Building manually
+## Repository Map
 
-[NodeJS] and [pnpm] are necessary to build this project.
-Other package managers, such as `npm`, should work but will not be able to read the lockfile.
+This repository is a workspace, split into three separate packages.
+View each package's README for more information.
 
-First, `cd` into the `brick` directory.
-Then, run `pnpm install` (this only needs to be done after initially downloading or updating Brick).
-Finally, run `pnpm build`.
-This will create a `format.js` file in the directory `storyformats/brick/`.
-
-[NodeJS]: https://nodejs.org
-[pnpm]: https://pnpm.io
+- [`brick`](./brick):
+  The main package, the runtime which is present in every compiled story.
+- [`website`](./website):
+  Brick's documentation website.
+- [`brick-codemirror`](./brick-codemirror):
+  A CodeMirror 5 tokenizer for Brick's markup language.
+  Both of the other packages depend on this package.
